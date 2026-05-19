@@ -1,10 +1,11 @@
 import * as schedulerFunctions from 'firebase-functions/v2/scheduler';
+import * as functions from 'firebase-functions/v2';
 import * as admin from 'firebase-admin';
 import { buildSmartMessage } from './notificationBuilder';
 import { StreakDoc } from './streakCalculator';
 
 const db = admin.firestore();
-const logger = schedulerFunctions.logger;
+const logger = functions.logger;
 
 function getLocalHHMM(utcDate: Date, tz: string): string {
   try {
@@ -84,7 +85,7 @@ async function sendToUser(uid: string, fcmToken: string, today: string): Promise
   if (!logSnap.empty) return; // Already trained today
 
   const streakSnap = await db.doc(`streaks/${uid}`).get();
-  const streak = streakSnap.exists()
+  const streak = streakSnap.exists
     ? (streakSnap.data() as StreakDoc)
     : { currentStreak: 0, weeklyGoal: 4, thisWeekCount: 0 };
 

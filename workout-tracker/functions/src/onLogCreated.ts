@@ -29,7 +29,7 @@ export const onWorkoutLogCreated = functions.firestore.onDocumentCreated(
     try {
       const streakRef = db.doc(`streaks/${userId}`);
       const streakSnap = await streakRef.get();
-      const existing = streakSnap.exists() ? (streakSnap.data() as StreakDoc) : null;
+      const existing = streakSnap.exists ? (streakSnap.data() as StreakDoc) : null;
       const updated = calculateStreak(existing, date);
 
       await streakRef.set(
