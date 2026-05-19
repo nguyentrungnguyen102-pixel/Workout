@@ -18,10 +18,12 @@ try {
     exit 1
 }
 
-# 2. Install npm packages
-if (-not (Test-Path "node_modules")) {
-    Write-Host "Cai npm packages..." -ForegroundColor Cyan
-    npm install --legacy-peer-deps
+# 2. Install npm packages (always run to ensure all deps installed)
+Write-Host "Cai npm packages..." -ForegroundColor Cyan
+npm install --legacy-peer-deps
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "npm install that bai! Thu lai..." -ForegroundColor Yellow
+    npm install --legacy-peer-deps --force
 }
 Write-Host "OK node_modules" -ForegroundColor Green
 
@@ -50,15 +52,16 @@ if ($javaExists) {
     Write-Host "   Emulator UI: http://localhost:4000" -ForegroundColor Green
     Start-Sleep -Seconds 5
 } else {
-    Write-Host "Java chua cai — bo qua Firebase Emulator" -ForegroundColor Yellow
+    Write-Host "Java chua cai - bo qua Firebase Emulator" -ForegroundColor Yellow
     Write-Host "   Cai Java: https://adoptium.net (LTS)" -ForegroundColor Yellow
+    Write-Host "   (App van chay duoc, chi khong co local backend)" -ForegroundColor Yellow
 }
 
-# 5. Start Expo
+# 5. Start Expo (--clear resets Metro cache - fix most startup errors)
 Write-Host ""
 Write-Host "Khoi dong Expo..." -ForegroundColor Cyan
 Write-Host "   -> Scan QR bang Expo Go tren dien thoai" -ForegroundColor Yellow
 Write-Host "   -> Dien thoai va may tinh phai cung WiFi" -ForegroundColor Yellow
 Write-Host ""
 
-npx expo start
+npx expo start --clear
