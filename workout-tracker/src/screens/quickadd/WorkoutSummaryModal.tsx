@@ -15,7 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useWorkoutStore } from '../../stores/workoutStore';
 import { useUserStore } from '../../stores/userStore';
 import { COLORS } from '../../constants/colors';
-import { Intensity } from '../../types/workout';
+import { Intensity, ExerciseEntry } from '../../types/workout';
 
 const INTENSITY_OPTIONS: { label: string; value: Intensity; color: string; emoji: string }[] = [
   { label: 'Nhẹ', value: 'light', color: '#4CAF50', emoji: '🟢' },
@@ -23,26 +23,140 @@ const INTENSITY_OPTIONS: { label: string; value: Intensity; color: string; emoji
   { label: 'Nặng', value: 'heavy', color: '#F44336', emoji: '🔴' },
 ];
 
-function ExerciseRow({ exercise, onRemove }: { exercise: any; onRemove: () => void }) {
+function Stepper({
+  value,
+  onIncrease,
+  onDecrease,
+  label,
+  min = 1,
+}: {
+  value: number;
+  onIncrease: () => void;
+  onDecrease: () => void;
+  label: string;
+  min?: number;
+}) {
+  return (
+    <View style={styles.stepper}>
+      <Text style={styles.stepperLabel}>{label}</Text>
+      <View style={styles.stepperControls}>
+        <TouchableOpacity
+          onPress={onDecrease}
+          disabled={value <= min}
+          style={[styles.stepperBtn, value <= min && styles.stepperBtnDisabled]}
+        >
+          <Ionicons name="remove" size={16} color={value <= min ? COLORS.border : COLORS.text} />
+        </TouchableOpacity>
+        <Text style={styles.stepperValue}>{value}</Text>
+        <TouchableOpacity onPress={onIncrease} style={styles.stepperBtn}>
+          <Ionicons name="add" size={16} color={COLORS.text} />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+function ExerciseRow({ exercise }: { exercise: ExerciseEntry }) {
+  const { removeExercise, updateExercise } = useWorkoutStore();
+  const [expanded, setExpanded] = useState(false);
+
   const unit = exercise.unit;
-  const valueStr =
-    unit === 'reps'
-      ? `${exercise.sets} × ${exercise.reps} reps`
-      : unit === 'seconds'
-      ? `${exercise.sets} × ${exercise.durationSeconds}s`
-      : unit === 'minutes'
-      ? `${Math.round((exercise.durationSeconds || 0) / 60)} phút`
-      : `${exercise.sets} sets`;
+
+  const handleSetsUp = () => updateExercise(exercise.presetId, { sets: exercise.sets + 1 });
+  const handleSetsDown = () => updateExercise(exercise.presetId, { sets: Math.max(1, exercise.sets - 1) });
+
+  const handleRepsUp = () =>
+    updateExercise(exercise.presetId, { reps: (exercise.reps || 10) + 5 });
+  const handleRepsDown = () =>
+    updateExercise(exercise.presetId, { reps: Math.max(1, (exercise.reps || 10) - 5) });
+
+  const handleDurationUp = () =>
+    updateExercise(exercise.presetId, {
+      durationSeconds: (exercise.durationSeconds || 60) + 30,
+    });
+  const handleDurationDown = () =>
+    updateExercise(exercise.presetId, {
+      durationSeconds: Math.max(30, (exercise.durationSeconds || 60) - 30),
+    });
+
+  let summaryStr = '';
+  if (unit === 'reps') {
+    summaryStr = `${exercise.sets} × ${exercise.reps} reps`;
+  } else if (unit === 'seconds') {
+    summaryStr = `${exercise.sets} × ${exercise.durationSeconds}s`;
+  } else if (unit === 'minutes') {
+    const mins = Math.round((exercise.durationSeconds || 0) / 60);
+    summaryStr = `${mins} phút`;
+  }
 
   return (
     <View style={styles.exerciseRow}>
-      <View style={styles.exerciseInfo}>
-        <Text style={styles.exerciseName}>{exercise.name}</Text>
-        <Text style={styles.exerciseValue}>{valueStr}</Text>
-      </View>
-      <TouchableOpacity onPress={onRemove} style={styles.removeBtn}>
-        <Ionicons name="close-circle" size={22} color={COLORS.textSecondary} />
+      <TouchableOpacity style={styles.exerciseMain} onPress={() => setExpanded(!expanded)} activeOpacity={0.8}>
+        <View style={styles.exerciseInfo}>
+          <Text style={styles.exerciseName}>{exercise.name}</Text>
+          <Text style={styles.exerciseValue}>{summaryStr}</Text>
+        </View>
+        <Ionicons
+          name={expanded ? 'chevron-up' : 'chevron-down'}
+          size={18}
+          color={COLORS.textSecondary}
+        />
+        <TouchableOpacity
+          onPress={() => removeExercise(exercise.presetId)}
+          style={styles.removeBtn}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <Ionicons name="close-circle" size={22} color={COLORS.textSecondary} />
+        </TouchableOpacity>
       </TouchableOpacity>
+
+      {expanded && (
+        <View style={styles.stepperSection}>
+          <Stepper
+            label="Hiệp"
+            value={exercise.sets}
+            onIncrease={handleSetsUp}
+            onDecrease={handleSetsDown}
+            min={1}
+          />
+          {unit === 'reps' && (
+            <Stepper
+              label="Reps"
+              value={exercise.reps || 10}
+              onIncrease={handleRepsUp}
+              onDecrease={handleRepsDown}
+              min={1}
+            />
+          )}
+          {(unit === 'seconds' || unit === 'minutes') && (
+            <Stepper
+              label={unit === 'minutes' ? 'Phút' : 'Giây'}
+              value={
+                unit === 'minutes'
+                  ? Math.round((exercise.durationSeconds || 60) / 60)
+                  : exercise.durationSeconds || 60
+              }
+              onIncrease={
+                unit === 'minutes'
+                  ? () =>
+                      updateExercise(exercise.presetId, {
+                        durationSeconds: (exercise.durationSeconds || 60) + 60,
+                      })
+                  : handleDurationUp
+              }
+              onDecrease={
+                unit === 'minutes'
+                  ? () =>
+                      updateExercise(exercise.presetId, {
+                        durationSeconds: Math.max(60, (exercise.durationSeconds || 60) - 60),
+                      })
+                  : handleDurationDown
+              }
+              min={1}
+            />
+          )}
+        </View>
+      )}
     </View>
   );
 }
@@ -55,7 +169,6 @@ export default function WorkoutSummaryModal() {
     isLogging,
     setIntensity,
     setNotes,
-    removeExercise,
     logWorkout,
     resetDraft,
   } = useWorkoutStore();
@@ -92,6 +205,13 @@ export default function WorkoutSummaryModal() {
     ]);
   };
 
+  // Total time estimate
+  const estimatedMins = draft.exercises.reduce((sum, e) => {
+    if (e.unit === 'minutes') return sum + Math.round((e.durationSeconds || 0) / 60);
+    if (e.unit === 'seconds') return sum + Math.round((e.durationSeconds || 0) / 60);
+    return sum + e.sets * 2; // ~2 min per set for strength
+  }, 0);
+
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       {/* Header */}
@@ -106,8 +226,15 @@ export default function WorkoutSummaryModal() {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Time estimate */}
+        {estimatedMins > 0 && (
+          <View style={styles.timeEstimate}>
+            <Text style={styles.timeEstimateText}>⏱ Ước tính ~{estimatedMins} phút</Text>
+          </View>
+        )}
+
         {/* Exercise list */}
-        <Text style={styles.sectionLabel}>Bài tập</Text>
+        <Text style={styles.sectionLabel}>Bài tập · Tap để chỉnh sửa</Text>
         {draft.exercises.length === 0 ? (
           <TouchableOpacity
             style={styles.addExerciseBtn}
@@ -119,11 +246,7 @@ export default function WorkoutSummaryModal() {
         ) : (
           <>
             {draft.exercises.map((ex) => (
-              <ExerciseRow
-                key={ex.presetId}
-                exercise={ex}
-                onRemove={() => removeExercise(ex.presetId)}
-              />
+              <ExerciseRow key={ex.presetId} exercise={ex} />
             ))}
             <TouchableOpacity
               style={styles.addMoreBtn}
@@ -212,6 +335,18 @@ const styles = StyleSheet.create({
 
   content: { flex: 1, padding: 20 },
 
+  timeEstimate: {
+    backgroundColor: COLORS.primaryDark,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    alignSelf: 'flex-start',
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+  },
+  timeEstimateText: { fontSize: 13, color: COLORS.primary, fontWeight: '600' },
+
   sectionLabel: {
     fontSize: 12,
     fontWeight: '600',
@@ -223,17 +358,49 @@ const styles = StyleSheet.create({
   },
 
   exerciseRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: COLORS.cardBackground,
     borderRadius: 12,
-    padding: 14,
     marginBottom: 8,
+    overflow: 'hidden',
+  },
+  exerciseMain: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    gap: 8,
   },
   exerciseInfo: { flex: 1 },
   exerciseName: { fontSize: 15, fontWeight: '700', color: COLORS.text },
   exerciseValue: { fontSize: 13, color: COLORS.textSecondary, marginTop: 2 },
-  removeBtn: { padding: 4 },
+  removeBtn: { padding: 4, marginLeft: 4 },
+
+  stepperSection: {
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+    padding: 12,
+    gap: 10,
+  },
+  stepper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  stepperLabel: { fontSize: 14, color: COLORS.textSecondary, fontWeight: '600' },
+  stepperControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  stepperBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: COLORS.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepperBtnDisabled: { opacity: 0.4 },
+  stepperValue: { fontSize: 18, fontWeight: '700', color: COLORS.text, minWidth: 36, textAlign: 'center' },
 
   addExerciseBtn: {
     flexDirection: 'row',

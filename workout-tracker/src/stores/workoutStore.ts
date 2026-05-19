@@ -27,6 +27,9 @@ interface WorkoutStore {
   setNotes: (notes: string) => void;
   resetDraft: () => void;
 
+  updateExercise: (presetId: string, updates: Partial<ExerciseEntry>) => void;
+  setDraftFromLog: (log: WorkoutLog) => void;
+
   // Async actions
   logWorkout: (uid: string) => Promise<void>;
   repeatYesterday: (uid: string) => Promise<void>;
@@ -79,6 +82,26 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
     set((s) => ({ draft: { ...s.draft, notes } })),
 
   resetDraft: () => set({ draft: emptyDraft() }),
+
+  updateExercise: (presetId, updates) =>
+    set((s) => ({
+      draft: {
+        ...s.draft,
+        exercises: s.draft.exercises.map((e) =>
+          e.presetId === presetId ? { ...e, ...updates } : e
+        ),
+      },
+    })),
+
+  setDraftFromLog: (log) =>
+    set({
+      draft: {
+        exercises: log.exercises.map((e) => ({ ...e })),
+        startedAt: new Date(),
+        intensity: log.intensity,
+        notes: '',
+      },
+    }),
 
   logWorkout: async (uid) => {
     const { draft } = get();

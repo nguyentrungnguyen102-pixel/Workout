@@ -26,6 +26,7 @@ export interface UserProfile {
   weeklyGoalMinutes: number;
   weeklyGoalSessions: number;
   fcmToken?: string;
+  n8nWebhookUrl?: string;
   streak: UserStreak;
   weeklyStats: WeeklyStats;
   createdAt?: Timestamp;
