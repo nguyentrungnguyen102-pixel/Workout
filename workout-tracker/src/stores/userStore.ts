@@ -23,37 +23,39 @@ export const useUserStore = create<UserStore>((set, get) => ({
   },
 
   loadProfile: async (uid) => {
-    const profile = await getUserProfile(uid);
-    if (profile) {
-      set({ profile });
-    } else {
-      // New user — create default profile
-      const defaultProfile: UserProfile = {
-        uid,
-        displayName: get().firebaseUser?.displayName || 'User',
-        email: get().firebaseUser?.email || '',
-        photoURL: get().firebaseUser?.photoURL || undefined,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        reminderEnabled: true,
-        reminderTime: '07:30',
-        weeklyGoalMinutes: 150,
-        weeklyGoalSessions: 4,
-        streak: {
-          current: 0,
-          longest: 0,
-          lastWorkoutDate: '',
-          streakStartDate: '',
-        },
-        weeklyStats: {
-          weekStartDate: '',
-          totalMinutes: 0,
-          targetMinutes: 150,
-          sessionCount: 0,
-        },
-        onboardingDone: false,
-      };
-      await createOrUpdateUserProfile(uid, defaultProfile);
-      set({ profile: defaultProfile });
+    const firebaseUser = get().firebaseUser;
+    const buildDefault = (): UserProfile => ({
+      uid,
+      displayName: firebaseUser?.displayName || 'User',
+      email: firebaseUser?.email || '',
+      photoURL: firebaseUser?.photoURL || undefined,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      reminderEnabled: true,
+      reminderTime: '07:30',
+      weeklyGoalMinutes: 150,
+      weeklyGoalSessions: 4,
+      streak: { current: 0, longest: 0, lastWorkoutDate: '', streakStartDate: '' },
+      weeklyStats: { weekStartDate: '', totalMinutes: 0, targetMinutes: 150, sessionCount: 0 },
+      onboardingDone: false,
+    });
+
+    try {
+      const profile = await getUserProfile(uid);
+      if (profile) {
+        set({ profile });
+      } else {
+        const defaultProfile = buildDefault();
+        try {
+          await createOrUpdateUserProfile(uid, defaultProfile);
+        } catch {
+          // Firestore write failed — continue with in-memory profile
+        }
+        set({ profile: defaultProfile });
+      }
+    } catch {
+      // Firestore unavailable (database not created yet, or no network)
+      // Use in-memory profile so buttons work immediately
+      set({ profile: buildDefault() });
     }
   },
 
