@@ -67,5 +67,5 @@ export function useAuth() {
     return unsub;
   }, []);
 
-  return { user: firebaseUser, profile, loading };
+  return { user: firebaseUser, profile, loading: loading || (!!firebaseUser && !profile) };
 }
