@@ -40,10 +40,9 @@ export default function StatsScreen() {
     ? Math.round((profile.weeklyStats.totalMinutes / profile.weeklyStats.targetMinutes) * 100)
     : 0;
 
-  const totalMinutesMonth = logs.slice(0, 30).reduce((s, l) => s + l.totalDurationMinutes, 0);
-  const totalCaloriesMonth = logs.slice(0, 30).reduce((s, l) => s + l.caloriesEstimate, 0);
+  const totalMinutesMonth = logs.reduce((s, l) => s + l.totalDurationMinutes, 0);
+  const totalCaloriesMonth = logs.reduce((s, l) => s + l.caloriesEstimate, 0);
 
-  // Most frequent exercise
   const exerciseCounts: Record<string, number> = {};
   logs.forEach((log) => {
     log.exercises.forEach((e) => {
@@ -51,6 +50,7 @@ export default function StatsScreen() {
     });
   });
   const topExercise = Object.entries(exerciseCounts).sort((a, b) => b[1] - a[1])[0];
+  const consistencyScore = Math.min(100, Math.round((logs.length / 30) * 100));
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -60,11 +60,24 @@ export default function StatsScreen() {
         <ActivityIndicator color={COLORS.primary} style={{ marginTop: 40 }} />
       ) : (
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          {/* Streak section */}
-          <Text style={styles.sectionTitle}>🔥 Streak</Text>
-          <View style={styles.statsRow}>
-            <StatCard label="Streak hiện tại" value={streak} unit="ngày" icon="🔥" />
-            <StatCard label="Dài nhất" value={longestStreak} unit="ngày" icon="🏆" />
+          {/* Streak Hero Card */}
+          <View style={styles.streakHero}>
+            <View style={styles.streakLeft}>
+              <Text style={styles.streakNumber}>{streak}</Text>
+              <Text style={styles.streakFire}>🔥</Text>
+              <Text style={styles.streakLabel}>ngày liên tiếp</Text>
+            </View>
+            <View style={styles.streakRight}>
+              <View style={styles.streakStat}>
+                <Text style={styles.streakStatValue}>{logs.length}</Text>
+                <Text style={styles.streakStatLabel}>buổi / tháng</Text>
+              </View>
+              <View style={styles.streakDivider} />
+              <View style={styles.streakStat}>
+                <Text style={styles.streakStatValue}>{totalCaloriesMonth}</Text>
+                <Text style={styles.streakStatLabel}>kcal</Text>
+              </View>
+            </View>
           </View>
 
           {/* Weekly */}
@@ -72,9 +85,11 @@ export default function StatsScreen() {
           <View style={styles.progressCard}>
             <Text style={styles.progressLabel}>Tiến độ mục tiêu tuần</Text>
             <View style={styles.progressBar}>
-              <View style={[styles.progressFill, { width: `${Math.min(weeklyPct, 100)}%` }]} />
+              <View style={[styles.progressFill, { width: `${Math.min(weeklyPct, 100)}%` as any }]} />
             </View>
-            <Text style={styles.progressPct}>{weeklyPct}% · {profile?.weeklyStats?.totalMinutes || 0}/{profile?.weeklyStats?.targetMinutes || 150} phút</Text>
+            <Text style={styles.progressPct}>
+              {weeklyPct}% · {profile?.weeklyStats?.totalMinutes || 0}/{profile?.weeklyStats?.targetMinutes || 150} phút
+            </Text>
           </View>
 
           {/* Monthly */}
@@ -85,23 +100,25 @@ export default function StatsScreen() {
           </View>
           <View style={styles.statsRow}>
             <StatCard label="Buổi tập" value={logs.length} unit="buổi" icon="💪" />
-            <StatCard
-              label="Bài tập yêu thích"
-              value={topExercise ? topExercise[0] : '--'}
-              icon="⭐"
-            />
+            <StatCard label="Dài nhất" value={longestStreak} unit="ngày" icon="🏆" />
           </View>
+          {topExercise && (
+            <View style={styles.topExerciseCard}>
+              <Text style={styles.topExerciseLabel}>Bài tập yêu thích</Text>
+              <Text style={styles.topExerciseName}>{topExercise[0]}</Text>
+              <Text style={styles.topExerciseCount}>{topExercise[1]} lần trong 30 ngày</Text>
+            </View>
+          )}
 
           {/* Consistency score */}
           <View style={styles.consistencyCard}>
             <Text style={styles.consistencyTitle}>Điểm consistency</Text>
-            <Text style={styles.consistencyScore}>
-              {Math.min(100, Math.round((logs.length / 30) * 100))}
-            </Text>
+            <Text style={styles.consistencyScore}>{consistencyScore}</Text>
             <Text style={styles.consistencyMax}>/100</Text>
-            <Text style={styles.consistencyHint}>
-              Dựa trên số ngày tập trong 30 ngày qua
-            </Text>
+            <View style={styles.consistencyBar}>
+              <View style={[styles.consistencyFill, { width: `${consistencyScore}%` as any }]} />
+            </View>
+            <Text style={styles.consistencyHint}>Dựa trên số ngày tập trong 30 ngày qua</Text>
           </View>
         </ScrollView>
       )}
@@ -120,12 +137,37 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   content: { paddingHorizontal: 20, paddingBottom: 32 },
+
+  // Streak Hero
+  streakHero: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 20,
+    padding: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.33,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  streakLeft: { flex: 1, flexDirection: 'row', alignItems: 'flex-end', gap: 8 },
+  streakNumber: { fontSize: 56, fontWeight: '900', color: '#fff', lineHeight: 60 },
+  streakFire: { fontSize: 32, marginBottom: 4 },
+  streakLabel: { fontSize: 13, color: 'rgba(255,255,255,0.8)', fontWeight: '600', marginBottom: 6, alignSelf: 'flex-end' },
+  streakRight: { alignItems: 'center', gap: 12 },
+  streakStat: { alignItems: 'center' },
+  streakStatValue: { fontSize: 20, fontWeight: '800', color: '#fff' },
+  streakStatLabel: { fontSize: 11, color: 'rgba(255,255,255,0.75)', fontWeight: '600' },
+  streakDivider: { width: 40, height: 1, backgroundColor: 'rgba(255,255,255,0.3)' },
+
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
     color: COLORS.text,
     marginBottom: 12,
-    marginTop: 8,
+    marginTop: 4,
   },
   statsRow: { flexDirection: 'row', gap: 10, marginBottom: 10 },
   statCard: {
@@ -134,6 +176,11 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 16,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 2,
   },
   statIcon: { fontSize: 28, marginBottom: 8 },
   statValue: { fontSize: 18, fontWeight: '700', color: COLORS.text, textAlign: 'center' },
@@ -143,7 +190,12 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.cardBackground,
     borderRadius: 14,
     padding: 16,
-    marginBottom: 10,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 2,
   },
   progressLabel: { fontSize: 13, color: COLORS.textSecondary, marginBottom: 10 },
   progressBar: {
@@ -156,15 +208,41 @@ const styles = StyleSheet.create({
   progressFill: { height: '100%', backgroundColor: COLORS.primary, borderRadius: 4 },
   progressPct: { fontSize: 13, color: COLORS.primary, fontWeight: '600' },
 
+  topExerciseCard: {
+    backgroundColor: COLORS.primaryLight,
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: COLORS.primary + '33',
+  },
+  topExerciseLabel: { fontSize: 11, fontWeight: '700', color: COLORS.primary, textTransform: 'uppercase', letterSpacing: 0.8 },
+  topExerciseName: { fontSize: 20, fontWeight: '800', color: COLORS.text, marginTop: 4 },
+  topExerciseCount: { fontSize: 13, color: COLORS.textSecondary, marginTop: 4 },
+
   consistencyCard: {
     backgroundColor: COLORS.cardBackground,
     borderRadius: 16,
     padding: 24,
     alignItems: 'center',
     marginTop: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 2,
   },
   consistencyTitle: { fontSize: 14, color: COLORS.textSecondary, marginBottom: 8 },
-  consistencyScore: { fontSize: 72, fontWeight: '800', color: COLORS.primary },
-  consistencyMax: { fontSize: 18, color: COLORS.textSecondary, marginTop: -8 },
-  consistencyHint: { fontSize: 12, color: COLORS.textSecondary, marginTop: 12, textAlign: 'center' },
+  consistencyScore: { fontSize: 72, fontWeight: '900', color: COLORS.primary },
+  consistencyMax: { fontSize: 18, color: COLORS.textSecondary, marginTop: -8, marginBottom: 16 },
+  consistencyBar: {
+    width: '100%',
+    height: 8,
+    backgroundColor: COLORS.border,
+    borderRadius: 4,
+    overflow: 'hidden',
+    marginBottom: 12,
+  },
+  consistencyFill: { height: '100%', backgroundColor: COLORS.primary, borderRadius: 4 },
+  consistencyHint: { fontSize: 12, color: COLORS.textSecondary, textAlign: 'center' },
 });

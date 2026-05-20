@@ -72,7 +72,7 @@ export default function LoginScreen() {
             <TextInput
               style={styles.input}
               placeholder="Tên của bạn"
-              placeholderTextColor={COLORS.textSecondary}
+              placeholderTextColor={COLORS.textMuted}
               value={name}
               onChangeText={setName}
               autoCapitalize="words"
@@ -81,7 +81,7 @@ export default function LoginScreen() {
           <TextInput
             style={styles.input}
             placeholder="Email"
-            placeholderTextColor={COLORS.textSecondary}
+            placeholderTextColor={COLORS.textMuted}
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
@@ -90,7 +90,7 @@ export default function LoginScreen() {
           <TextInput
             style={styles.input}
             placeholder="Mật khẩu"
-            placeholderTextColor={COLORS.textSecondary}
+            placeholderTextColor={COLORS.textMuted}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
@@ -100,9 +100,10 @@ export default function LoginScreen() {
             style={[styles.authBtn, loading && styles.authBtnDisabled]}
             onPress={handleAuth}
             disabled={loading}
+            activeOpacity={0.8}
           >
             {loading ? (
-              <ActivityIndicator color="#000" />
+              <ActivityIndicator color="#fff" />
             ) : (
               <Text style={styles.authBtnText}>
                 {isSignUp ? 'Tạo tài khoản' : 'Đăng nhập'}
@@ -113,6 +114,7 @@ export default function LoginScreen() {
           <TouchableOpacity
             style={styles.switchBtn}
             onPress={() => setIsSignUp(!isSignUp)}
+            activeOpacity={0.7}
           >
             <Text style={styles.switchText}>
               {isSignUp ? 'Đã có tài khoản? Đăng nhập' : 'Chưa có tài khoản? Đăng ký'}
@@ -156,9 +158,14 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     alignItems: 'center',
     marginTop: 8,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.33,
+    shadowRadius: 10,
+    elevation: 6,
   },
-  authBtnDisabled: { opacity: 0.5 },
-  authBtnText: { fontSize: 17, fontWeight: '800', color: '#000' },
+  authBtnDisabled: { opacity: 0.5, shadowOpacity: 0 },
+  authBtnText: { fontSize: 17, fontWeight: '800', color: '#fff' },
 
   switchBtn: { alignItems: 'center', marginTop: 12 },
   switchText: { fontSize: 14, color: COLORS.primary, fontWeight: '600' },

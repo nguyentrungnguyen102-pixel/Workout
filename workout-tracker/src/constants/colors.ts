@@ -1,19 +1,38 @@
 export const COLORS = {
-  background: '#0f0f0f',
-  cardBackground: '#1a1a1a',
-  cardBorder: '#2a2a2a',
-  primary: '#00ff87',
-  primaryDark: '#0d2b1e',
-  text: '#ffffff',
-  textSecondary: '#888888',
-  border: '#2a2a2a',
-  danger: '#ff4444',
-  warning: '#ffaa00',
-  success: '#00ff87',
+  // Backgrounds
+  background:      '#FAF9F6',
+  cardBackground:  '#FFFFFF',
+  card2:           '#F3F2EE',
 
-  // Heatmap colors
-  heatmapNone: '#1F1F1F',
-  heatmapLight: 'rgba(92, 184, 92, 0.4)',
-  heatmapModerate: 'rgba(92, 184, 92, 0.7)',
-  heatmapHeavy: '#5CB85C',
+  // Accent
+  primary:         '#FF5400',
+  primaryLight:    '#FFF0EC',
+  primaryMed:      'rgba(255,84,0,0.15)',
+
+  // Text
+  text:            '#111111',
+  textSecondary:   '#8A8A8A',
+  textMuted:       '#C8C7C2',
+
+  // Borders
+  border:          '#E8E7E2',
+  border2:         '#F0EFeb',
+
+  // Semantic
+  success:         '#1DAA60',
+  successLight:    '#E8F9F0',
+  danger:          '#E53935',
+  dangerLight:     '#FFEBEE',
+
+  // Heatmap (orange gradient)
+  heatmapNone:     '#E8E7E2',
+  heatmapLight:    '#FFD8C8',
+  heatmapModerate: '#FF9970',
+  heatmapHeavy:    '#FF5400',
+
+  // Category badges
+  catStrength:     { text: '#FF5400', bg: '#FFF0EC' },
+  catCardio:       { text: '#2563EB', bg: '#EFF6FF' },
+  catMobility:     { text: '#059669', bg: '#ECFDF5' },
+  catRecovery:     { text: '#7C3AED', bg: '#F5F3FF' },
 };

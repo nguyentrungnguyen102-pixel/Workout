@@ -30,7 +30,7 @@ function MetricCard({ label, value, unit, delta }: {
         {hasData && <Text style={styles.metricUnit}> {unit}</Text>}
       </Text>
       {delta !== undefined && (
-        <Text style={[styles.metricDelta, { color: delta < 0 ? COLORS.primary : COLORS.danger }]}>
+        <Text style={[styles.metricDelta, { color: delta < 0 ? COLORS.success : COLORS.danger }]}>
           {delta > 0 ? '+' : ''}{delta.toFixed(1)} {unit}
         </Text>
       )}
@@ -48,7 +48,7 @@ function BodyLogItem({ metric }: { metric: BodyMetric }) {
       <View style={styles.logValues}>
         {metric.weight && <Text style={styles.logValue}>{metric.weight} kg</Text>}
         {metric.bodyFatPercent && <Text style={styles.logValue}>{metric.bodyFatPercent}% fat</Text>}
-        {metric.waistCm && <Text style={styles.logValue}>{metric.waistCm} cm vòng bụng</Text>}
+        {metric.waistCm && <Text style={styles.logValue}>{metric.waistCm} cm</Text>}
       </View>
     </View>
   );
@@ -65,7 +65,6 @@ export default function BodyTrackingScreen() {
     if (uid) loadMetrics(uid);
   }, [uid]);
 
-  // Calculate delta from previous entry
   const prevMetric = metrics[1];
   const weightDelta =
     latestMetric?.weight && prevMetric?.weight
@@ -79,8 +78,9 @@ export default function BodyTrackingScreen() {
         <TouchableOpacity
           style={styles.addBtn}
           onPress={() => navigation.navigate('AddMetric')}
+          activeOpacity={0.7}
         >
-          <Ionicons name="add" size={22} color={COLORS.background} />
+          <Ionicons name="add" size={22} color="#fff" />
           <Text style={styles.addBtnText}>Cập nhật</Text>
         </TouchableOpacity>
       </View>
@@ -91,30 +91,17 @@ export default function BodyTrackingScreen() {
         contentContainerStyle={styles.list}
         ListHeaderComponent={
           <View>
-            {/* Current metrics summary */}
             <View style={styles.summaryRow}>
-              <MetricCard
-                label="Cân nặng"
-                value={latestMetric?.weight}
-                unit="kg"
-                delta={weightDelta}
-              />
-              <MetricCard
-                label="Body fat"
-                value={latestMetric?.bodyFatPercent}
-                unit="%"
-              />
-              <MetricCard
-                label="Vòng bụng"
-                value={latestMetric?.waistCm}
-                unit="cm"
-              />
+              <MetricCard label="Cân nặng" value={latestMetric?.weight} unit="kg" delta={weightDelta} />
+              <MetricCard label="Body fat" value={latestMetric?.bodyFatPercent} unit="%" />
+              <MetricCard label="Vòng bụng" value={latestMetric?.waistCm} unit="cm" />
             </View>
 
             {metrics.length === 0 && !loading && (
               <TouchableOpacity
                 style={styles.emptyState}
                 onPress={() => navigation.navigate('AddMetric')}
+                activeOpacity={0.7}
               >
                 <Text style={styles.emptyIcon}>📏</Text>
                 <Text style={styles.emptyTitle}>Bắt đầu theo dõi cơ thể</Text>
@@ -155,21 +142,22 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
   },
-  addBtnText: { fontSize: 14, fontWeight: '700', color: COLORS.background },
+  addBtnText: { fontSize: 14, fontWeight: '700', color: '#fff' },
 
   list: { paddingHorizontal: 20, paddingBottom: 32 },
 
-  summaryRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 20,
-  },
+  summaryRow: { flexDirection: 'row', gap: 10, marginBottom: 20 },
   metricCard: {
     flex: 1,
     backgroundColor: COLORS.cardBackground,
     borderRadius: 14,
     padding: 14,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 2,
   },
   metricLabel: { fontSize: 11, color: COLORS.textSecondary, fontWeight: '600', marginBottom: 6 },
   metricValue: { fontSize: 20, fontWeight: '700', color: COLORS.text },
@@ -187,12 +175,7 @@ const styles = StyleSheet.create({
   emptyTitle: { fontSize: 16, fontWeight: '700', color: COLORS.text },
   emptySubtitle: { fontSize: 13, color: COLORS.textSecondary, marginTop: 6 },
 
-  historyLabel: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: COLORS.text,
-    marginBottom: 12,
-  },
+  historyLabel: { fontSize: 16, fontWeight: '700', color: COLORS.text, marginBottom: 12 },
   logItem: {
     backgroundColor: COLORS.cardBackground,
     borderRadius: 12,
@@ -201,6 +184,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   logDate: { fontSize: 14, fontWeight: '600', color: COLORS.textSecondary },
   logValues: { flexDirection: 'row', gap: 10 },

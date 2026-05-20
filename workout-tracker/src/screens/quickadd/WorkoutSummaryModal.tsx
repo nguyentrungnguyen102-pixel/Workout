@@ -18,31 +18,112 @@ import { COLORS } from '../../constants/colors';
 import { Intensity } from '../../types/workout';
 
 const INTENSITY_OPTIONS: { label: string; value: Intensity; color: string; emoji: string }[] = [
-  { label: 'Nhẹ', value: 'light', color: '#4CAF50', emoji: '🟢' },
-  { label: 'Vừa', value: 'moderate', color: '#FF9800', emoji: '🟡' },
-  { label: 'Nặng', value: 'heavy', color: '#F44336', emoji: '🔴' },
+  { label: 'Nhẹ',  value: 'light',    color: COLORS.success,  emoji: '🟢' },
+  { label: 'Vừa',  value: 'moderate', color: '#FF9800',        emoji: '🟡' },
+  { label: 'Nặng', value: 'heavy',    color: COLORS.danger,   emoji: '🔴' },
 ];
 
-function ExerciseRow({ exercise, onRemove }: { exercise: any; onRemove: () => void }) {
+function getStep(unit: string) {
+  if (unit === 'seconds') return 15;
+  if (unit === 'minutes') return 5;
+  return 5; // reps
+}
+
+function ExerciseRow({
+  exercise,
+  onRemove,
+  onUpdate,
+}: {
+  exercise: any;
+  onRemove: () => void;
+  onUpdate: (updates: Partial<any>) => void;
+}) {
   const unit = exercise.unit;
-  const valueStr =
+  const step = getStep(unit);
+
+  const currentValue =
     unit === 'reps'
-      ? `${exercise.sets} × ${exercise.reps} reps`
-      : unit === 'seconds'
-      ? `${exercise.sets} × ${exercise.durationSeconds}s`
-      : unit === 'minutes'
-      ? `${Math.round((exercise.durationSeconds || 0) / 60)} phút`
-      : `${exercise.sets} sets`;
+      ? exercise.reps ?? 0
+      : Math.round((exercise.durationSeconds ?? 0) / (unit === 'minutes' ? 60 : 1));
+
+  const displayUnit =
+    unit === 'reps' ? 'reps' : unit === 'seconds' ? 'giây' : 'phút';
+
+  const handleDecrement = () => {
+    const next = Math.max(step, currentValue - step);
+    if (unit === 'reps') {
+      onUpdate({ reps: next });
+    } else {
+      onUpdate({ durationSeconds: next * (unit === 'minutes' ? 60 : 1) });
+    }
+  };
+
+  const handleIncrement = () => {
+    const next = currentValue + step;
+    if (unit === 'reps') {
+      onUpdate({ reps: next });
+    } else {
+      onUpdate({ durationSeconds: next * (unit === 'minutes' ? 60 : 1) });
+    }
+  };
+
+  const handleTextChange = (text: string) => {
+    const num = parseInt(text, 10);
+    if (isNaN(num) || num <= 0) return;
+    if (unit === 'reps') {
+      onUpdate({ reps: num });
+    } else {
+      onUpdate({ durationSeconds: num * (unit === 'minutes' ? 60 : 1) });
+    }
+  };
+
+  const handleSetsChange = (text: string) => {
+    const num = parseInt(text, 10);
+    if (!isNaN(num) && num > 0) onUpdate({ sets: num });
+  };
 
   return (
     <View style={styles.exerciseRow}>
-      <View style={styles.exerciseInfo}>
+      <View style={styles.exerciseTop}>
         <Text style={styles.exerciseName}>{exercise.name}</Text>
-        <Text style={styles.exerciseValue}>{valueStr}</Text>
+        <TouchableOpacity onPress={onRemove} style={styles.removeBtn} activeOpacity={0.7}>
+          <Ionicons name="trash-outline" size={18} color={COLORS.textMuted} />
+        </TouchableOpacity>
       </View>
-      <TouchableOpacity onPress={onRemove} style={styles.removeBtn}>
-        <Ionicons name="close-circle" size={22} color={COLORS.textSecondary} />
-      </TouchableOpacity>
+
+      <View style={styles.exerciseControls}>
+        {/* Sets (only for non-duration exercises) */}
+        {unit === 'reps' && (
+          <View style={styles.setsControl}>
+            <Text style={styles.controlLabel}>Sets</Text>
+            <TextInput
+              style={styles.setsInput}
+              value={String(exercise.sets ?? 3)}
+              onChangeText={handleSetsChange}
+              keyboardType="number-pad"
+              selectTextOnFocus
+            />
+          </View>
+        )}
+
+        {/* Stepper */}
+        <View style={styles.stepperRow}>
+          <TouchableOpacity style={styles.stepBtn} onPress={handleDecrement} activeOpacity={0.7}>
+            <Ionicons name="remove" size={20} color={COLORS.primary} />
+          </TouchableOpacity>
+          <TextInput
+            style={styles.stepValue}
+            value={String(currentValue)}
+            onChangeText={handleTextChange}
+            keyboardType="number-pad"
+            selectTextOnFocus
+          />
+          <Text style={styles.stepUnit}>{displayUnit}</Text>
+          <TouchableOpacity style={styles.stepBtn} onPress={handleIncrement} activeOpacity={0.7}>
+            <Ionicons name="add" size={20} color={COLORS.primary} />
+          </TouchableOpacity>
+        </View>
+      </View>
     </View>
   );
 }
@@ -56,6 +137,7 @@ export default function WorkoutSummaryModal() {
     setIntensity,
     setNotes,
     removeExercise,
+    updateExercise,
     logWorkout,
     resetDraft,
   } = useWorkoutStore();
@@ -96,11 +178,11 @@ export default function WorkoutSummaryModal() {
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
           <Ionicons name="chevron-down" size={28} color={COLORS.textSecondary} />
         </TouchableOpacity>
         <Text style={styles.title}>Xác nhận buổi tập</Text>
-        <TouchableOpacity onPress={handleDiscard}>
+        <TouchableOpacity onPress={handleDiscard} activeOpacity={0.7}>
           <Text style={styles.discardText}>Huỷ</Text>
         </TouchableOpacity>
       </View>
@@ -112,6 +194,7 @@ export default function WorkoutSummaryModal() {
           <TouchableOpacity
             style={styles.addExerciseBtn}
             onPress={() => navigation.navigate('ExercisePicker')}
+            activeOpacity={0.7}
           >
             <Ionicons name="add-circle-outline" size={24} color={COLORS.primary} />
             <Text style={styles.addExerciseBtnText}>Thêm bài tập</Text>
@@ -123,11 +206,13 @@ export default function WorkoutSummaryModal() {
                 key={ex.presetId}
                 exercise={ex}
                 onRemove={() => removeExercise(ex.presetId)}
+                onUpdate={(updates) => updateExercise(ex.presetId, updates)}
               />
             ))}
             <TouchableOpacity
               style={styles.addMoreBtn}
               onPress={() => navigation.navigate('ExercisePicker')}
+              activeOpacity={0.7}
             >
               <Ionicons name="add" size={18} color={COLORS.primary} />
               <Text style={styles.addMoreText}>Thêm bài tập</Text>
@@ -145,10 +230,11 @@ export default function WorkoutSummaryModal() {
                 styles.intensityBtn,
                 draft.intensity === opt.value && {
                   borderColor: opt.color,
-                  backgroundColor: `${opt.color}20`,
+                  backgroundColor: opt.color + '18',
                 },
               ]}
               onPress={() => setIntensity(opt.value)}
+              activeOpacity={0.7}
             >
               <Text style={styles.intensityEmoji}>{opt.emoji}</Text>
               <Text style={[styles.intensityLabel, draft.intensity === opt.value && { color: opt.color }]}>
@@ -163,7 +249,7 @@ export default function WorkoutSummaryModal() {
         <TextInput
           style={styles.notesInput}
           placeholder="Cảm giác hôm nay..."
-          placeholderTextColor={COLORS.textSecondary}
+          placeholderTextColor={COLORS.textMuted}
           value={draft.notes}
           onChangeText={setNotes}
           multiline
@@ -179,12 +265,13 @@ export default function WorkoutSummaryModal() {
           style={[styles.logBtn, (saving || draft.exercises.length === 0) && styles.logBtnDisabled]}
           onPress={handleLog}
           disabled={saving || draft.exercises.length === 0}
+          activeOpacity={0.8}
         >
           {saving ? (
-            <ActivityIndicator color="#000" />
+            <ActivityIndicator color="#fff" />
           ) : (
             <>
-              <Ionicons name="checkmark-circle" size={22} color="#000" />
+              <Ionicons name="checkmark-circle" size={22} color="#fff" />
               <Text style={styles.logBtnText}>
                 Log {draft.exercises.length} bài tập ✅
               </Text>
@@ -213,27 +300,86 @@ const styles = StyleSheet.create({
   content: { flex: 1, padding: 20 },
 
   sectionLabel: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '700',
     color: COLORS.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
     marginBottom: 10,
-    marginTop: 16,
+    marginTop: 20,
   },
 
   exerciseRow: {
+    backgroundColor: COLORS.cardBackground,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  exerciseTop: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.cardBackground,
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 8,
+    justifyContent: 'space-between',
+    marginBottom: 12,
   },
-  exerciseInfo: { flex: 1 },
-  exerciseName: { fontSize: 15, fontWeight: '700', color: COLORS.text },
-  exerciseValue: { fontSize: 13, color: COLORS.textSecondary, marginTop: 2 },
+  exerciseName: { fontSize: 15, fontWeight: '700', color: COLORS.text, flex: 1 },
   removeBtn: { padding: 4 },
+
+  exerciseControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  setsControl: { alignItems: 'center' },
+  controlLabel: { fontSize: 10, fontWeight: '600', color: COLORS.textSecondary, marginBottom: 4, textTransform: 'uppercase' },
+  setsInput: {
+    backgroundColor: COLORS.card2,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.text,
+    minWidth: 44,
+    textAlign: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+
+  stepperRow: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.card2,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    overflow: 'hidden',
+  },
+  stepBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  stepValue: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 18,
+    fontWeight: '800',
+    color: COLORS.primary,
+    paddingVertical: 8,
+  },
+  stepUnit: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    fontWeight: '600',
+    paddingRight: 8,
+  },
 
   addExerciseBtn: {
     flexDirection: 'row',
@@ -245,6 +391,7 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
     borderColor: COLORS.primary,
     paddingVertical: 18,
+    marginTop: 4,
   },
   addExerciseBtnText: { fontSize: 15, fontWeight: '600', color: COLORS.primary },
 
@@ -253,7 +400,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingVertical: 10,
+    paddingVertical: 12,
     marginTop: 4,
   },
   addMoreText: { fontSize: 14, color: COLORS.primary, fontWeight: '600' },
@@ -298,7 +445,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.33,
+    shadowRadius: 10,
+    elevation: 6,
   },
-  logBtnDisabled: { opacity: 0.5 },
-  logBtnText: { fontSize: 17, fontWeight: '800', color: '#000' },
+  logBtnDisabled: { opacity: 0.5, shadowOpacity: 0 },
+  logBtnText: { fontSize: 17, fontWeight: '800', color: '#fff' },
 });

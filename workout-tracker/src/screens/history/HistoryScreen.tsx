@@ -16,11 +16,10 @@ import { WorkoutLog } from '../../types/workout';
 import { COLORS } from '../../constants/colors';
 import { toLocalDateString } from '../../lib/date';
 
-// --- Heatmap component ---
+// --- Heatmap ---
 function HeatmapCalendar({ uid }: { uid: string }) {
   const { data, loading } = useHeatmap(uid);
 
-  // Build last 90 days array
   const days: string[] = [];
   for (let i = 89; i >= 0; i--) {
     const d = new Date();
@@ -32,10 +31,10 @@ function HeatmapCalendar({ uid }: { uid: string }) {
     const cell = data[date];
     if (!cell) return COLORS.heatmapNone;
     switch (cell.intensity) {
-      case 'light': return COLORS.heatmapLight;
+      case 'light':    return COLORS.heatmapLight;
       case 'moderate': return COLORS.heatmapModerate;
-      case 'heavy': return COLORS.heatmapHeavy;
-      default: return COLORS.heatmapNone;
+      case 'heavy':    return COLORS.heatmapHeavy;
+      default:         return COLORS.heatmapNone;
     }
   };
 
@@ -43,7 +42,6 @@ function HeatmapCalendar({ uid }: { uid: string }) {
     return <ActivityIndicator color={COLORS.primary} style={{ margin: 20 }} />;
   }
 
-  // Render as a grid: 13 rows × 7 cols (weeks in columns)
   const weeks: string[][] = [];
   for (let i = 0; i < days.length; i += 7) {
     weeks.push(days.slice(i, i + 7));
@@ -52,16 +50,6 @@ function HeatmapCalendar({ uid }: { uid: string }) {
   return (
     <View style={heatStyles.container}>
       <Text style={heatStyles.title}>90 ngày gần đây</Text>
-      <View style={heatStyles.legend}>
-        <View style={[heatStyles.legendDot, { backgroundColor: COLORS.heatmapNone }]} />
-        <Text style={heatStyles.legendText}>Nghỉ</Text>
-        <View style={[heatStyles.legendDot, { backgroundColor: COLORS.heatmapLight }]} />
-        <Text style={heatStyles.legendText}>Nhẹ</Text>
-        <View style={[heatStyles.legendDot, { backgroundColor: COLORS.heatmapModerate }]} />
-        <Text style={heatStyles.legendText}>Vừa</Text>
-        <View style={[heatStyles.legendDot, { backgroundColor: COLORS.heatmapHeavy }]} />
-        <Text style={heatStyles.legendText}>Nặng</Text>
-      </View>
       <View style={heatStyles.grid}>
         {weeks.map((week, wi) => (
           <View key={wi} style={heatStyles.week}>
@@ -73,6 +61,16 @@ function HeatmapCalendar({ uid }: { uid: string }) {
             ))}
           </View>
         ))}
+      </View>
+      <View style={heatStyles.legend}>
+        <View style={[heatStyles.legendDot, { backgroundColor: COLORS.heatmapNone }]} />
+        <Text style={heatStyles.legendText}>Nghỉ</Text>
+        <View style={[heatStyles.legendDot, { backgroundColor: COLORS.heatmapLight }]} />
+        <Text style={heatStyles.legendText}>Nhẹ</Text>
+        <View style={[heatStyles.legendDot, { backgroundColor: COLORS.heatmapModerate }]} />
+        <Text style={heatStyles.legendText}>Vừa</Text>
+        <View style={[heatStyles.legendDot, { backgroundColor: COLORS.heatmapHeavy }]} />
+        <Text style={heatStyles.legendText}>Nặng</Text>
       </View>
       <Text style={heatStyles.summary}>
         Đã tập {Object.keys(data).length} ngày trong 90 ngày qua
@@ -87,39 +85,44 @@ const heatStyles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 2,
   },
-  title: { fontSize: 14, fontWeight: '700', color: COLORS.text, marginBottom: 8 },
+  title: { fontSize: 14, fontWeight: '700', color: COLORS.text, marginBottom: 12 },
+  grid: { flexDirection: 'row', gap: 3, marginBottom: 10 },
+  week: { flexDirection: 'column', gap: 3 },
+  cell: { width: 12, height: 12, borderRadius: 2 },
   legend: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginBottom: 12,
+    marginBottom: 10,
   },
-  legendDot: { width: 12, height: 12, borderRadius: 3 },
-  legendText: { fontSize: 11, color: COLORS.textSecondary, marginRight: 6 },
-  grid: { flexDirection: 'row', gap: 3 },
-  week: { flexDirection: 'column', gap: 3 },
-  cell: { width: 12, height: 12, borderRadius: 2 },
-  summary: { fontSize: 12, color: COLORS.textSecondary, marginTop: 10 },
+  legendDot: { width: 10, height: 10, borderRadius: 2 },
+  legendText: { fontSize: 11, color: COLORS.textSecondary, marginRight: 4 },
+  summary: { fontSize: 12, color: COLORS.textSecondary },
 });
 
 // --- Log card ---
 function LogCard({ log, onPress }: { log: WorkoutLog; onPress: () => void }) {
   const dateObj = new Date(log.date + 'T00:00:00');
-  const dayName = dateObj.toLocaleDateString('vi-VN', { weekday: 'long' });
+  const dayName = dateObj.toLocaleDateString('vi-VN', { weekday: 'short' });
   const dateStr = dateObj.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
 
-  const intensityColors = {
-    light: COLORS.heatmapHeavy,
+  const intensityColor = {
+    light:    COLORS.success,
     moderate: '#FF9800',
-    heavy: '#F44336',
-  };
+    heavy:    COLORS.danger,
+  }[log.intensity] ?? COLORS.textSecondary;
 
   return (
-    <TouchableOpacity style={logStyles.card} onPress={onPress}>
+    <TouchableOpacity style={logStyles.card} onPress={onPress} activeOpacity={0.7}>
       <View style={logStyles.dateCol}>
         <Text style={logStyles.dateDay}>{dateStr}</Text>
-        <Text style={logStyles.dateDayName}>{dayName.charAt(0).toUpperCase() + dayName.slice(1)}</Text>
+        <Text style={logStyles.dateDayName}>{dayName}</Text>
       </View>
       <View style={logStyles.divider} />
       <View style={logStyles.info}>
@@ -128,7 +131,7 @@ function LogCard({ log, onPress }: { log: WorkoutLog; onPress: () => void }) {
         </Text>
         <View style={logStyles.meta}>
           <Text style={logStyles.metaText}>{log.totalDurationMinutes} phút</Text>
-          <View style={[logStyles.intensityDot, { backgroundColor: intensityColors[log.intensity] }]} />
+          <View style={[logStyles.intensityDot, { backgroundColor: intensityColor }]} />
           <Text style={logStyles.metaText}>{log.caloriesEstimate} kcal</Text>
         </View>
       </View>
@@ -145,6 +148,13 @@ const logStyles = StyleSheet.create({
     marginBottom: 10,
     alignItems: 'center',
     gap: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 2,
   },
   dateCol: { alignItems: 'center', minWidth: 44 },
   dateDay: { fontSize: 16, fontWeight: '700', color: COLORS.text },

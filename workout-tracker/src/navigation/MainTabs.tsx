@@ -13,9 +13,9 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 
 const ICONS: Record<string, [keyof typeof Ionicons.glyphMap, keyof typeof Ionicons.glyphMap]> = {
   QuickAdd: ['barbell', 'barbell-outline'],
-  History: ['calendar', 'calendar-outline'],
-  Body: ['body', 'body-outline'],
-  Stats: ['stats-chart', 'stats-chart-outline'],
+  History:  ['calendar', 'calendar-outline'],
+  Body:     ['body', 'body-outline'],
+  Stats:    ['stats-chart', 'stats-chart-outline'],
   Settings: ['settings', 'settings-outline'],
 };
 
@@ -25,10 +25,11 @@ export default function MainTabs() {
       screenOptions={({ route }: { route: { name: string } }) => ({
         headerShown: false,
         tabBarActiveTintColor: COLORS.primary,
-        tabBarInactiveTintColor: COLORS.textSecondary,
+        tabBarInactiveTintColor: COLORS.textMuted,
         tabBarStyle: {
-          backgroundColor: COLORS.background,
+          backgroundColor: '#FFFFFF',
           borderTopColor: COLORS.border,
+          borderTopWidth: 1,
           height: 80,
           paddingBottom: 20,
           paddingTop: 8,
@@ -39,10 +40,10 @@ export default function MainTabs() {
         },
       })}
     >
-      <Tab.Screen name="QuickAdd" component={QuickAddScreen} options={{ title: 'Quick Add' }} />
-      <Tab.Screen name="History" component={HistoryScreen} options={{ title: 'Lịch sử' }} />
-      <Tab.Screen name="Body" component={BodyTrackingScreen} options={{ title: 'Cơ thể' }} />
-      <Tab.Screen name="Stats" component={StatsScreen} options={{ title: 'Thống kê' }} />
+      <Tab.Screen name="QuickAdd" component={QuickAddScreen} options={{ title: 'Tập' }} />
+      <Tab.Screen name="History"  component={HistoryScreen}  options={{ title: 'Lịch sử' }} />
+      <Tab.Screen name="Body"     component={BodyTrackingScreen} options={{ title: 'Cơ thể' }} />
+      <Tab.Screen name="Stats"    component={StatsScreen}    options={{ title: 'Thống kê' }} />
       <Tab.Screen name="Settings" component={SettingsScreen} options={{ title: 'Cài đặt' }} />
     </Tab.Navigator>
   );

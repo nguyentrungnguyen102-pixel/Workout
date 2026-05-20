@@ -56,7 +56,7 @@ export default function AddMetricModal() {
         style={{ flex: 1 }}
       >
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
+          <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
             <Ionicons name="close" size={26} color={COLORS.textSecondary} />
           </TouchableOpacity>
           <Text style={styles.title}>Cập nhật chỉ số</Text>
@@ -73,7 +73,7 @@ export default function AddMetricModal() {
             <TextInput
               style={styles.input}
               placeholder="70.5"
-              placeholderTextColor={COLORS.textSecondary}
+              placeholderTextColor={COLORS.textMuted}
               value={weight}
               onChangeText={setWeight}
               keyboardType="decimal-pad"
@@ -86,7 +86,7 @@ export default function AddMetricModal() {
             <TextInput
               style={styles.input}
               placeholder="15.0"
-              placeholderTextColor={COLORS.textSecondary}
+              placeholderTextColor={COLORS.textMuted}
               value={bodyFat}
               onChangeText={setBodyFat}
               keyboardType="decimal-pad"
@@ -99,7 +99,7 @@ export default function AddMetricModal() {
             <TextInput
               style={styles.input}
               placeholder="80"
-              placeholderTextColor={COLORS.textSecondary}
+              placeholderTextColor={COLORS.textMuted}
               value={waist}
               onChangeText={setWaist}
               keyboardType="decimal-pad"
@@ -113,9 +113,10 @@ export default function AddMetricModal() {
             style={[styles.saveBtn, saving && styles.saveBtnDisabled]}
             onPress={handleSave}
             disabled={saving}
+            activeOpacity={0.8}
           >
             {saving ? (
-              <ActivityIndicator color="#000" />
+              <ActivityIndicator color="#fff" />
             ) : (
               <Text style={styles.saveBtnText}>Lưu chỉ số ✅</Text>
             )}
@@ -142,7 +143,7 @@ const styles = StyleSheet.create({
   date: { fontSize: 14, color: COLORS.textSecondary, marginBottom: 24 },
 
   field: { marginBottom: 20 },
-  label: { fontSize: 14, fontWeight: '600', color: COLORS.textSecondary, marginBottom: 8 },
+  label: { fontSize: 14, fontWeight: '600', color: COLORS.text, marginBottom: 8 },
   input: {
     backgroundColor: COLORS.cardBackground,
     borderRadius: 12,
@@ -161,7 +162,12 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingVertical: 18,
     alignItems: 'center',
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.33,
+    shadowRadius: 10,
+    elevation: 6,
   },
-  saveBtnDisabled: { opacity: 0.5 },
-  saveBtnText: { fontSize: 17, fontWeight: '800', color: '#000' },
+  saveBtnDisabled: { opacity: 0.5, shadowOpacity: 0 },
+  saveBtnText: { fontSize: 17, fontWeight: '800', color: '#fff' },
 });

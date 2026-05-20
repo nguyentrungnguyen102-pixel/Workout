@@ -17,9 +17,19 @@ import { WorkoutPreset, ExerciseCategory } from '../../types/workout';
 
 const CATEGORIES: ExerciseCategory[] = ['strength', 'cardio', 'mobility', 'recovery'];
 
+function getCategoryStyle(category: string) {
+  switch (category) {
+    case 'strength': return COLORS.catStrength;
+    case 'cardio':   return COLORS.catCardio;
+    case 'mobility': return COLORS.catMobility;
+    case 'recovery': return COLORS.catRecovery;
+    default:         return COLORS.catStrength;
+  }
+}
+
 export default function ExercisePickerModal() {
   const navigation = useNavigation<any>();
-  const { startDraft, addExercise, draft } = useWorkoutStore();
+  const { startDraft, addExercise, draft, yesterdayLog } = useWorkoutStore();
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState<ExerciseCategory | 'all'>('all');
 
@@ -40,18 +50,21 @@ export default function ExercisePickerModal() {
   const handleSelect = (preset: WorkoutPreset) => {
     if (isSelected(preset.id)) return;
     startDraft();
+    const suggested = yesterdayLog?.exercises.find((e) => e.presetId === preset.id);
     addExercise({
       presetId: preset.id,
       name: preset.nameVi,
       category: preset.category,
       unit: preset.unit,
-      sets: preset.defaultSets ?? 3,
-      reps: preset.unit === 'reps' ? preset.defaultValue : undefined,
+      sets: suggested?.sets ?? preset.defaultSets ?? 3,
+      reps: preset.unit === 'reps'
+        ? (suggested?.reps ?? preset.defaultValue)
+        : undefined,
       durationSeconds:
         preset.unit === 'seconds'
-          ? preset.defaultValue
+          ? (suggested?.durationSeconds ?? preset.defaultValue)
           : preset.unit === 'minutes'
-          ? preset.defaultValue * 60
+          ? (suggested?.durationSeconds ?? preset.defaultValue * 60)
           : undefined,
     });
     navigation.navigate('WorkoutSummary');
@@ -61,7 +74,7 @@ export default function ExercisePickerModal() {
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
           <Ionicons name="close" size={26} color={COLORS.textSecondary} />
         </TouchableOpacity>
         <Text style={styles.title}>Chọn bài tập</Text>
@@ -74,13 +87,13 @@ export default function ExercisePickerModal() {
         <TextInput
           style={styles.searchInput}
           placeholder="Tìm kiếm..."
-          placeholderTextColor={COLORS.textSecondary}
+          placeholderTextColor={COLORS.textMuted}
           value={search}
           onChangeText={setSearch}
           autoFocus
         />
         {search.length > 0 && (
-          <TouchableOpacity onPress={() => setSearch('')}>
+          <TouchableOpacity onPress={() => setSearch('')} activeOpacity={0.7}>
             <Ionicons name="close-circle" size={18} color={COLORS.textSecondary} />
           </TouchableOpacity>
         )}
@@ -93,16 +106,20 @@ export default function ExercisePickerModal() {
         keyExtractor={(item) => item}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.categoryList}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={[styles.categoryChip, activeCategory === item && styles.categoryChipActive]}
-            onPress={() => setActiveCategory(item as any)}
-          >
-            <Text style={[styles.categoryChipText, activeCategory === item && styles.categoryChipTextActive]}>
-              {item === 'all' ? 'Tất cả' : CATEGORY_LABELS[item]}
-            </Text>
-          </TouchableOpacity>
-        )}
+        renderItem={({ item }) => {
+          const active = activeCategory === item;
+          return (
+            <TouchableOpacity
+              style={[styles.categoryChip, active && styles.categoryChipActive]}
+              onPress={() => setActiveCategory(item as any)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.categoryChipText, active && styles.categoryChipTextActive]}>
+                {item === 'all' ? 'Tất cả' : CATEGORY_LABELS[item]}
+              </Text>
+            </TouchableOpacity>
+          );
+        }}
       />
 
       {/* Exercise list */}
@@ -112,21 +129,28 @@ export default function ExercisePickerModal() {
         contentContainerStyle={{ padding: 16 }}
         renderItem={({ item }) => {
           const selected = isSelected(item.id);
+          const cat = getCategoryStyle(item.category);
           return (
             <TouchableOpacity
               style={[styles.exerciseItem, selected && styles.exerciseItemSelected]}
               onPress={() => handleSelect(item)}
               disabled={selected}
+              activeOpacity={0.7}
             >
               <Text style={styles.exerciseIcon}>{item.icon}</Text>
               <View style={styles.exerciseInfo}>
                 <Text style={styles.exerciseName}>{item.nameVi}</Text>
-                <Text style={styles.exerciseSub}>
-                  {CATEGORY_LABELS[item.category]} · {item.defaultValue} {item.unit}
-                </Text>
+                <View style={[styles.catBadge, { backgroundColor: cat.bg }]}>
+                  <Text style={[styles.catBadgeText, { color: cat.text }]}>
+                    {CATEGORY_LABELS[item.category]}
+                  </Text>
+                </View>
               </View>
+              <Text style={styles.exerciseDefault}>
+                {item.defaultValue} {item.unit}
+              </Text>
               {selected && (
-                <Ionicons name="checkmark-circle" size={22} color={COLORS.primary} />
+                <Ionicons name="checkmark-circle" size={22} color={COLORS.primary} style={{ marginLeft: 8 }} />
               )}
             </TouchableOpacity>
           );
@@ -168,34 +192,37 @@ const styles = StyleSheet.create({
   categoryChip: {
     paddingHorizontal: 14,
     paddingVertical: 7,
-    borderRadius: 20,
+    borderRadius: 100,
     backgroundColor: COLORS.cardBackground,
     borderWidth: 1,
     borderColor: COLORS.border,
   },
   categoryChipActive: {
-    backgroundColor: COLORS.primaryDark,
+    backgroundColor: COLORS.primary,
     borderColor: COLORS.primary,
   },
   categoryChipText: { fontSize: 13, fontWeight: '600', color: COLORS.textSecondary },
-  categoryChipTextActive: { color: COLORS.primary },
+  categoryChipTextActive: { color: '#fff' },
 
   exerciseItem: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.cardBackground,
-    borderRadius: 12,
+    borderRadius: 14,
     padding: 14,
     marginBottom: 8,
     gap: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   exerciseItemSelected: {
-    borderWidth: 1.5,
     borderColor: COLORS.primary,
-    backgroundColor: COLORS.primaryDark,
+    backgroundColor: COLORS.primaryLight,
   },
   exerciseIcon: { fontSize: 26 },
   exerciseInfo: { flex: 1 },
-  exerciseName: { fontSize: 15, fontWeight: '700', color: COLORS.text },
-  exerciseSub: { fontSize: 12, color: COLORS.textSecondary, marginTop: 2 },
+  exerciseName: { fontSize: 15, fontWeight: '700', color: COLORS.text, marginBottom: 4 },
+  catBadge: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 100 },
+  catBadgeText: { fontSize: 10, fontWeight: '700' },
+  exerciseDefault: { fontSize: 12, color: COLORS.textSecondary, fontWeight: '600' },
 });
