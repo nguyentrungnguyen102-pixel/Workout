@@ -40,8 +40,9 @@ export default function StatsScreen() {
 
   const streak = profile?.streak?.current || 0;
   const longestStreak = profile?.streak?.longest || 0;
-  const weeklyPct = profile?.weeklyStats
-    ? Math.round((profile.weeklyStats.totalMinutes / profile.weeklyStats.targetMinutes) * 100)
+  const targetMinutes = profile?.weeklyStats?.targetMinutes || profile?.weeklyGoalMinutes || 150;
+  const weeklyPct = profile?.weeklyStats?.totalMinutes
+    ? Math.min(100, Math.round((profile.weeklyStats.totalMinutes / targetMinutes) * 100))
     : 0;
 
   const totalMinutesMonth = logs.reduce((s, l) => s + l.totalDurationMinutes, 0);
@@ -92,7 +93,7 @@ export default function StatsScreen() {
               <View style={[styles.progressFill, { width: `${Math.min(weeklyPct, 100)}%` as any }]} />
             </View>
             <Text style={styles.progressPct}>
-              {weeklyPct}% · {profile?.weeklyStats?.totalMinutes || 0}/{profile?.weeklyStats?.targetMinutes || 150} phút
+              {weeklyPct}% · {profile?.weeklyStats?.totalMinutes || 0}/{targetMinutes} phút
             </Text>
           </View>
 
@@ -100,7 +101,7 @@ export default function StatsScreen() {
           <Text style={styles.sectionTitle}>📊 30 ngày qua</Text>
           <View style={styles.statsRow}>
             <StatCard label="Tổng thời gian" value={totalMinutesMonth} unit="phút" icon="⏱️" />
-            <StatCard label="Calories" value={totalCaloriesMonth} unit="kcal" icon="🔥" />
+            <StatCard label="Calo" value={totalCaloriesMonth} unit="kcal" icon="🔥" />
           </View>
           <View style={styles.statsRow}>
             <StatCard label="Buổi tập" value={logs.length} unit="buổi" icon="💪" />

@@ -76,8 +76,6 @@ export default function QuickAddScreen() {
     addExercise,
     resetDraft,
     repeatYesterday,
-    loadYesterdayLog,
-    loadTodayLog,
     loadRecentLogs,
   } = useWorkoutStore();
 
@@ -87,8 +85,6 @@ export default function QuickAddScreen() {
   useFocusEffect(
     useCallback(() => {
       if (!uid) return;
-      loadYesterdayLog(uid);
-      loadTodayLog(uid);
       loadRecentLogs(uid);
     }, [uid])
   );
@@ -133,8 +129,9 @@ export default function QuickAddScreen() {
 
   const hasDraft = draft.exercises.length > 0;
   const streak = profile?.streak?.current || 0;
-  const weeklyPct = profile?.weeklyStats
-    ? Math.round((profile.weeklyStats.totalMinutes / profile.weeklyStats.targetMinutes) * 100)
+  const targetMinutes = profile?.weeklyStats?.targetMinutes || profile?.weeklyGoalMinutes || 150;
+  const weeklyPct = profile?.weeklyStats?.totalMinutes
+    ? Math.min(100, Math.round((profile.weeklyStats.totalMinutes / targetMinutes) * 100))
     : 0;
 
   const filteredPresets = SYSTEM_PRESETS.filter(

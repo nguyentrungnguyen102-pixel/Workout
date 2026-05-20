@@ -42,7 +42,23 @@ export const useUserStore = create<UserStore>((set, get) => ({
     try {
       const profile = await getUserProfile(uid);
       if (profile) {
-        set({ profile });
+        // Apply safe defaults for fields that may be missing in older Firestore docs
+        const safe = { ...profile };
+        safe.weeklyStats = {
+          ...profile.weeklyStats,
+          totalMinutes: profile.weeklyStats?.totalMinutes ?? 0,
+          sessionCount: profile.weeklyStats?.sessionCount ?? 0,
+          weekStartDate: profile.weeklyStats?.weekStartDate ?? '',
+          targetMinutes: profile.weeklyStats?.targetMinutes || profile.weeklyGoalMinutes || 150,
+        };
+        safe.streak = {
+          ...profile.streak,
+          current: profile.streak?.current ?? 0,
+          longest: profile.streak?.longest ?? 0,
+          lastWorkoutDate: profile.streak?.lastWorkoutDate ?? '',
+          streakStartDate: profile.streak?.streakStartDate ?? '',
+        };
+        set({ profile: safe });
       } else {
         const defaultProfile = buildDefault();
         try {

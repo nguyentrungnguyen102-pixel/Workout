@@ -6,18 +6,15 @@ import {
   getDocs,
   query,
   where,
-  orderBy,
   limit,
   serverTimestamp,
   increment,
   updateDoc,
-  Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { DraftWorkout, WorkoutLog, WorkoutPreset, Intensity } from '../types/workout';
 import { todayString, yesterdayString } from '../lib/date';
 
-// Returns intensity label and score (1-10) from exercises
 function deriveIntensity(exercises: WorkoutLog['exercises']): { intensity: Intensity; score: number } {
   const totalSets = exercises.reduce((s, e) => s + e.sets, 0);
   if (totalSets >= 12) return { intensity: 'heavy', score: 8 };
@@ -29,9 +26,6 @@ export async function logWorkout(uid: string, draft: DraftWorkout): Promise<stri
   if (draft.exercises.length === 0) throw new Error('No exercises');
 
   const date = todayString();
-  // One log per user per day — compound key
-  const logId = `${uid}_${date}`;
-  const logRef = doc(db, 'logs', logId);
 
   const totalDurationMinutes = draft.startedAt
     ? Math.max(1, Math.round((Date.now() - draft.startedAt.getTime()) / 60_000))
@@ -59,48 +53,25 @@ export async function logWorkout(uid: string, draft: DraftWorkout): Promise<stri
     return c;
   });
 
-  // Accumulate exercises: merge with existing day's log if it exists
-  const existingSnap = await getDoc(logRef);
-  let finalExercises = cleanExercises;
-  if (existingSnap.exists()) {
-    const existing = existingSnap.data() as WorkoutLog;
-    const newIds = new Set(cleanExercises.map((e) => e.presetId));
-    const kept = existing.exercises.filter((e) => !newIds.has(e.presetId));
-    finalExercises = [...kept, ...cleanExercises];
-  }
+  // Each log call creates a new document (multiple logs per day supported)
+  const logRef = doc(collection(db, 'logs'));
+  const logData: Record<string, any> = {
+    id: logRef.id,
+    userId: uid,
+    date,
+    exercises: cleanExercises,
+    totalDurationMinutes: Math.round(totalDurationMinutes),
+    intensityScore: score,
+    intensity: draft.intensity || intensity,
+    caloriesEstimate,
+    source: 'manual',
+    syncedToSheets: false,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  };
+  if (draft.notes) logData.notes = draft.notes;
 
-  const { intensity: finalIntensity, score: finalScore } = deriveIntensity(finalExercises as WorkoutLog['exercises']);
-  const finalCalories = Math.round(totalDurationMinutes * 7);
-
-  if (existingSnap.exists()) {
-    const updateData: Record<string, any> = {
-      exercises: finalExercises,
-      totalDurationMinutes: Math.round(totalDurationMinutes),
-      intensityScore: finalScore,
-      intensity: draft.intensity || finalIntensity,
-      caloriesEstimate: finalCalories,
-      updatedAt: serverTimestamp(),
-    };
-    if (draft.notes) updateData.notes = draft.notes;
-    await updateDoc(logRef, updateData);
-  } else {
-    const logData: Record<string, any> = {
-      userId: uid,
-      date,
-      exercises: finalExercises,
-      totalDurationMinutes: Math.round(totalDurationMinutes),
-      intensityScore: finalScore,
-      intensity: draft.intensity || finalIntensity,
-      caloriesEstimate: finalCalories,
-      source: 'manual',
-      syncedToSheets: false,
-      id: logId,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    };
-    if (draft.notes) logData.notes = draft.notes;
-    await setDoc(logRef, logData);
-  }
+  await setDoc(logRef, logData);
 
   // Increment usageCount on presets
   await Promise.all(
@@ -108,27 +79,14 @@ export async function logWorkout(uid: string, draft: DraftWorkout): Promise<stri
       updateDoc(doc(db, 'workouts', e.presetId), {
         usageCount: increment(1),
         lastUsedAt: todayString(),
-      }).catch(() => null) // preset may not exist in Firestore yet for system presets
+      }).catch(() => null)
     )
   );
 
-  return logId;
-}
-
-export async function getTodayLog(uid: string): Promise<WorkoutLog | null> {
-  const logId = `${uid}_${todayString()}`;
-  const snap = await getDoc(doc(db, 'logs', logId));
-  return snap.exists() ? (snap.data() as WorkoutLog) : null;
-}
-
-export async function getYesterdayLog(uid: string): Promise<WorkoutLog | null> {
-  const logId = `${uid}_${yesterdayString()}`;
-  const snap = await getDoc(doc(db, 'logs', logId));
-  return snap.exists() ? (snap.data() as WorkoutLog) : null;
+  return logRef.id;
 }
 
 export async function getRecentLogs(uid: string, count = 10): Promise<WorkoutLog[]> {
-  // No orderBy — avoids composite index requirement; sort client-side
   const q = query(
     collection(db, 'logs'),
     where('userId', '==', uid),
@@ -142,7 +100,6 @@ export async function getRecentLogs(uid: string, count = 10): Promise<WorkoutLog
 }
 
 export async function getLogsForHeatmap(uid: string, startDate: string): Promise<WorkoutLog[]> {
-  // Single where clause only — avoids composite index; filter date client-side
   const q = query(
     collection(db, 'logs'),
     where('userId', '==', uid),
