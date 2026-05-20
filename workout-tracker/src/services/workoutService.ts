@@ -44,7 +44,7 @@ export async function logWorkout(uid: string, draft: DraftWorkout): Promise<stri
   const { intensity, score } = deriveIntensity(draft.exercises);
   const caloriesEstimate = Math.round(totalDurationMinutes * 7);
 
-  const logData: Omit<WorkoutLog, 'id'> = {
+  const logData: Record<string, any> = {
     userId: uid,
     date,
     exercises: draft.exercises,
@@ -52,14 +52,17 @@ export async function logWorkout(uid: string, draft: DraftWorkout): Promise<stri
     intensityScore: score,
     intensity: draft.intensity || intensity,
     caloriesEstimate,
-    notes: draft.notes || undefined,
     source: 'manual',
     syncedToSheets: false,
+    id: logId,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
   };
+  if (draft.notes) logData.notes = draft.notes;
 
   await setDoc(
     logRef,
-    { ...logData, id: logId, createdAt: serverTimestamp(), updatedAt: serverTimestamp() },
+    logData,
     { merge: true }
   );
 
