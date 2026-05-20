@@ -44,10 +44,26 @@ export async function logWorkout(uid: string, draft: DraftWorkout): Promise<stri
   const { intensity, score } = deriveIntensity(draft.exercises);
   const caloriesEstimate = Math.round(totalDurationMinutes * 7);
 
+  // Strip undefined fields from each exercise — Firestore rejects undefined values
+  const cleanExercises = draft.exercises.map((e) => {
+    const c: Record<string, any> = {
+      presetId: e.presetId,
+      name: e.name,
+      category: e.category,
+      unit: e.unit,
+      sets: e.sets ?? 1,
+    };
+    if (e.reps !== undefined) c.reps = e.reps;
+    if (e.durationSeconds !== undefined) c.durationSeconds = e.durationSeconds;
+    if (e.weight !== undefined) c.weight = e.weight;
+    if (e.distance !== undefined) c.distance = e.distance;
+    return c;
+  });
+
   const logData: Record<string, any> = {
     userId: uid,
     date,
-    exercises: draft.exercises,
+    exercises: cleanExercises,
     totalDurationMinutes: Math.round(totalDurationMinutes),
     intensityScore: score,
     intensity: draft.intensity || intensity,
