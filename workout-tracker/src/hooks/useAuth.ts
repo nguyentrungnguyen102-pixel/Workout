@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 import { onAuthStateChanged } from 'firebase/auth';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
+import Constants from 'expo-constants';
 import { auth } from '../services/firebase';
 import { useUserStore } from '../stores/userStore';
 import { saveFcmToken } from '../services/userService';
@@ -19,6 +20,8 @@ Notifications.setNotificationHandler({
 
 async function registerForPushNotifications(uid: string): Promise<void> {
   if (!Device.isDevice) return;
+  // expo-notifications is not available in Expo Go (SDK 53+)
+  if ((Constants as any).executionEnvironment === 'storeClient') return;
 
   try {
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
@@ -64,5 +67,5 @@ export function useAuth() {
     return unsub;
   }, []);
 
-  return { user: firebaseUser, profile, loading };
+  return { user: firebaseUser, profile, loading: loading || (!!firebaseUser && !profile) };
 }

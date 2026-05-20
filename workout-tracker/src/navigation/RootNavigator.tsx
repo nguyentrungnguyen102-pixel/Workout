@@ -7,6 +7,7 @@ import { RootStackParamList } from './types';
 import { COLORS } from '../constants/colors';
 import MainTabs from './MainTabs';
 import LoginScreen from '../screens/auth/LoginScreen';
+import OnboardingScreen from '../screens/onboarding/OnboardingScreen';
 import WorkoutSummaryModal from '../screens/quickadd/WorkoutSummaryModal';
 import ExercisePickerModal from '../screens/quickadd/ExercisePickerModal';
 import HistoryDetailScreen from '../screens/history/HistoryDetailScreen';
@@ -15,7 +16,7 @@ import AddMetricModal from '../screens/body/AddMetricModal';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function RootNavigator() {
-  const { user, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
 
   if (loading) {
     return (
@@ -25,10 +26,16 @@ export default function RootNavigator() {
     );
   }
 
+  const needsOnboarding = user && profile && !profile.onboardingDone;
+
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: COLORS.background } }}>
-        {user ? (
+        {!user ? (
+          <Stack.Screen name="Auth" component={LoginScreen} />
+        ) : needsOnboarding ? (
+          <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+        ) : (
           <>
             <Stack.Screen name="Main" component={MainTabs} />
             <Stack.Screen
@@ -48,8 +55,6 @@ export default function RootNavigator() {
               options={{ presentation: 'modal' }}
             />
           </>
-        ) : (
-          <Stack.Screen name="Auth" component={LoginScreen} />
         )}
       </Stack.Navigator>
     </NavigationContainer>

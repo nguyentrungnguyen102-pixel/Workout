@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useWorkoutStore } from '../../stores/workoutStore';
@@ -71,27 +71,32 @@ export default function QuickAddScreen() {
     draft,
     yesterdayLog,
     todayLog,
+    recentLogs,
     startDraft,
     addExercise,
     resetDraft,
     repeatYesterday,
-    loadYesterdayLog,
-    loadTodayLog,
+    loadRecentLogs,
   } = useWorkoutStore();
 
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>('all');
   const uid = profile?.uid;
 
-  useEffect(() => {
-    if (!uid) return;
-    loadYesterdayLog(uid);
-    loadTodayLog(uid);
-  }, [uid]);
+  useFocusEffect(
+    useCallback(() => {
+      if (!uid) return;
+      loadRecentLogs(uid);
+    }, [uid])
+  );
 
+  // Scan all recent logs (sorted desc) to find most recent value for this exercise
   const getSuggestedValue = useCallback((preset: WorkoutPreset) => {
-    if (!yesterdayLog) return null;
-    return yesterdayLog.exercises.find((e) => e.presetId === preset.id) ?? null;
-  }, [yesterdayLog]);
+    for (const log of recentLogs) {
+      const entry = log.exercises.find((e) => e.presetId === preset.id);
+      if (entry) return entry;
+    }
+    return null;
+  }, [recentLogs]);
 
   const handlePresetTap = useCallback(
     (preset: WorkoutPreset) => {
@@ -124,8 +129,9 @@ export default function QuickAddScreen() {
 
   const hasDraft = draft.exercises.length > 0;
   const streak = profile?.streak?.current || 0;
-  const weeklyPct = profile?.weeklyStats
-    ? Math.round((profile.weeklyStats.totalMinutes / profile.weeklyStats.targetMinutes) * 100)
+  const targetMinutes = profile?.weeklyStats?.targetMinutes || profile?.weeklyGoalMinutes || 150;
+  const weeklyPct = profile?.weeklyStats?.totalMinutes
+    ? Math.min(100, Math.round((profile.weeklyStats.totalMinutes / targetMinutes) * 100))
     : 0;
 
   const filteredPresets = SYSTEM_PRESETS.filter(
