@@ -4,6 +4,7 @@ echo.
 cd /d %~dp0
 
 echo [1/4] Pulling latest code...
+git checkout -- package-lock.json 2>nul
 git pull
 if %ERRORLEVEL% NEQ 0 (
   echo.
