@@ -37,7 +37,6 @@ export const db = getFirestore(app);
 if (USE_EMULATOR) {
   const host =
     Constants.expoConfig?.hostUri?.split(':')[0] ||
-    Constants.manifest?.debuggerHost?.split(':')[0] ||
     'localhost';
 
   connectAuthEmulator(auth, `http://${host}:9099`, { disableWarnings: true });

@@ -1,5 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { View, ActivityIndicator } from 'react-native';
 import {
   useFonts,
@@ -33,8 +34,10 @@ export default function App() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <StatusBar style="dark" />
-      <RootNavigator />
+      <SafeAreaProvider>
+        <StatusBar style="dark" />
+        <RootNavigator />
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }
