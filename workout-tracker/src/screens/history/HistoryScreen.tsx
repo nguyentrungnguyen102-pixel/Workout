@@ -181,6 +181,7 @@ export default function HistoryScreen() {
     setLoading(true);
     getRecentLogs(uid, 20)
       .then(setLogs)
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, [uid]);
 

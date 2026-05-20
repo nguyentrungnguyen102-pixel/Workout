@@ -24,6 +24,8 @@ export const useBodyStore = create<BodyStore>((set, get) => ({
         getLatestBodyMetric(uid),
       ]);
       set({ metrics, latestMetric: latest });
+    } catch {
+      // Firestore unavailable — keep empty state
     } finally {
       set({ loading: false });
     }

@@ -17,24 +17,28 @@ export async function addBodyMetric(
   uid: string,
   data: Omit<BodyMetric, 'id' | 'userId' | 'date' | 'createdAt'>
 ): Promise<string> {
-  const ref = await addDoc(collection(db, 'bodyMetrics'), {
-    ...data,
-    userId: uid,
-    date: todayString(),
-    createdAt: serverTimestamp(),
-  });
+  // Strip undefined fields — Firestore rejects them
+  const clean: Record<string, any> = { userId: uid, date: todayString(), createdAt: serverTimestamp() };
+  if (data.weight !== undefined) clean.weight = data.weight;
+  if (data.bodyFatPercent !== undefined) clean.bodyFatPercent = data.bodyFatPercent;
+  if (data.waistCm !== undefined) clean.waistCm = data.waistCm;
+
+  const ref = await addDoc(collection(db, 'bodyMetrics'), clean);
   return ref.id;
 }
 
 export async function getBodyMetrics(uid: string, count = 30): Promise<BodyMetric[]> {
+  // No orderBy — avoids composite index requirement; sort client-side
   const q = query(
     collection(db, 'bodyMetrics'),
     where('userId', '==', uid),
-    orderBy('date', 'desc'),
-    limit(count)
+    limit(100)
   );
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as BodyMetric));
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() } as BodyMetric))
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, count);
 }
 
 export async function getLatestBodyMetric(uid: string): Promise<BodyMetric | null> {

@@ -28,6 +28,7 @@ export function useHeatmap(uid?: string) {
         });
         setData(map);
       })
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, [uid]);
 

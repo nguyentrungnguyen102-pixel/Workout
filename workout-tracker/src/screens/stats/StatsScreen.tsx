@@ -31,7 +31,7 @@ export default function StatsScreen() {
   useEffect(() => {
     if (!uid) return;
     setLoading(true);
-    getRecentLogs(uid, 30).then(setLogs).finally(() => setLoading(false));
+    getRecentLogs(uid, 30).then(setLogs).catch(() => {}).finally(() => setLoading(false));
   }, [uid]);
 
   const streak = profile?.streak?.current || 0;

@@ -108,25 +108,31 @@ export async function getYesterdayLog(uid: string): Promise<WorkoutLog | null> {
 }
 
 export async function getRecentLogs(uid: string, count = 10): Promise<WorkoutLog[]> {
+  // No orderBy — avoids composite index requirement; sort client-side
   const q = query(
     collection(db, 'logs'),
     where('userId', '==', uid),
-    orderBy('date', 'desc'),
-    limit(count)
+    limit(200)
   );
   const snap = await getDocs(q);
-  return snap.docs.map((d) => d.data() as WorkoutLog);
+  return snap.docs
+    .map((d) => d.data() as WorkoutLog)
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, count);
 }
 
 export async function getLogsForHeatmap(uid: string, startDate: string): Promise<WorkoutLog[]> {
+  // Single where clause only — avoids composite index; filter date client-side
   const q = query(
     collection(db, 'logs'),
     where('userId', '==', uid),
-    where('date', '>=', startDate),
-    orderBy('date', 'asc')
+    limit(200)
   );
   const snap = await getDocs(q);
-  return snap.docs.map((d) => d.data() as WorkoutLog);
+  return snap.docs
+    .map((d) => d.data() as WorkoutLog)
+    .filter((log) => log.date >= startDate)
+    .sort((a, b) => a.date.localeCompare(b.date));
 }
 
 export function buildDraftFromLog(log: WorkoutLog): DraftWorkout {
