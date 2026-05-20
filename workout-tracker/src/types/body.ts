@@ -5,8 +5,8 @@ export interface BodyMetric {
   userId: string;
   date: string;
   weight?: number;
-  bodyFatPercent?: number;
-  waistCm?: number;
+  chestCm?: number;
+  hipCm?: number;
   notes?: string;
   createdAt?: Timestamp;
 }

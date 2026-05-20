@@ -29,7 +29,7 @@ export async function logWorkout(uid: string, draft: DraftWorkout): Promise<stri
   if (draft.exercises.length === 0) throw new Error('No exercises');
 
   const date = todayString();
-  // One log per user per day — compound key for upsert
+  // One log per user per day — compound key
   const logId = `${uid}_${date}`;
   const logRef = doc(db, 'logs', logId);
 
@@ -38,13 +38,12 @@ export async function logWorkout(uid: string, draft: DraftWorkout): Promise<stri
     : draft.exercises.reduce((sum, e) => {
         if (e.unit === 'minutes') return sum + e.durationSeconds! / 60;
         if (e.unit === 'seconds') return sum + (e.durationSeconds || 0) / 60;
-        return sum + 3; // estimate 3 min per strength exercise
+        return sum + 3;
       }, 0);
 
   const { intensity, score } = deriveIntensity(draft.exercises);
   const caloriesEstimate = Math.round(totalDurationMinutes * 7);
 
-  // Strip undefined fields from each exercise — Firestore rejects undefined values
   const cleanExercises = draft.exercises.map((e) => {
     const c: Record<string, any> = {
       presetId: e.presetId,
@@ -60,27 +59,48 @@ export async function logWorkout(uid: string, draft: DraftWorkout): Promise<stri
     return c;
   });
 
-  const logData: Record<string, any> = {
-    userId: uid,
-    date,
-    exercises: cleanExercises,
-    totalDurationMinutes: Math.round(totalDurationMinutes),
-    intensityScore: score,
-    intensity: draft.intensity || intensity,
-    caloriesEstimate,
-    source: 'manual',
-    syncedToSheets: false,
-    id: logId,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  };
-  if (draft.notes) logData.notes = draft.notes;
+  // Accumulate exercises: merge with existing day's log if it exists
+  const existingSnap = await getDoc(logRef);
+  let finalExercises = cleanExercises;
+  if (existingSnap.exists()) {
+    const existing = existingSnap.data() as WorkoutLog;
+    const newIds = new Set(cleanExercises.map((e) => e.presetId));
+    const kept = existing.exercises.filter((e) => !newIds.has(e.presetId));
+    finalExercises = [...kept, ...cleanExercises];
+  }
 
-  await setDoc(
-    logRef,
-    logData,
-    { merge: true }
-  );
+  const { intensity: finalIntensity, score: finalScore } = deriveIntensity(finalExercises as WorkoutLog['exercises']);
+  const finalCalories = Math.round(totalDurationMinutes * 7);
+
+  if (existingSnap.exists()) {
+    const updateData: Record<string, any> = {
+      exercises: finalExercises,
+      totalDurationMinutes: Math.round(totalDurationMinutes),
+      intensityScore: finalScore,
+      intensity: draft.intensity || finalIntensity,
+      caloriesEstimate: finalCalories,
+      updatedAt: serverTimestamp(),
+    };
+    if (draft.notes) updateData.notes = draft.notes;
+    await updateDoc(logRef, updateData);
+  } else {
+    const logData: Record<string, any> = {
+      userId: uid,
+      date,
+      exercises: finalExercises,
+      totalDurationMinutes: Math.round(totalDurationMinutes),
+      intensityScore: finalScore,
+      intensity: draft.intensity || finalIntensity,
+      caloriesEstimate: finalCalories,
+      source: 'manual',
+      syncedToSheets: false,
+      id: logId,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    if (draft.notes) logData.notes = draft.notes;
+    await setDoc(logRef, logData);
+  }
 
   // Increment usageCount on presets
   await Promise.all(
