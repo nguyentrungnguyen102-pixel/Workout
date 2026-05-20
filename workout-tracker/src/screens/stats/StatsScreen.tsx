@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import { useUserStore } from '../../stores/userStore';
 import { getRecentLogs } from '../../services/workoutService';
 import { WorkoutLog } from '../../types/workout';
@@ -22,17 +23,20 @@ function StatCard({ label, value, unit, icon }: {
 }
 
 export default function StatsScreen() {
-  const { profile } = useUserStore();
+  const { profile, loadProfile } = useUserStore();
   const [logs, setLogs] = useState<WorkoutLog[]>([]);
   const [loading, setLoading] = useState(false);
 
   const uid = profile?.uid;
 
-  useEffect(() => {
-    if (!uid) return;
-    setLoading(true);
-    getRecentLogs(uid, 30).then(setLogs).catch(() => {}).finally(() => setLoading(false));
-  }, [uid]);
+  useFocusEffect(
+    useCallback(() => {
+      if (!uid) return;
+      setLoading(true);
+      loadProfile(uid).catch(() => {});
+      getRecentLogs(uid, 30).then(setLogs).catch(() => {}).finally(() => setLoading(false));
+    }, [uid])
+  );
 
   const streak = profile?.streak?.current || 0;
   const longestStreak = profile?.streak?.longest || 0;

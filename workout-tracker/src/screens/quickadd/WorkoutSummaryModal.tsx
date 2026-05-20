@@ -47,7 +47,7 @@ function ExerciseRow({
       : Math.round((exercise.durationSeconds ?? 0) / (unit === 'minutes' ? 60 : 1));
 
   const displayUnit =
-    unit === 'reps' ? 'reps' : unit === 'seconds' ? 'giây' : 'phút';
+    unit === 'reps' ? 'lần' : unit === 'seconds' ? 'giây' : 'phút';
 
   const handleDecrement = () => {
     const next = Math.max(step, currentValue - step);
@@ -95,7 +95,7 @@ function ExerciseRow({
         {/* Sets (only for non-duration exercises) */}
         {unit === 'reps' && (
           <View style={styles.setsControl}>
-            <Text style={styles.controlLabel}>Sets</Text>
+            <Text style={styles.controlLabel}>Hiệp</Text>
             <TextInput
               style={styles.setsInput}
               value={String(exercise.sets ?? 3)}
@@ -130,7 +130,7 @@ function ExerciseRow({
 
 export default function WorkoutSummaryModal() {
   const navigation = useNavigation<any>();
-  const { profile } = useUserStore();
+  const { profile, loadProfile } = useUserStore();
   const {
     draft,
     isLogging,
@@ -152,6 +152,7 @@ export default function WorkoutSummaryModal() {
     setSaving(true);
     try {
       await logWorkout(profile.uid);
+      await loadProfile(profile.uid);
       navigation.navigate('Main');
     } catch (err) {
       Alert.alert('Lỗi', 'Không lưu được. Thử lại nhé!');
@@ -223,25 +224,25 @@ export default function WorkoutSummaryModal() {
         {/* Intensity picker */}
         <Text style={styles.sectionLabel}>Cường độ</Text>
         <View style={styles.intensityRow}>
-          {INTENSITY_OPTIONS.map((opt) => (
-            <TouchableOpacity
-              key={opt.value}
-              style={[
-                styles.intensityBtn,
-                draft.intensity === opt.value && {
-                  borderColor: opt.color,
-                  backgroundColor: opt.color + '18',
-                },
-              ]}
-              onPress={() => setIntensity(opt.value)}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.intensityEmoji}>{opt.emoji}</Text>
-              <Text style={[styles.intensityLabel, draft.intensity === opt.value && { color: opt.color }]}>
-                {opt.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
+          {INTENSITY_OPTIONS.map((opt) => {
+            const active = draft.intensity === opt.value;
+            return (
+              <TouchableOpacity
+                key={opt.value}
+                style={[
+                  styles.intensityBtn,
+                  active && { borderColor: opt.color, backgroundColor: opt.color },
+                ]}
+                onPress={() => setIntensity(opt.value)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.intensityEmoji}>{opt.emoji}</Text>
+                <Text style={[styles.intensityLabel, active && { color: '#fff', fontWeight: '800' }]}>
+                  {opt.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
         {/* Notes */}

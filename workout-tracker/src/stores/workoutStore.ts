@@ -6,7 +6,7 @@ import {
   WorkoutLog,
   WorkoutPreset,
 } from '../types/workout';
-import { logWorkout as saveLog, getYesterdayLog, getTodayLog } from '../services/workoutService';
+import { logWorkout as saveLog, getYesterdayLog, getTodayLog, getRecentLogs } from '../services/workoutService';
 import { updateStreakAfterLog, updateWeeklyMinutes } from '../services/userService';
 
 interface WorkoutStore {
@@ -34,6 +34,7 @@ interface WorkoutStore {
   repeatYesterday: (uid: string) => Promise<void>;
   loadYesterdayLog: (uid: string) => Promise<void>;
   loadTodayLog: (uid: string) => Promise<void>;
+  loadRecentLogs: (uid: string) => Promise<void>;
 }
 
 const emptyDraft = (): DraftWorkout => ({
@@ -143,5 +144,10 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
   loadTodayLog: async (uid) => {
     const log = await getTodayLog(uid);
     set({ todayLog: log });
+  },
+
+  loadRecentLogs: async (uid) => {
+    const logs = await getRecentLogs(uid, 30);
+    set({ recentLogs: logs });
   },
 }));

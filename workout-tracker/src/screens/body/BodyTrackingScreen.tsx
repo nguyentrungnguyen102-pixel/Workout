@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useBodyStore } from '../../stores/bodyStore';
 import { useUserStore } from '../../stores/userStore';
@@ -237,8 +237,8 @@ function BodyLogItem({ metric }: { metric: BodyMetric }) {
       <Text style={styles.logDate}>{dateStr}</Text>
       <View style={styles.logValues}>
         {metric.weight != null && <Text style={styles.logValue}>{metric.weight} kg</Text>}
-        {metric.bodyFatPercent != null && <Text style={styles.logValue}>{metric.bodyFatPercent}% fat</Text>}
-        {metric.waistCm != null && <Text style={styles.logValue}>{metric.waistCm} cm</Text>}
+        {metric.chestCm != null && <Text style={styles.logValue}>Ngực {metric.chestCm} cm</Text>}
+        {metric.hipCm != null && <Text style={styles.logValue}>Mông {metric.hipCm} cm</Text>}
       </View>
     </View>
   );
@@ -251,9 +251,11 @@ export default function BodyTrackingScreen() {
 
   const uid = profile?.uid;
 
-  useEffect(() => {
-    if (uid) loadMetrics(uid);
-  }, [uid]);
+  useFocusEffect(
+    useCallback(() => {
+      if (uid) loadMetrics(uid);
+    }, [uid])
+  );
 
   // Calculate delta from previous entry
   const prevMetric = metrics[1];
@@ -293,13 +295,13 @@ export default function BodyTrackingScreen() {
                 delta={weightDelta}
               />
               <MetricCard
-                label="Body fat"
-                value={latestMetric?.bodyFatPercent}
-                unit="%"
+                label="Vòng ngực"
+                value={latestMetric?.chestCm}
+                unit="cm"
               />
               <MetricCard
-                label="Vòng bụng"
-                value={latestMetric?.waistCm}
+                label="Vòng mông"
+                value={latestMetric?.hipCm}
                 unit="cm"
               />
             </View>
