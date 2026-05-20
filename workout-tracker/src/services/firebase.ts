@@ -32,15 +32,18 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 
 // Connect to local emulators when in dev mode.
-// Uses the Expo dev server host so the phone can reach the emulator
-// on the same WiFi (hostUri = "192.168.x.x:8081").
+// try/catch guards against "already connected" on hot reload.
 if (USE_EMULATOR) {
   const host =
     Constants.expoConfig?.hostUri?.split(':')[0] ||
     'localhost';
 
-  connectAuthEmulator(auth, `http://${host}:9099`, { disableWarnings: true });
-  connectFirestoreEmulator(db, host, 8080);
+  try {
+    connectAuthEmulator(auth, `http://${host}:9099`, { disableWarnings: true });
+  } catch { /* already connected */ }
+  try {
+    connectFirestoreEmulator(db, host, 8080);
+  } catch { /* already connected */ }
 }
 
 export default app;

@@ -40,13 +40,24 @@ export default function LoginScreen() {
         await signInWithEmailAndPassword(auth, email, password);
       }
     } catch (err: any) {
-      const msg = err.code === 'auth/user-not-found'
-        ? 'Email không tồn tại'
-        : err.code === 'auth/wrong-password'
-        ? 'Mật khẩu sai'
-        : err.code === 'auth/email-already-in-use'
-        ? 'Email đã được sử dụng'
-        : 'Đăng nhập thất bại. Thử lại!';
+      const code = err.code || '';
+      const msg =
+        code === 'auth/invalid-credential' ||
+        code === 'auth/user-not-found' ||
+        code === 'auth/wrong-password' ||
+        code === 'auth/invalid-login-credentials'
+          ? 'Email hoặc mật khẩu không đúng'
+          : code === 'auth/email-already-in-use'
+          ? 'Email đã được sử dụng'
+          : code === 'auth/weak-password'
+          ? 'Mật khẩu phải có ít nhất 6 ký tự'
+          : code === 'auth/invalid-email'
+          ? 'Email không hợp lệ'
+          : code === 'auth/too-many-requests'
+          ? 'Quá nhiều lần thử. Vui lòng thử lại sau'
+          : code === 'auth/network-request-failed'
+          ? 'Lỗi kết nối mạng. Kiểm tra WiFi và thử lại'
+          : `Lỗi: ${code || err.message}`;
       Alert.alert('Lỗi', msg);
     } finally {
       setLoading(false);
