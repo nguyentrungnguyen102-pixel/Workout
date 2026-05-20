@@ -24,6 +24,7 @@ interface WorkoutStore {
   addExercise: (exercise: ExerciseEntry) => void;
   removeExercise: (presetId: string) => void;
   updateExercise: (presetId: string, updates: Partial<ExerciseEntry>) => void;
+  setDraftFromLog: (log: WorkoutLog) => void;
   setIntensity: (intensity: Intensity) => void;
   setNotes: (notes: string) => void;
   resetDraft: () => void;
@@ -82,6 +83,16 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
         ),
       },
     })),
+
+  setDraftFromLog: (log) =>
+    set({
+      draft: {
+        exercises: log.exercises.map((e) => ({ ...e })),
+        startedAt: new Date(),
+        intensity: log.intensity,
+        notes: '',
+      },
+    }),
 
   setIntensity: (intensity) =>
     set((s) => ({ draft: { ...s.draft, intensity } })),

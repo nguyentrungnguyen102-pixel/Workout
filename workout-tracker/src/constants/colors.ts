@@ -7,6 +7,7 @@ export const COLORS = {
   // Accent
   primary:         '#FF5400',
   primaryLight:    '#FFF0EC',
+  primaryDark:     '#FFF0EC',
   primaryMed:      'rgba(255,84,0,0.15)',
 
   // Text

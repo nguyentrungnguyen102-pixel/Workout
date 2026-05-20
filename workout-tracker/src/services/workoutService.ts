@@ -143,3 +143,8 @@ export function buildDraftFromLog(log: WorkoutLog): DraftWorkout {
     notes: '',
   };
 }
+
+export async function getLogById(logId: string): Promise<WorkoutLog | null> {
+  const snap = await getDoc(doc(db, 'logs', logId));
+  return snap.exists() ? (snap.data() as WorkoutLog) : null;
+}

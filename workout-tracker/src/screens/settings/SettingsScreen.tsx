@@ -1,5 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, Switch, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  Switch,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  Alert,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../services/firebase';
@@ -20,6 +29,7 @@ export default function SettingsScreen() {
   const [reminderEnabled, setReminderEnabled] = useState(profile?.reminderEnabled ?? true);
   const [reminderTime, setReminderTime] = useState(profile?.reminderTime || '07:30');
   const [weeklyGoal, setWeeklyGoal] = useState(String(profile?.weeklyGoalMinutes || 150));
+  const [webhookUrl, setWebhookUrl] = useState(profile?.n8nWebhookUrl || '');
 
   const handleSave = async () => {
     if (!profile?.uid) return;
@@ -27,6 +37,7 @@ export default function SettingsScreen() {
       reminderEnabled,
       reminderTime,
       weeklyGoalMinutes: parseInt(weeklyGoal) || 150,
+      n8nWebhookUrl: webhookUrl.trim() || undefined,
     });
     Alert.alert('Đã lưu', 'Cài đặt đã được cập nhật');
   };
@@ -42,16 +53,17 @@ export default function SettingsScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <Text style={styles.pageTitle}>Cài đặt</Text>
 
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* User info */}
         <View style={styles.profileCard}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {(profile?.displayName || 'U').charAt(0).toUpperCase()}
-            </Text>
-          </View>
+          <Text style={styles.profileAvatar}>👤</Text>
           <Text style={styles.profileName}>{profile?.displayName || 'User'}</Text>
           <Text style={styles.profileEmail}>{profile?.email}</Text>
+          {profile?.streak?.current ? (
+            <View style={styles.profileStreak}>
+              <Text style={styles.profileStreakText}>🔥 {profile.streak.current} ngày streak</Text>
+            </View>
+          ) : null}
         </View>
 
         {/* Notifications */}
@@ -72,7 +84,7 @@ export default function SettingsScreen() {
                 value={reminderTime}
                 onChangeText={setReminderTime}
                 placeholder="07:30"
-                placeholderTextColor={COLORS.textMuted}
+                placeholderTextColor={COLORS.textSecondary}
                 keyboardType="numbers-and-punctuation"
               />
             </SettingRow>
@@ -89,9 +101,27 @@ export default function SettingsScreen() {
               onChangeText={setWeeklyGoal}
               keyboardType="numeric"
               placeholder="150"
-              placeholderTextColor={COLORS.textMuted}
+              placeholderTextColor={COLORS.textSecondary}
             />
           </SettingRow>
+        </View>
+
+        {/* Integration */}
+        <Text style={styles.sectionLabel}>🔗 Tích hợp Google Sheets</Text>
+        <View style={styles.card}>
+          <Text style={styles.webhookHint}>
+            Nhập URL webhook n8n để tự động ghi dữ liệu vào Google Sheets sau mỗi buổi tập.
+          </Text>
+          <TextInput
+            style={[styles.timeInput, styles.webhookInput]}
+            value={webhookUrl}
+            onChangeText={setWebhookUrl}
+            placeholder="https://your-n8n.app/webhook/..."
+            placeholderTextColor={COLORS.textSecondary}
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="url"
+          />
         </View>
 
         {/* Save */}
@@ -100,9 +130,11 @@ export default function SettingsScreen() {
         </TouchableOpacity>
 
         {/* Sign out */}
-        <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut} activeOpacity={0.7}>
+        <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut} activeOpacity={0.8}>
           <Text style={styles.signOutText}>Đăng xuất</Text>
         </TouchableOpacity>
+
+        <View style={{ height: 20 }} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -126,30 +158,24 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 24,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 3,
-    elevation: 2,
   },
-  avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: COLORS.primaryLight,
-    borderWidth: 2,
-    borderColor: COLORS.primary + '44',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  avatarText: { fontSize: 28, fontWeight: '800', color: COLORS.primary },
+  profileAvatar: { fontSize: 40, marginBottom: 10 },
   profileName: { fontSize: 18, fontWeight: '700', color: COLORS.text },
   profileEmail: { fontSize: 13, color: COLORS.textSecondary, marginTop: 4 },
+  profileStreak: {
+    marginTop: 10,
+    backgroundColor: COLORS.primaryLight,
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 5,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+  },
+  profileStreakText: { fontSize: 13, color: COLORS.primary, fontWeight: '700' },
 
   sectionLabel: {
-    fontSize: 11,
-    fontWeight: '700',
+    fontSize: 13,
+    fontWeight: '600',
     color: COLORS.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
@@ -160,8 +186,6 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingHorizontal: 16,
     marginBottom: 20,
-    borderWidth: 1,
-    borderColor: COLORS.border,
   },
   row: {
     flexDirection: 'row',
@@ -169,11 +193,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border2,
+    borderBottomColor: COLORS.border,
   },
   rowLabel: { fontSize: 15, color: COLORS.text, flex: 1 },
   timeInput: {
-    backgroundColor: COLORS.card2,
+    backgroundColor: COLORS.border,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -182,8 +206,22 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     minWidth: 80,
     textAlign: 'center',
-    borderWidth: 1,
-    borderColor: COLORS.border,
+  },
+
+  webhookHint: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    lineHeight: 18,
+    paddingTop: 14,
+    paddingBottom: 10,
+  },
+  webhookInput: {
+    minWidth: undefined,
+    width: '100%',
+    textAlign: 'left',
+    fontWeight: '400',
+    fontSize: 13,
+    marginBottom: 14,
   },
 
   saveBtn: {
@@ -192,11 +230,6 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: 'center',
     marginBottom: 12,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 4,
   },
   saveBtnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
 
@@ -204,7 +237,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: 'center',
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: COLORS.danger,
   },
   signOutText: { fontSize: 16, fontWeight: '600', color: COLORS.danger },
