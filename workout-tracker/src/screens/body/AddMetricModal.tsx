@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -24,12 +25,14 @@ export default function AddMetricModal() {
 
   const [weight, setWeight] = useState('');
   const [chest, setChest] = useState('');
+  const [waist, setWaist] = useState('');
   const [hip, setHip] = useState('');
+  const [arm, setArm] = useState('');
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
     if (!profile?.uid) return;
-    if (!weight && !chest && !hip) {
+    if (!weight && !chest && !waist && !hip && !arm) {
       Alert.alert('Thiếu dữ liệu', 'Hãy nhập ít nhất 1 chỉ số');
       return;
     }
@@ -39,7 +42,9 @@ export default function AddMetricModal() {
       await addMetric(profile.uid, {
         weight: weight ? parseFloat(weight) : undefined,
         chestCm: chest ? parseFloat(chest) : undefined,
+        waistCm: waist ? parseFloat(waist) : undefined,
         hipCm: hip ? parseFloat(hip) : undefined,
+        armCm: arm ? parseFloat(arm) : undefined,
       });
       navigation.goBack();
     } catch {
@@ -63,7 +68,12 @@ export default function AddMetricModal() {
           <View style={{ width: 26 }} />
         </View>
 
-        <View style={styles.content}>
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
           <Text style={styles.date}>
             📅 {new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit' })}
           </Text>
@@ -81,32 +91,64 @@ export default function AddMetricModal() {
             />
           </View>
 
-          <View style={styles.field}>
-            <Text style={styles.label}>📐 Vòng ngực (cm)</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="90"
-              placeholderTextColor={COLORS.textMuted}
-              value={chest}
-              onChangeText={setChest}
-              keyboardType="decimal-pad"
-              returnKeyType="next"
-            />
+          <Text style={styles.sectionLabel}>Số đo vòng (cm)</Text>
+
+          <View style={styles.row2}>
+            <View style={styles.fieldHalf}>
+              <Text style={styles.label}>📐 Vòng ngực</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="90"
+                placeholderTextColor={COLORS.textMuted}
+                value={chest}
+                onChangeText={setChest}
+                keyboardType="decimal-pad"
+                returnKeyType="next"
+              />
+            </View>
+            <View style={styles.fieldHalf}>
+              <Text style={styles.label}>🎀 Vòng eo</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="75"
+                placeholderTextColor={COLORS.textMuted}
+                value={waist}
+                onChangeText={setWaist}
+                keyboardType="decimal-pad"
+                returnKeyType="next"
+              />
+            </View>
           </View>
 
-          <View style={styles.field}>
-            <Text style={styles.label}>🍑 Vòng mông (cm)</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="95"
-              placeholderTextColor={COLORS.textMuted}
-              value={hip}
-              onChangeText={setHip}
-              keyboardType="decimal-pad"
-              returnKeyType="done"
-            />
+          <View style={styles.row2}>
+            <View style={styles.fieldHalf}>
+              <Text style={styles.label}>🍑 Vòng mông</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="95"
+                placeholderTextColor={COLORS.textMuted}
+                value={hip}
+                onChangeText={setHip}
+                keyboardType="decimal-pad"
+                returnKeyType="next"
+              />
+            </View>
+            <View style={styles.fieldHalf}>
+              <Text style={styles.label}>💪 Vòng cánh tay</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="35"
+                placeholderTextColor={COLORS.textMuted}
+                value={arm}
+                onChangeText={setArm}
+                keyboardType="decimal-pad"
+                returnKeyType="done"
+              />
+            </View>
           </View>
-        </View>
+
+          <View style={{ height: 20 }} />
+        </ScrollView>
 
         <View style={styles.footer}>
           <TouchableOpacity
@@ -139,21 +181,35 @@ const styles = StyleSheet.create({
     borderBottomColor: COLORS.border,
   },
   title: { fontSize: 17, fontWeight: '700', color: COLORS.text },
-  content: { flex: 1, padding: 24 },
-  date: { fontSize: 14, color: COLORS.textSecondary, marginBottom: 24 },
+  content: { padding: 24 },
+  date: { fontSize: 14, color: COLORS.textSecondary, marginBottom: 20 },
+
+  sectionLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 12,
+    marginTop: 4,
+  },
 
   field: { marginBottom: 20 },
-  label: { fontSize: 14, fontWeight: '600', color: COLORS.text, marginBottom: 8 },
+  fieldHalf: { flex: 1 },
+  row2: { flexDirection: 'row', gap: 12, marginBottom: 12 },
+
+  label: { fontSize: 13, fontWeight: '600', color: COLORS.text, marginBottom: 8 },
   input: {
     backgroundColor: COLORS.cardBackground,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
     color: COLORS.text,
     borderWidth: 1,
     borderColor: COLORS.border,
+    textAlign: 'center',
   },
 
   footer: { padding: 20, paddingBottom: 32 },

@@ -6,7 +6,9 @@ export interface BodyMetric {
   date: string;
   weight?: number;
   chestCm?: number;
+  waistCm?: number;
   hipCm?: number;
+  armCm?: number;
   notes?: string;
   createdAt?: Timestamp;
 }

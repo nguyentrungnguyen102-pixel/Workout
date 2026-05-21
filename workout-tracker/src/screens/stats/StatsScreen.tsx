@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useMemo } from 'react';
 import { View, Text, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
@@ -56,6 +56,23 @@ export default function StatsScreen() {
   });
   const topExercise = Object.entries(exerciseCounts).sort((a, b) => b[1] - a[1])[0];
   const consistencyScore = Math.min(100, Math.round((logs.length / 30) * 100));
+
+  // Compute personal records from 30-day logs
+  const personalRecords = useMemo(() => {
+    const prs: Record<string, { name: string; bestReps?: number; bestWeight?: number; bestDuration?: number }> = {};
+    logs.forEach((log) => {
+      log.exercises.forEach((e) => {
+        if (!prs[e.presetId]) prs[e.presetId] = { name: e.name };
+        const pr = prs[e.presetId];
+        if (e.reps && (!pr.bestReps || e.reps > pr.bestReps)) pr.bestReps = e.reps;
+        if (e.weight && (!pr.bestWeight || e.weight > pr.bestWeight)) pr.bestWeight = e.weight;
+        if (e.durationSeconds && (!pr.bestDuration || e.durationSeconds > pr.bestDuration)) pr.bestDuration = e.durationSeconds;
+      });
+    });
+    return Object.entries(prs)
+      .filter(([, pr]) => pr.bestReps || pr.bestWeight || pr.bestDuration)
+      .slice(0, 6);
+  }, [logs]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -125,6 +142,39 @@ export default function StatsScreen() {
             </View>
             <Text style={styles.consistencyHint}>Dựa trên số ngày tập trong 30 ngày qua</Text>
           </View>
+
+          {/* Personal Records */}
+          {personalRecords.length > 0 && (
+            <>
+              <Text style={styles.sectionTitle}>🏆 Kỷ lục cá nhân (30 ngày)</Text>
+              {personalRecords.map(([id, pr]) => (
+                <View key={id} style={styles.prCard}>
+                  <Text style={styles.prName}>{pr.name}</Text>
+                  <View style={styles.prBadges}>
+                    {pr.bestReps !== undefined && (
+                      <View style={styles.prBadge}>
+                        <Text style={styles.prBadgeText}>{pr.bestReps} reps</Text>
+                      </View>
+                    )}
+                    {pr.bestWeight !== undefined && (
+                      <View style={[styles.prBadge, styles.prBadgeWeight]}>
+                        <Text style={[styles.prBadgeText, styles.prBadgeWeightText]}>{pr.bestWeight} kg</Text>
+                      </View>
+                    )}
+                    {pr.bestDuration !== undefined && pr.bestReps === undefined && (
+                      <View style={styles.prBadge}>
+                        <Text style={styles.prBadgeText}>
+                          {pr.bestDuration >= 60
+                            ? `${Math.round(pr.bestDuration / 60)} phút`
+                            : `${pr.bestDuration}s`}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+              ))}
+            </>
+          )}
         </ScrollView>
       )}
     </SafeAreaView>
@@ -250,4 +300,30 @@ const styles = StyleSheet.create({
   },
   consistencyFill: { height: '100%', backgroundColor: COLORS.primary, borderRadius: 4 },
   consistencyHint: { fontSize: 12, color: COLORS.textSecondary, textAlign: 'center' },
+
+  prCard: {
+    backgroundColor: COLORS.cardBackground,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  prName: { fontSize: 14, fontWeight: '700', color: COLORS.text, flex: 1 },
+  prBadges: { flexDirection: 'row', gap: 6 },
+  prBadge: {
+    backgroundColor: COLORS.primaryLight,
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: COLORS.primary + '33',
+  },
+  prBadgeText: { fontSize: 12, fontWeight: '700', color: COLORS.primary },
+  prBadgeWeight: { backgroundColor: '#EFF6FF', borderColor: '#2563EB33' },
+  prBadgeWeightText: { color: '#2563EB' },
 });

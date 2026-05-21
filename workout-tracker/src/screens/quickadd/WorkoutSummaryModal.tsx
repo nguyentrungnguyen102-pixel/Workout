@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -22,6 +22,74 @@ const INTENSITY_OPTIONS: { label: string; value: Intensity; color: string; emoji
   { label: 'Vừa',  value: 'moderate', color: '#FF9800',        emoji: '🟡' },
   { label: 'Nặng', value: 'heavy',    color: COLORS.danger,   emoji: '🔴' },
 ];
+
+const REST_PRESETS = [30, 60, 90];
+
+function RestTimer() {
+  const [active, setActive] = useState(false);
+  const [seconds, setSeconds] = useState(60);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const start = (secs: number) => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    setSeconds(secs);
+    setActive(true);
+  };
+
+  const stop = () => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    setActive(false);
+  };
+
+  useEffect(() => {
+    if (!active) return;
+    intervalRef.current = setInterval(() => {
+      setSeconds((s) => {
+        if (s <= 1) {
+          setActive(false);
+          return 0;
+        }
+        return s - 1;
+      });
+    }, 1000);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [active]);
+
+  if (active) {
+    return (
+      <View style={timerStyles.activeCard}>
+        <View style={timerStyles.countdownRow}>
+          <Text style={timerStyles.countdown}>{seconds}</Text>
+          <Text style={timerStyles.countdownUnit}>giây</Text>
+        </View>
+        <Text style={timerStyles.restLabel}>Đang nghỉ giữa hiệp...</Text>
+        <TouchableOpacity onPress={stop} style={timerStyles.skipBtn} activeOpacity={0.7}>
+          <Text style={timerStyles.skipText}>Bỏ qua ⏭</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  return (
+    <View style={timerStyles.card}>
+      <Text style={timerStyles.label}>⏱ Nghỉ giữa hiệp</Text>
+      <View style={timerStyles.presets}>
+        {REST_PRESETS.map((s) => (
+          <TouchableOpacity
+            key={s}
+            style={timerStyles.presetBtn}
+            onPress={() => start(s)}
+            activeOpacity={0.7}
+          >
+            <Text style={timerStyles.presetText}>{s}s</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+}
 
 function getStep(unit: string) {
   if (unit === 'seconds') return 15;
@@ -82,6 +150,15 @@ function ExerciseRow({
     if (!isNaN(num) && num > 0) onUpdate({ sets: num });
   };
 
+  const handleWeightChange = (text: string) => {
+    if (text === '') {
+      onUpdate({ weight: undefined });
+      return;
+    }
+    const num = parseFloat(text);
+    if (!isNaN(num) && num > 0) onUpdate({ weight: num });
+  };
+
   return (
     <View style={styles.exerciseRow}>
       <View style={styles.exerciseTop}>
@@ -92,7 +169,7 @@ function ExerciseRow({
       </View>
 
       <View style={styles.exerciseControls}>
-        {/* Sets (only for non-duration exercises) */}
+        {/* Sets (only for reps exercises) */}
         {unit === 'reps' && (
           <View style={styles.setsControl}>
             <Text style={styles.controlLabel}>Hiệp</Text>
@@ -124,6 +201,23 @@ function ExerciseRow({
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Weight input for strength exercises */}
+      {exercise.category === 'strength' && (
+        <View style={styles.weightRow}>
+          <Ionicons name="barbell-outline" size={14} color={COLORS.textSecondary} />
+          <Text style={styles.weightLabel}>Tạ (kg):</Text>
+          <TextInput
+            style={styles.weightInput}
+            value={exercise.weight !== undefined ? String(exercise.weight) : ''}
+            onChangeText={handleWeightChange}
+            keyboardType="decimal-pad"
+            placeholder="0"
+            placeholderTextColor={COLORS.textMuted}
+            selectTextOnFocus
+          />
+        </View>
+      )}
     </View>
   );
 }
@@ -218,6 +312,14 @@ export default function WorkoutSummaryModal() {
               <Ionicons name="add" size={18} color={COLORS.primary} />
               <Text style={styles.addMoreText}>Thêm bài tập</Text>
             </TouchableOpacity>
+          </>
+        )}
+
+        {/* Rest Timer */}
+        {draft.exercises.length > 0 && (
+          <>
+            <Text style={styles.sectionLabel}>Hẹn giờ nghỉ</Text>
+            <RestTimer />
           </>
         )}
 
@@ -382,6 +484,30 @@ const styles = StyleSheet.create({
     paddingRight: 8,
   },
 
+  weightRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+  },
+  weightLabel: { fontSize: 12, fontWeight: '600', color: COLORS.textSecondary, flex: 1 },
+  weightInput: {
+    backgroundColor: COLORS.card2,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    fontSize: 15,
+    fontWeight: '700',
+    color: COLORS.text,
+    minWidth: 72,
+    textAlign: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+
   addExerciseBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -454,4 +580,51 @@ const styles = StyleSheet.create({
   },
   logBtnDisabled: { opacity: 0.5, shadowOpacity: 0 },
   logBtnText: { fontSize: 17, fontWeight: '800', color: '#fff' },
+});
+
+const timerStyles = StyleSheet.create({
+  card: {
+    backgroundColor: COLORS.cardBackground,
+    borderRadius: 14,
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  label: { fontSize: 13, fontWeight: '600', color: COLORS.textSecondary },
+  presets: { flexDirection: 'row', gap: 8 },
+  presetBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: COLORS.primaryLight,
+    borderWidth: 1,
+    borderColor: COLORS.primary + '44',
+  },
+  presetText: { fontSize: 13, fontWeight: '700', color: COLORS.primary },
+
+  activeCard: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 14,
+    padding: 20,
+    alignItems: 'center',
+  },
+  countdownRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 4 },
+  countdown: {
+    fontSize: 52,
+    fontWeight: '900',
+    color: '#fff',
+    lineHeight: 56,
+  },
+  countdownUnit: { fontSize: 16, color: 'rgba(255,255,255,0.8)', fontWeight: '600', marginBottom: 6 },
+  restLabel: { fontSize: 13, color: 'rgba(255,255,255,0.8)', marginBottom: 16 },
+  skipBtn: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 20,
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+  },
+  skipText: { fontSize: 14, fontWeight: '700', color: '#fff' },
 });
