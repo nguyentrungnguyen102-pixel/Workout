@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -8,11 +8,12 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useWorkoutStore } from '../../stores/workoutStore';
 import { useUserStore } from '../../stores/userStore';
+import { useProgramStore } from '../../stores/programStore';
 import { SYSTEM_PRESETS, CATEGORY_LABELS } from '../../constants/exercises';
 import { COLORS } from '../../constants/colors';
 import { WorkoutPreset, ExerciseCategory } from '../../types/workout';
@@ -71,27 +72,34 @@ export default function QuickAddScreen() {
     draft,
     yesterdayLog,
     todayLog,
+    recentLogs,
     startDraft,
     addExercise,
     resetDraft,
     repeatYesterday,
-    loadYesterdayLog,
-    loadTodayLog,
+    loadRecentLogs,
   } = useWorkoutStore();
+  const { activeState, loadActiveProgram, advanceDay, getActiveProgram, getTodayDay } = useProgramStore();
 
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>('all');
   const uid = profile?.uid;
 
-  useEffect(() => {
-    if (!uid) return;
-    loadYesterdayLog(uid);
-    loadTodayLog(uid);
-  }, [uid]);
+  useFocusEffect(
+    useCallback(() => {
+      if (!uid) return;
+      loadRecentLogs(uid);
+      loadActiveProgram(uid);
+    }, [uid])
+  );
 
+  // Scan all recent logs (sorted desc) to find most recent value for this exercise
   const getSuggestedValue = useCallback((preset: WorkoutPreset) => {
-    if (!yesterdayLog) return null;
-    return yesterdayLog.exercises.find((e) => e.presetId === preset.id) ?? null;
-  }, [yesterdayLog]);
+    for (const log of recentLogs) {
+      const entry = log.exercises.find((e) => e.presetId === preset.id);
+      if (entry) return entry;
+    }
+    return null;
+  }, [recentLogs]);
 
   const handlePresetTap = useCallback(
     (preset: WorkoutPreset) => {
@@ -122,10 +130,33 @@ export default function QuickAddScreen() {
     navigation.navigate('WorkoutSummary');
   }, [uid, yesterdayLog, repeatYesterday, navigation]);
 
+  const handleLoadProgramDay = useCallback(() => {
+    const todayDay = getTodayDay();
+    if (!todayDay) return;
+    resetDraft();
+    startDraft();
+    todayDay.exercises.forEach((ex) => {
+      const preset = SYSTEM_PRESETS.find((p) => p.id === ex.presetId);
+      addExercise({
+        presetId: ex.presetId,
+        name: preset?.nameVi ?? ex.nameVi,
+        category: preset?.category ?? 'strength',
+        unit: preset?.unit ?? ex.unit,
+        sets: ex.sets,
+        reps: ex.unit === 'reps' ? ex.reps : undefined,
+        durationSeconds: ex.unit !== 'reps' ? ex.durationSeconds : undefined,
+      });
+    });
+    navigation.navigate('WorkoutSummary');
+  }, [getTodayDay, resetDraft, startDraft, addExercise, navigation]);
+
   const hasDraft = draft.exercises.length > 0;
+  const activeProg = getActiveProgram();
+  const todayProgramDay = getTodayDay();
   const streak = profile?.streak?.current || 0;
-  const weeklyPct = profile?.weeklyStats
-    ? Math.round((profile.weeklyStats.totalMinutes / profile.weeklyStats.targetMinutes) * 100)
+  const targetMinutes = profile?.weeklyStats?.targetMinutes || profile?.weeklyGoalMinutes || 150;
+  const weeklyPct = profile?.weeklyStats?.totalMinutes
+    ? Math.min(100, Math.round((profile.weeklyStats.totalMinutes / targetMinutes) * 100))
     : 0;
 
   const filteredPresets = SYSTEM_PRESETS.filter(
@@ -143,8 +174,45 @@ export default function QuickAddScreen() {
             <Text style={styles.greeting}>Chào {profile?.displayName?.split(' ')[0] || 'anh'} 👋</Text>
             <Text style={styles.subtitle}>{today}</Text>
           </View>
-          <StreakBadge streak={streak} />
+          <View style={styles.headerRight}>
+            <TouchableOpacity
+              style={styles.programsBtn}
+              onPress={() => navigation.navigate('ProgramsList')}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="barbell-outline" size={18} color={COLORS.primary} />
+            </TouchableOpacity>
+            <StreakBadge streak={streak} />
+          </View>
         </View>
+
+        {/* Active program day card */}
+        {activeProg && todayProgramDay && !todayLog && (
+          <TouchableOpacity
+            style={styles.programCard}
+            onPress={handleLoadProgramDay}
+            activeOpacity={0.8}
+          >
+            <View style={styles.programCardLeft}>
+              <View style={styles.programCardBadge}>
+                <Ionicons name="barbell" size={11} color={COLORS.primary} />
+                <Text style={styles.programCardBadgeText}>{activeProg.nameVi}</Text>
+              </View>
+              <Text style={styles.programCardDay}>
+                {todayProgramDay.emoji} {todayProgramDay.nameVi}
+              </Text>
+              <Text style={styles.programCardFocus} numberOfLines={1}>
+                {todayProgramDay.focusVi}
+              </Text>
+              <Text style={styles.programCardCount}>
+                {todayProgramDay.exercises.length} bài tập · ~{activeProg.estimatedMinutes} phút
+              </Text>
+            </View>
+            <View style={styles.programCardArrow}>
+              <Ionicons name="play-circle" size={36} color={COLORS.primary} />
+            </View>
+          </TouchableOpacity>
+        )}
 
         {/* Weekly progress card */}
         {weeklyPct > 0 && (
@@ -280,6 +348,46 @@ const styles = StyleSheet.create({
   },
   greeting: { fontSize: 22, fontWeight: '700', color: COLORS.text },
   subtitle: { fontSize: 13, color: COLORS.textSecondary, marginTop: 2 },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  programsBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: COLORS.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.primary + '44',
+  },
+
+  programCard: {
+    marginHorizontal: 20,
+    marginBottom: 12,
+    backgroundColor: COLORS.cardBackground,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1.5,
+    borderColor: COLORS.primary + '66',
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  programCardLeft: { flex: 1 },
+  programCardBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 6,
+  },
+  programCardBadgeText: { fontSize: 11, fontWeight: '700', color: COLORS.primary, textTransform: 'uppercase' },
+  programCardDay: { fontSize: 17, fontWeight: '800', color: COLORS.text, marginBottom: 2 },
+  programCardFocus: { fontSize: 12, color: COLORS.textSecondary, marginBottom: 4 },
+  programCardCount: { fontSize: 11, color: COLORS.textMuted, fontWeight: '600' },
+  programCardArrow: { paddingLeft: 8 },
 
   streakBadge: {
     flexDirection: 'row',
