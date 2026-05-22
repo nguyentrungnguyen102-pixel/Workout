@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { useUserStore } from '../../stores/userStore';
+import { useProgramStore } from '../../stores/programStore';
 import { getRecentLogs } from '../../services/workoutService';
 import { computePRs, getPRLabel, PersonalRecord } from '../../services/prService';
 import { WorkoutLog } from '../../types/workout';
@@ -91,6 +92,77 @@ function WeeklyBarChart({ logs }: { logs: WorkoutLog[] }) {
   );
 }
 
+function VolumeChart({ logs }: { logs: WorkoutLog[] }) {
+  const weeks: { label: string; volume: number }[] = [];
+  const today = new Date();
+
+  for (let w = 3; w >= 0; w--) {
+    const weekEnd = new Date(today);
+    weekEnd.setDate(today.getDate() - w * 7);
+    const weekStart = new Date(weekEnd);
+    weekStart.setDate(weekEnd.getDate() - 6);
+
+    const fmt = (d: Date) => {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    };
+    const startStr = fmt(weekStart);
+    const endStr = fmt(weekEnd);
+
+    let vol = 0;
+    for (const log of logs) {
+      if (log.date >= startStr && log.date <= endStr) {
+        for (const ex of log.exercises) {
+          if (ex.unit === 'reps') {
+            vol += (ex.sets ?? 1) * (ex.reps ?? 0);
+          } else {
+            vol += Math.round((ex.durationSeconds ?? 0) / 60);
+          }
+        }
+      }
+    }
+
+    const label = w === 0 ? 'Tuần này' : `T-${w}`;
+    weeks.push({ label, volume: vol });
+  }
+
+  const maxVol = Math.max(1, ...weeks.map((w) => w.volume));
+
+  return (
+    <View style={volStyles.card}>
+      <Text style={styles.sectionTitle}>📈 Volume tập luyện (4 tuần)</Text>
+      <View style={volStyles.chartRow}>
+        {weeks.map((week, i) => {
+          const pct = week.volume / maxVol;
+          const isLast = i === weeks.length - 1;
+          return (
+            <View key={i} style={volStyles.col}>
+              <Text style={volStyles.volNum}>
+                {week.volume > 0 ? (week.volume >= 1000 ? `${(week.volume / 1000).toFixed(1)}k` : String(week.volume)) : '–'}
+              </Text>
+              <View style={volStyles.barWrapper}>
+                <View
+                  style={[
+                    volStyles.barFill,
+                    {
+                      height: Math.max(4, pct * 80),
+                      backgroundColor: isLast ? COLORS.primary : COLORS.heatmapModerate,
+                    },
+                  ]}
+                />
+              </View>
+              <Text style={[volStyles.weekLabel, isLast && volStyles.weekLabelActive]}>{week.label}</Text>
+            </View>
+          );
+        })}
+      </View>
+      <Text style={volStyles.hint}>Tổng reps + phút tập mỗi tuần</Text>
+    </View>
+  );
+}
+
 function PRCard({ pr }: { pr: PersonalRecord }) {
   const dateStr = pr.achievedDate
     ? new Date(pr.achievedDate + 'T00:00:00').toLocaleDateString('vi-VN', {
@@ -114,6 +186,7 @@ function PRCard({ pr }: { pr: PersonalRecord }) {
 
 export default function StatsScreen() {
   const { profile, loadProfile } = useUserStore();
+  const { activeState, loadActiveProgram, getActiveProgram } = useProgramStore();
   const [logs, setLogs] = useState<WorkoutLog[]>([]);
   const [loading, setLoading] = useState(false);
   const [showAllPRs, setShowAllPRs] = useState(false);
@@ -125,7 +198,8 @@ export default function StatsScreen() {
       if (!uid) return;
       setLoading(true);
       loadProfile(uid).catch(() => {});
-      getRecentLogs(uid, 30).then(setLogs).catch(() => {}).finally(() => setLoading(false));
+      loadActiveProgram(uid).catch(() => {});
+      getRecentLogs(uid, 60).then(setLogs).catch(() => {}).finally(() => setLoading(false));
     }, [uid])
   );
 
@@ -150,6 +224,11 @@ export default function StatsScreen() {
 
   const prs = computePRs(logs);
   const displayedPRs = showAllPRs ? prs : prs.slice(0, 4);
+
+  const activeProg = getActiveProgram();
+  const programAdherence = activeProg && activeState
+    ? Math.min(100, Math.round((activeState.completedDates.length / Math.max(1, activeProg.daysPerWeek * 4)) * 100))
+    : 0;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -193,6 +272,9 @@ export default function StatsScreen() {
           {/* Weekly bar chart */}
           <WeeklyBarChart logs={logs} />
 
+          {/* Volume chart */}
+          <VolumeChart logs={logs} />
+
           {/* Monthly stats */}
           <Text style={styles.sectionTitle}>📊 30 ngày qua</Text>
           <View style={styles.statsRow}>
@@ -231,6 +313,29 @@ export default function StatsScreen() {
                 </TouchableOpacity>
               )}
             </>
+          )}
+
+          {/* Active program adherence */}
+          {activeProg && activeState && (
+            <View style={styles.programAdherenceCard}>
+              <View style={styles.progAdherenceHeader}>
+                <Text style={styles.progEmoji}>{activeProg.emoji}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.progAdherenceLabel}>Chương trình đang theo</Text>
+                  <Text style={styles.progAdherenceName}>{activeProg.nameVi}</Text>
+                </View>
+                <Text style={styles.progAdherencePct}>{programAdherence}%</Text>
+              </View>
+              <View style={styles.progressBar}>
+                <View style={[styles.progressFill, { width: `${programAdherence}%` as any }]} />
+              </View>
+              <Text style={styles.progAdherenceHint}>
+                {activeState.completedDates.length} buổi · bắt đầu{' '}
+                {new Date(activeState.startedAt + 'T00:00:00').toLocaleDateString('vi-VN', {
+                  day: '2-digit', month: '2-digit',
+                })}
+              </Text>
+            </View>
           )}
 
           {/* Consistency score */}
@@ -445,4 +550,53 @@ const styles = StyleSheet.create({
   },
   consistencyFill: { height: '100%', backgroundColor: COLORS.primary, borderRadius: 4 },
   consistencyHint: { fontSize: 12, color: COLORS.textSecondary, textAlign: 'center' },
+
+  programAdherenceCard: {
+    backgroundColor: COLORS.cardBackground,
+    borderRadius: 14,
+    padding: 16,
+    marginTop: 8,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  progAdherenceHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
+  progEmoji: { fontSize: 28 },
+  progAdherenceLabel: { fontSize: 11, fontWeight: '700', color: COLORS.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5 },
+  progAdherenceName: { fontSize: 15, fontWeight: '800', color: COLORS.text, marginTop: 2 },
+  progAdherencePct: { fontSize: 22, fontWeight: '900', color: COLORS.primary },
+  progAdherenceHint: { fontSize: 12, color: COLORS.textMuted, marginTop: 6 },
+});
+
+const volStyles = StyleSheet.create({
+  card: {
+    backgroundColor: COLORS.cardBackground,
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  chartRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    height: 110,
+    paddingTop: 8,
+  },
+  col: { flex: 1, alignItems: 'center', justifyContent: 'flex-end', gap: 4 },
+  volNum: { fontSize: 10, fontWeight: '700', color: COLORS.textSecondary, marginBottom: 2 },
+  barWrapper: { width: '60%', height: 84, justifyContent: 'flex-end' },
+  barFill: { width: '100%', borderRadius: 5, minHeight: 4 },
+  weekLabel: { fontSize: 11, color: COLORS.textSecondary, fontWeight: '600', marginTop: 2 },
+  weekLabelActive: { color: COLORS.primary, fontWeight: '800' },
+  hint: { fontSize: 11, color: COLORS.textMuted, marginTop: 8, textAlign: 'center' },
 });

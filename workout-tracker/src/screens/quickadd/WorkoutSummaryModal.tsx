@@ -14,6 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useWorkoutStore } from '../../stores/workoutStore';
 import { useUserStore } from '../../stores/userStore';
+import { useProgramStore } from '../../stores/programStore';
 import { COLORS } from '../../constants/colors';
 import { Intensity } from '../../types/workout';
 
@@ -209,6 +210,7 @@ export default function WorkoutSummaryModal() {
     logWorkout,
     resetDraft,
   } = useWorkoutStore();
+  const { activeState, advanceDay } = useProgramStore();
   const [saving, setSaving] = useState(false);
 
   const handleLog = async () => {
@@ -221,6 +223,9 @@ export default function WorkoutSummaryModal() {
     try {
       await logWorkout(profile.uid);
       await loadProfile(profile.uid);
+      if (activeState) {
+        advanceDay(profile.uid).catch(() => {});
+      }
       navigation.navigate('Main');
     } catch (err) {
       Alert.alert('Lỗi', 'Không lưu được. Thử lại nhé!');
