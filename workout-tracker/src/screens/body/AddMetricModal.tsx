@@ -25,11 +25,12 @@ export default function AddMetricModal() {
   const [weight, setWeight] = useState('');
   const [chest, setChest] = useState('');
   const [hip, setHip] = useState('');
+  const [arm, setArm] = useState('');
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
     if (!profile?.uid) return;
-    if (!weight && !chest && !hip) {
+    if (!weight && !chest && !hip && !arm) {
       Alert.alert('Thiếu dữ liệu', 'Hãy nhập ít nhất 1 chỉ số');
       return;
     }
@@ -40,6 +41,7 @@ export default function AddMetricModal() {
         weight: weight ? parseFloat(weight) : undefined,
         chestCm: chest ? parseFloat(chest) : undefined,
         hipCm: hip ? parseFloat(hip) : undefined,
+        armCm: arm ? parseFloat(arm) : undefined,
       });
       navigation.goBack();
     } catch {
@@ -102,6 +104,19 @@ export default function AddMetricModal() {
               placeholderTextColor={COLORS.textMuted}
               value={hip}
               onChangeText={setHip}
+              keyboardType="decimal-pad"
+              returnKeyType="next"
+            />
+          </View>
+
+          <View style={styles.field}>
+            <Text style={styles.label}>💪 Vòng tay (cm)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="35"
+              placeholderTextColor={COLORS.textMuted}
+              value={arm}
+              onChangeText={setArm}
               keyboardType="decimal-pad"
               returnKeyType="done"
             />

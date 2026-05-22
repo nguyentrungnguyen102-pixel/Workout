@@ -239,6 +239,7 @@ function BodyLogItem({ metric }: { metric: BodyMetric }) {
         {metric.weight != null && <Text style={styles.logValue}>{metric.weight} kg</Text>}
         {metric.chestCm != null && <Text style={styles.logValue}>Ngực {metric.chestCm} cm</Text>}
         {metric.hipCm != null && <Text style={styles.logValue}>Mông {metric.hipCm} cm</Text>}
+        {metric.armCm != null && <Text style={styles.logValue}>Tay {metric.armCm} cm</Text>}
       </View>
     </View>
   );
@@ -304,6 +305,15 @@ export default function BodyTrackingScreen() {
                 value={latestMetric?.hipCm}
                 unit="cm"
               />
+            </View>
+            <View style={[styles.summaryRow, { marginBottom: 8 }]}>
+              <MetricCard
+                label="Vòng tay"
+                value={latestMetric?.armCm}
+                unit="cm"
+              />
+              <View style={{ flex: 1 }} />
+              <View style={{ flex: 1 }} />
             </View>
 
             {/* Weight chart */}

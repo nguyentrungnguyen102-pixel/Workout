@@ -58,6 +58,8 @@ export const useUserStore = create<UserStore>((set, get) => ({
           lastWorkoutDate: profile.streak?.lastWorkoutDate ?? '',
           streakStartDate: profile.streak?.streakStartDate ?? '',
         };
+        // Skip onboarding for existing users who have workout history
+        safe.onboardingDone = profile.onboardingDone ?? (!!profile.streak?.lastWorkoutDate);
         set({ profile: safe });
       } else {
         const defaultProfile = buildDefault();

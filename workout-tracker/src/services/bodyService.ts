@@ -20,6 +20,7 @@ export async function addBodyMetric(
   if (data.weight !== undefined) clean.weight = data.weight;
   if (data.chestCm !== undefined) clean.chestCm = data.chestCm;
   if (data.hipCm !== undefined) clean.hipCm = data.hipCm;
+  if (data.armCm !== undefined) clean.armCm = data.armCm;
 
   const ref = await addDoc(collection(db, 'bodyMetrics'), clean);
   return ref.id;

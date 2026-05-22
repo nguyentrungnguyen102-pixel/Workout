@@ -1,5 +1,6 @@
 export type RootStackParamList = {
   Auth: undefined;
+  Onboarding: undefined;
   Main: undefined;
   WorkoutSummary: undefined;
   ExercisePicker: undefined;
