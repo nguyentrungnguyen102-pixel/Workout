@@ -7,6 +7,7 @@ import Constants from 'expo-constants';
 import { auth } from '../services/firebase';
 import { useUserStore } from '../stores/userStore';
 import { saveFcmToken } from '../services/userService';
+import { scheduleWorkoutReminder } from '../services/notificationService';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -62,6 +63,13 @@ export function useAuth() {
       if (user) {
         await loadProfile(user.uid);
         registerForPushNotifications(user.uid);
+        const { profile } = useUserStore.getState();
+        if (profile?.onboardingDone) {
+          scheduleWorkoutReminder(
+            profile.reminderTime || '07:30',
+            profile.reminderEnabled ?? true
+          ).catch(() => {});
+        }
       }
     });
     return unsub;

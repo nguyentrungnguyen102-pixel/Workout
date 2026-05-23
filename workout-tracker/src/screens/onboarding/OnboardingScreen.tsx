@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useUserStore } from '../../stores/userStore';
+import { scheduleWorkoutReminder } from '../../services/notificationService';
 import { COLORS } from '../../constants/colors';
 import { RootStackParamList } from '../../navigation/types';
 
@@ -77,6 +78,7 @@ export default function OnboardingScreen() {
         reminderTime,
         onboardingDone: true,
       });
+      await scheduleWorkoutReminder(reminderTime, reminderEnabled).catch(() => {});
       navigation.reset({ index: 0, routes: [{ name: 'Main' }] });
     } catch {
       setSaving(false);

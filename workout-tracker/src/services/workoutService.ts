@@ -125,3 +125,39 @@ export async function getLogById(logId: string): Promise<WorkoutLog | null> {
   const snap = await getDoc(doc(db, 'logs', logId));
   return snap.exists() ? (snap.data() as WorkoutLog) : null;
 }
+
+export interface ExerciseDataPoint {
+  date: string;
+  sets: number;
+  reps?: number;
+  weight?: number;
+  durationSeconds?: number;
+}
+
+export async function getExerciseHistory(
+  uid: string,
+  presetId: string,
+  count = 20
+): Promise<ExerciseDataPoint[]> {
+  const q = query(collection(db, 'logs'), where('userId', '==', uid), limit(300));
+  const snap = await getDocs(q);
+  const points: ExerciseDataPoint[] = [];
+
+  snap.docs
+    .map((d) => d.data() as WorkoutLog)
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .forEach((log) => {
+      const entry = log.exercises.find((e) => e.presetId === presetId);
+      if (entry) {
+        points.push({
+          date: log.date,
+          sets: entry.sets ?? 1,
+          reps: entry.reps,
+          weight: entry.weight,
+          durationSeconds: entry.durationSeconds,
+        });
+      }
+    });
+
+  return points.slice(0, count).reverse();
+}
