@@ -1,10 +1,12 @@
 export type RootStackParamList = {
   Auth: undefined;
+  Onboarding: undefined;
   Main: undefined;
   WorkoutSummary: undefined;
   ExercisePicker: undefined;
   LogDetail: { logId: string; date: string };
   AddMetric: undefined;
+  ExerciseProgress: { presetId: string; exerciseName: string };
 };
 
 export type MainTabParamList = {
