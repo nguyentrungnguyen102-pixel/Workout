@@ -1,15 +1,16 @@
-import React, { useEffect } from 'react';
+import React, { useCallback } from 'react';
 import {
   View,
   Text,
   FlatList,
+  ScrollView,
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
   Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useBodyStore } from '../../stores/bodyStore';
 import { useUserStore } from '../../stores/userStore';
@@ -237,8 +238,10 @@ function BodyLogItem({ metric }: { metric: BodyMetric }) {
       <Text style={styles.logDate}>{dateStr}</Text>
       <View style={styles.logValues}>
         {metric.weight != null && <Text style={styles.logValue}>{metric.weight} kg</Text>}
-        {metric.bodyFatPercent != null && <Text style={styles.logValue}>{metric.bodyFatPercent}% fat</Text>}
-        {metric.waistCm != null && <Text style={styles.logValue}>{metric.waistCm} cm</Text>}
+        {metric.chestCm != null && <Text style={styles.logValue}>Ngực {metric.chestCm}</Text>}
+        {metric.waistCm != null && <Text style={styles.logValue}>Eo {metric.waistCm}</Text>}
+        {metric.hipCm != null && <Text style={styles.logValue}>Mông {metric.hipCm}</Text>}
+        {metric.armCm != null && <Text style={styles.logValue}>Tay {metric.armCm}</Text>}
       </View>
     </View>
   );
@@ -251,9 +254,11 @@ export default function BodyTrackingScreen() {
 
   const uid = profile?.uid;
 
-  useEffect(() => {
-    if (uid) loadMetrics(uid);
-  }, [uid]);
+  useFocusEffect(
+    useCallback(() => {
+      if (uid) loadMetrics(uid);
+    }, [uid])
+  );
 
   // Calculate delta from previous entry
   const prevMetric = metrics[1];
@@ -284,25 +289,23 @@ export default function BodyTrackingScreen() {
         contentContainerStyle={styles.list}
         ListHeaderComponent={
           <View>
-            {/* Current metrics summary */}
-            <View style={styles.summaryRow}>
+            {/* Current metrics summary - scrollable row */}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.summaryRow}
+            >
               <MetricCard
                 label="Cân nặng"
                 value={latestMetric?.weight}
                 unit="kg"
                 delta={weightDelta}
               />
-              <MetricCard
-                label="Body fat"
-                value={latestMetric?.bodyFatPercent}
-                unit="%"
-              />
-              <MetricCard
-                label="Vòng bụng"
-                value={latestMetric?.waistCm}
-                unit="cm"
-              />
-            </View>
+              <MetricCard label="Vòng ngực" value={latestMetric?.chestCm} unit="cm" />
+              <MetricCard label="Vòng eo" value={latestMetric?.waistCm} unit="cm" />
+              <MetricCard label="Vòng mông" value={latestMetric?.hipCm} unit="cm" />
+              <MetricCard label="Cánh tay" value={latestMetric?.armCm} unit="cm" />
+            </ScrollView>
 
             {/* Weight chart */}
             {hasMetrics && <WeightChart metrics={metrics} />}
@@ -357,15 +360,15 @@ const styles = StyleSheet.create({
   list: { paddingHorizontal: 20, paddingBottom: 32 },
 
   summaryRow: {
-    flexDirection: 'row',
     gap: 10,
-    marginBottom: 20,
+    marginBottom: 16,
+    paddingRight: 20,
   },
   metricCard: {
-    flex: 1,
+    width: 90,
     backgroundColor: COLORS.cardBackground,
     borderRadius: 14,
-    padding: 14,
+    padding: 12,
     alignItems: 'center',
   },
   metricLabel: { fontSize: 11, color: COLORS.textSecondary, fontWeight: '600', marginBottom: 6 },

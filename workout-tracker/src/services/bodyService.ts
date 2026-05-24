@@ -5,7 +5,6 @@ import {
   getDocs,
   query,
   where,
-  orderBy,
   limit,
   serverTimestamp,
 } from 'firebase/firestore';
@@ -17,18 +16,18 @@ export async function addBodyMetric(
   uid: string,
   data: Omit<BodyMetric, 'id' | 'userId' | 'date' | 'createdAt'>
 ): Promise<string> {
-  // Strip undefined fields — Firestore rejects them
   const clean: Record<string, any> = { userId: uid, date: todayString(), createdAt: serverTimestamp() };
   if (data.weight !== undefined) clean.weight = data.weight;
-  if (data.bodyFatPercent !== undefined) clean.bodyFatPercent = data.bodyFatPercent;
+  if (data.chestCm !== undefined) clean.chestCm = data.chestCm;
   if (data.waistCm !== undefined) clean.waistCm = data.waistCm;
+  if (data.hipCm !== undefined) clean.hipCm = data.hipCm;
+  if (data.armCm !== undefined) clean.armCm = data.armCm;
 
   const ref = await addDoc(collection(db, 'bodyMetrics'), clean);
   return ref.id;
 }
 
 export async function getBodyMetrics(uid: string, count = 30): Promise<BodyMetric[]> {
-  // No orderBy — avoids composite index requirement; sort client-side
   const q = query(
     collection(db, 'bodyMetrics'),
     where('userId', '==', uid),
