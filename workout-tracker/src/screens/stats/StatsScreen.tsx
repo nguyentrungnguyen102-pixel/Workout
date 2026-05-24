@@ -8,12 +8,16 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useUserStore } from '../../stores/userStore';
 import { getRecentLogs } from '../../services/workoutService';
 import { computePRs, getPRLabel, PersonalRecord } from '../../services/prService';
 import { WorkoutLog } from '../../types/workout';
 import { COLORS } from '../../constants/colors';
+import { RootStackParamList } from '../../navigation/types';
+
+type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 function StatCard({ label, value, unit, icon }: {
   label: string; value: string | number; unit?: string; icon: string;
@@ -91,7 +95,7 @@ function WeeklyBarChart({ logs }: { logs: WorkoutLog[] }) {
   );
 }
 
-function PRCard({ pr }: { pr: PersonalRecord }) {
+function PRCard({ pr, onPress }: { pr: PersonalRecord; onPress: () => void }) {
   const dateStr = pr.achievedDate
     ? new Date(pr.achievedDate + 'T00:00:00').toLocaleDateString('vi-VN', {
         day: '2-digit', month: '2-digit',
@@ -99,20 +103,21 @@ function PRCard({ pr }: { pr: PersonalRecord }) {
     : '';
 
   return (
-    <View style={styles.prCard}>
+    <TouchableOpacity style={styles.prCard} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.prLeft}>
         <Text style={styles.prName} numberOfLines={1}>{pr.name}</Text>
         <Text style={styles.prDate}>{dateStr}</Text>
       </View>
       <View style={styles.prRight}>
         <Text style={styles.prValue}>{getPRLabel(pr)}</Text>
-        <Text style={styles.prBadge}>🏆 PR</Text>
+        <Text style={styles.prBadge}>🏆 Xem tiến độ →</Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
 export default function StatsScreen() {
+  const navigation = useNavigation<Nav>();
   const { profile, loadProfile } = useUserStore();
   const [logs, setLogs] = useState<WorkoutLog[]>([]);
   const [loading, setLoading] = useState(false);
@@ -217,7 +222,14 @@ export default function StatsScreen() {
             <>
               <Text style={styles.sectionTitle}>🏆 Kỷ lục cá nhân (PR)</Text>
               {displayedPRs.map((pr) => (
-                <PRCard key={pr.presetId} pr={pr} />
+                <PRCard
+                  key={pr.presetId}
+                  pr={pr}
+                  onPress={() => navigation.navigate('ExerciseProgress', {
+                    presetId: pr.presetId,
+                    exerciseName: pr.name,
+                  })}
+                />
               ))}
               {prs.length > 4 && (
                 <TouchableOpacity

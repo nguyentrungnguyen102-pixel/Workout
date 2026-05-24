@@ -125,3 +125,12 @@ export async function getLogById(logId: string): Promise<WorkoutLog | null> {
   const snap = await getDoc(doc(db, 'logs', logId));
   return snap.exists() ? (snap.data() as WorkoutLog) : null;
 }
+
+export async function getLogsForExercise(uid: string, presetId: string): Promise<WorkoutLog[]> {
+  const q = query(collection(db, 'logs'), where('userId', '==', uid), limit(200));
+  const snap = await getDocs(q);
+  return snap.docs
+    .map((d) => d.data() as WorkoutLog)
+    .filter((log) => log.exercises.some((e) => e.presetId === presetId))
+    .sort((a, b) => b.date.localeCompare(a.date));
+}

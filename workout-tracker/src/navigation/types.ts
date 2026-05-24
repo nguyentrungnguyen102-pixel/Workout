@@ -6,6 +6,7 @@ export type RootStackParamList = {
   ExercisePicker: undefined;
   LogDetail: { logId: string; date: string };
   AddMetric: undefined;
+  ExerciseProgress: { presetId: string; exerciseName: string };
 };
 
 export type MainTabParamList = {

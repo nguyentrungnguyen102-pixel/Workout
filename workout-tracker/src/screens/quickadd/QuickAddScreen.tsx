@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   FlatList,
   StyleSheet,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -15,8 +16,9 @@ import { useWorkoutStore } from '../../stores/workoutStore';
 import { useUserStore } from '../../stores/userStore';
 import { SYSTEM_PRESETS, CATEGORY_LABELS } from '../../constants/exercises';
 import { COLORS } from '../../constants/colors';
-import { WorkoutPreset, ExerciseCategory } from '../../types/workout';
+import { WorkoutPreset, ExerciseCategory, WorkoutTemplate } from '../../types/workout';
 import { RootStackParamList } from '../../navigation/types';
+import { getTemplates, deleteTemplate } from '../../services/templateService';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -80,12 +82,14 @@ export default function QuickAddScreen() {
   } = useWorkoutStore();
 
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>('all');
+  const [templates, setTemplates] = useState<WorkoutTemplate[]>([]);
   const uid = profile?.uid;
 
   useFocusEffect(
     useCallback(() => {
       if (!uid) return;
       loadRecentLogs(uid);
+      getTemplates(uid).then(setTemplates).catch(() => {});
     }, [uid])
   );
 
@@ -126,6 +130,32 @@ export default function QuickAddScreen() {
     await repeatYesterday(uid);
     navigation.navigate('WorkoutSummary');
   }, [uid, yesterdayLog, repeatYesterday, navigation]);
+
+  const handleLoadTemplate = useCallback(
+    (template: WorkoutTemplate) => {
+      startDraft();
+      template.exercises.forEach((ex) => addExercise({ ...ex }));
+      navigation.navigate('WorkoutSummary');
+    },
+    [startDraft, addExercise, navigation]
+  );
+
+  const handleDeleteTemplate = useCallback(
+    (template: WorkoutTemplate) => {
+      Alert.alert('Xoá template?', `"${template.name}" sẽ bị xoá`, [
+        { text: 'Huỷ', style: 'cancel' },
+        {
+          text: 'Xoá',
+          style: 'destructive',
+          onPress: async () => {
+            await deleteTemplate(template.id).catch(() => {});
+            setTemplates((prev: WorkoutTemplate[]) => prev.filter((t: WorkoutTemplate) => t.id !== template.id));
+          },
+        },
+      ]);
+    },
+    []
+  );
 
   const hasDraft = draft.exercises.length > 0;
   const streak = profile?.streak?.current || 0;
@@ -198,6 +228,34 @@ export default function QuickAddScreen() {
             </View>
             <Ionicons name="chevron-forward" size={20} color={COLORS.primary} />
           </TouchableOpacity>
+        )}
+
+        {/* Saved templates */}
+        {templates.length > 0 && (
+          <View style={styles.templatesSection}>
+            <Text style={styles.templatesSectionTitle}>📌 Template đã lưu</Text>
+            <FlatList
+              data={templates}
+              horizontal
+              keyExtractor={(item) => item.id}
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.templatesList}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.templateCard}
+                  onPress={() => handleLoadTemplate(item)}
+                  onLongPress={() => handleDeleteTemplate(item)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.templateName} numberOfLines={1}>{item.name}</Text>
+                  <Text style={styles.templateMeta}>{item.exercises.length} bài</Text>
+                  <Text style={styles.templateExercises} numberOfLines={1}>
+                    {item.exercises.map((e) => e.name).join(' · ')}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
         )}
 
         {/* Category filter tabs */}
@@ -363,6 +421,35 @@ const styles = StyleSheet.create({
   repeatLeft: { flex: 1 },
   repeatTitle: { fontSize: 15, fontWeight: '700', color: COLORS.text },
   repeatSub: { fontSize: 12, color: COLORS.textSecondary, marginTop: 4 },
+
+  templatesSection: { marginBottom: 16 },
+  templatesSectionTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    paddingHorizontal: 20,
+    marginBottom: 10,
+  },
+  templatesList: { paddingHorizontal: 20, gap: 10 },
+  templateCard: {
+    backgroundColor: COLORS.cardBackground,
+    borderRadius: 12,
+    padding: 12,
+    minWidth: 140,
+    maxWidth: 180,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  templateName: { fontSize: 14, fontWeight: '700', color: COLORS.text, marginBottom: 4 },
+  templateMeta: { fontSize: 11, fontWeight: '600', color: COLORS.primary, marginBottom: 4 },
+  templateExercises: { fontSize: 10, color: COLORS.textSecondary },
 
   categoryTabList: { paddingHorizontal: 20, gap: 8, marginBottom: 16 },
   categoryTab: {
