@@ -14,7 +14,7 @@ interface ProgramStore {
 
   loadActiveProgram: (uid: string) => Promise<void>;
   activate: (uid: string, programId: string) => Promise<void>;
-  advanceDay: (uid: string) => Promise<void>;
+  advanceDay: (uid: string, completedDayId?: string) => Promise<void>;
   deactivate: (uid: string) => Promise<void>;
 
   getActiveProgram: () => WorkoutProgram | null;
@@ -42,12 +42,12 @@ export const useProgramStore = create<ProgramStore>((set, get) => ({
     set({ activeState: state });
   },
 
-  advanceDay: async (uid) => {
+  advanceDay: async (uid, completedDayId) => {
     const { activeState } = get();
     if (!activeState) return;
     const prog = PROGRAM_TEMPLATES.find((p) => p.id === activeState.programId);
     if (!prog) return;
-    const updated = await advanceProgramDay(uid, activeState, prog.days.length);
+    const updated = await advanceProgramDay(uid, activeState, prog.days.length, completedDayId);
     set({ activeState: updated });
   },
 

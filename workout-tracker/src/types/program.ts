@@ -36,4 +36,5 @@ export interface ActiveProgramState {
   startedAt: string;
   currentDayIndex: number;
   completedDates: string[];
+  completedDayIds?: string[];
 }

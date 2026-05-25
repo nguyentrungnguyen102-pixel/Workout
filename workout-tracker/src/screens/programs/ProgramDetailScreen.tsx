@@ -99,7 +99,7 @@ export default function ProgramDetailScreen() {
   const { programId } = route.params;
   const { profile } = useUserStore();
   const { activeState, loadActiveProgram, activate, deactivate } = useProgramStore();
-  const { startDraft, addExercise, resetDraft } = useWorkoutStore();
+  const { startDraft, addExercise, resetDraft, setActiveProgramDay } = useWorkoutStore();
   const uid = profile?.uid;
 
   useFocusEffect(
@@ -155,6 +155,7 @@ export default function ProgramDetailScreen() {
         durationSeconds: ex.unit !== 'reps' ? ex.durationSeconds : undefined,
       });
     });
+    setActiveProgramDay(day.id);
     navigation.navigate('WorkoutSummary');
   };
 
@@ -233,7 +234,8 @@ export default function ProgramDetailScreen() {
         <Text style={styles.sectionTitle}>Lịch tập chi tiết</Text>
         {program.days.map((day) => {
           const isCurrent = isActive && activeState?.currentDayIndex === day.order - 1;
-          const isCompleted = false; // simplified — could track per-day
+          const completedIds = activeState?.completedDayIds ?? [];
+          const isCompleted = isActive && completedIds.includes(day.id);
           return (
             <DayCard
               key={day.id}

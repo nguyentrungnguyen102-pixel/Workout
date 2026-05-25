@@ -4,7 +4,6 @@ import {
   ExerciseEntry,
   Intensity,
   WorkoutLog,
-  WorkoutPreset,
 } from '../types/workout';
 import { logWorkout as saveLog, getRecentLogs } from '../services/workoutService';
 import { updateStreakAfterLog, updateWeeklyMinutes } from '../services/userService';
@@ -25,9 +24,10 @@ interface WorkoutStore {
   setDraftFromLog: (log: WorkoutLog) => void;
   setIntensity: (intensity: Intensity) => void;
   setNotes: (notes: string) => void;
+  setActiveProgramDay: (dayId: string) => void;
   resetDraft: () => void;
 
-  logWorkout: (uid: string) => Promise<void>;
+  logWorkout: (uid: string) => Promise<string | undefined>;
   repeatYesterday: (uid: string) => Promise<void>;
   loadYesterdayLog: (uid: string) => Promise<void>;
   loadTodayLog: (uid: string) => Promise<void>;
@@ -113,10 +113,14 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
   setNotes: (notes) =>
     set((s) => ({ draft: { ...s.draft, notes } })),
 
+  setActiveProgramDay: (dayId) =>
+    set((s) => ({ draft: { ...s.draft, activeProgramDayId: dayId } })),
+
   resetDraft: () => set({ draft: emptyDraft() }),
 
   logWorkout: async (uid) => {
     const { draft } = get();
+    const activeProgramDayId = draft.activeProgramDayId;
     set({ isLogging: true });
     try {
       await saveLog(uid, draft);
@@ -128,6 +132,7 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
       }, 0));
       set({ draft: emptyDraft(), isLogging: false });
       await get().loadRecentLogs(uid);
+      return activeProgramDayId;
     } catch (err) {
       set({ isLogging: false });
       throw err;

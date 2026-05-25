@@ -59,8 +59,19 @@ export default function ExerciseProgressScreen() {
   const isSeconds = sessions[0]?.entry.unit === 'seconds';
   const hasWeight = sessions.some((s: Session) => s.entry.weight);
 
+  // Total volume = sets × reps × weight across all sessions
+  const totalVolume = hasWeight
+    ? sessions.reduce((sum: number, s: Session) => {
+        if (s.entry.weight && s.entry.reps) {
+          return sum + s.entry.sets * s.entry.reps * s.entry.weight;
+        }
+        return sum;
+      }, 0)
+    : 0;
+
   const chartSessions: Session[] = [...sessions].reverse().slice(-12);
   const chartValues = chartSessions.map((s: Session) => {
+    if (hasWeight && s.entry.weight && s.entry.reps) return s.entry.sets * s.entry.reps * s.entry.weight;
     if (hasWeight && s.entry.weight) return s.entry.weight;
     if (isReps) return s.entry.reps ?? 0;
     if (isSeconds) return s.entry.durationSeconds ?? 0;
@@ -68,7 +79,7 @@ export default function ExerciseProgressScreen() {
   });
   const maxVal = Math.max(1, ...chartValues);
 
-  const chartLabel = hasWeight ? '📈 Tiến độ tạ (kg)' : isReps ? '📈 Tiến độ reps' : isSeconds ? '📈 Tiến độ (giây)' : '📈 Tiến độ (phút)';
+  const chartLabel = hasWeight ? '📈 Tiến độ volume (kg)' : isReps ? '📈 Tiến độ reps' : isSeconds ? '📈 Tiến độ (giây)' : '📈 Tiến độ (phút)';
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -142,6 +153,19 @@ export default function ExerciseProgressScreen() {
               <Text style={styles.overviewLabel}>Lần đầu</Text>
             </View>
           </View>
+
+          {/* Volume card */}
+          {hasWeight && totalVolume > 0 && (
+            <View style={styles.volumeCard}>
+              <Text style={styles.volumeLabel}>🏋️ Tổng volume nâng được</Text>
+              <Text style={styles.volumeValue}>
+                {totalVolume >= 1000
+                  ? `${(totalVolume / 1000).toFixed(1)} tấn`
+                  : `${totalVolume.toLocaleString()} kg`}
+              </Text>
+              <Text style={styles.volumeHint}>Tổng (sets × reps × tạ) qua {sessions.length} buổi</Text>
+            </View>
+          )}
 
           {/* Progress chart */}
           {chartSessions.length > 1 && (
@@ -322,4 +346,16 @@ const styles = StyleSheet.create({
   },
   sessionDate: { fontSize: 13, fontWeight: '600', color: COLORS.textSecondary },
   sessionDetail: { fontSize: 14, fontWeight: '700', color: COLORS.text },
+
+  volumeCard: {
+    backgroundColor: COLORS.primaryLight,
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: COLORS.primary + '33',
+  },
+  volumeLabel: { fontSize: 12, fontWeight: '700', color: COLORS.primary, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6 },
+  volumeValue: { fontSize: 28, fontWeight: '900', color: COLORS.primary },
+  volumeHint: { fontSize: 11, color: COLORS.textSecondary, marginTop: 4 },
 });

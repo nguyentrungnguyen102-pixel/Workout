@@ -14,8 +14,10 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useWorkoutStore } from '../../stores/workoutStore';
 import { useUserStore } from '../../stores/userStore';
+import { useProgramStore } from '../../stores/programStore';
 import { COLORS } from '../../constants/colors';
 import { Intensity } from '../../types/workout';
+import { SYSTEM_PRESETS } from '../../constants/exercises';
 import { saveTemplate } from '../../services/templateService';
 
 const REST_PRESETS = [30, 60, 90];
@@ -219,9 +221,28 @@ function ExerciseRow({
   );
 }
 
+function MuscleGroupChips({ exercises }: { exercises: Array<{ presetId: string }> }) {
+  const groups = new Set<string>();
+  exercises.forEach((ex) => {
+    const preset = SYSTEM_PRESETS.find((p) => p.id === ex.presetId);
+    preset?.muscleGroups?.forEach((g) => groups.add(g));
+  });
+  if (groups.size === 0) return null;
+  return (
+    <View style={muscleStyles.row}>
+      {[...groups].map((g) => (
+        <View key={g} style={muscleStyles.chip}>
+          <Text style={muscleStyles.chipText}>{g}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
 export default function WorkoutSummaryModal() {
   const navigation = useNavigation<any>();
   const { profile, loadProfile } = useUserStore();
+  const { advanceDay } = useProgramStore();
   const {
     draft,
     isLogging,
@@ -264,7 +285,10 @@ export default function WorkoutSummaryModal() {
     }
     setSaving(true);
     try {
-      await logWorkout(profile.uid);
+      const completedDayId = await logWorkout(profile.uid);
+      if (completedDayId) {
+        advanceDay(profile.uid, completedDayId).catch(() => {});
+      }
       await loadProfile(profile.uid);
       navigation.navigate('Main');
     } catch (err) {
@@ -331,6 +355,14 @@ export default function WorkoutSummaryModal() {
               <Ionicons name="add" size={18} color={COLORS.primary} />
               <Text style={styles.addMoreText}>Thêm bài tập</Text>
             </TouchableOpacity>
+          </>
+        )}
+
+        {/* Muscle groups */}
+        {draft.exercises.length > 0 && (
+          <>
+            <Text style={styles.sectionLabel}>Nhóm cơ tập hôm nay</Text>
+            <MuscleGroupChips exercises={draft.exercises} />
           </>
         )}
 
@@ -677,6 +709,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   templateSaveBtnText: { fontSize: 14, fontWeight: '700', color: '#fff' },
+});
+
+const muscleStyles = StyleSheet.create({
+  row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 4 },
+  chip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: COLORS.primaryLight,
+    borderWidth: 1,
+    borderColor: COLORS.primary + '33',
+  },
+  chipText: { fontSize: 12, fontWeight: '700', color: COLORS.primary },
 });
 
 const timerStyles = StyleSheet.create({

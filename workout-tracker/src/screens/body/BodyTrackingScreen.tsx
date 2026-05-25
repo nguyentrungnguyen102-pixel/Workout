@@ -265,6 +265,19 @@ export default function BodyTrackingScreen() {
       ? +(latestMetric.weight - prevMetric.weight).toFixed(1)
       : undefined;
 
+  // BMI: use latest height available in metrics
+  const latestHeight = metrics.find((m) => m.heightCm != null)?.heightCm;
+  const bmi =
+    latestMetric?.weight && latestHeight
+      ? +(latestMetric.weight / Math.pow(latestHeight / 100, 2)).toFixed(1)
+      : undefined;
+  const bmiLabel =
+    bmi == null ? null
+    : bmi < 18.5 ? 'Thiếu cân'
+    : bmi < 25   ? 'Bình thường'
+    : bmi < 30   ? 'Thừa cân'
+    : 'Béo phì';
+
   const hasMetrics = metrics.length > 0;
 
   return (
@@ -312,9 +325,28 @@ export default function BodyTrackingScreen() {
                 value={latestMetric?.armCm}
                 unit="cm"
               />
-              <View style={{ flex: 1 }} />
+              <MetricCard
+                label="Chiều cao"
+                value={latestHeight}
+                unit="cm"
+              />
               <View style={{ flex: 1 }} />
             </View>
+
+            {bmi != null && (
+              <View style={styles.bmiCard}>
+                <View style={styles.bmiLeft}>
+                  <Text style={styles.bmiTitle}>BMI</Text>
+                  <Text style={styles.bmiValue}>{bmi}</Text>
+                </View>
+                <View style={styles.bmiRight}>
+                  <Text style={styles.bmiLabel}>{bmiLabel}</Text>
+                  <Text style={styles.bmiHint}>
+                    {latestMetric!.weight} kg · {latestHeight} cm
+                  </Text>
+                </View>
+              </View>
+            )}
 
             {/* Weight chart */}
             {hasMetrics && <WeightChart metrics={metrics} />}
@@ -395,6 +427,24 @@ const styles = StyleSheet.create({
   emptyIcon: { fontSize: 48, marginBottom: 12 },
   emptyTitle: { fontSize: 16, fontWeight: '700', color: COLORS.text },
   emptySubtitle: { fontSize: 13, color: COLORS.textSecondary, marginTop: 6 },
+
+  bmiCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.primaryLight,
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: COLORS.primary + '33',
+    gap: 16,
+  },
+  bmiLeft: { alignItems: 'center', minWidth: 60 },
+  bmiTitle: { fontSize: 11, fontWeight: '700', color: COLORS.primary, textTransform: 'uppercase', letterSpacing: 0.8 },
+  bmiValue: { fontSize: 32, fontWeight: '900', color: COLORS.primary, lineHeight: 36 },
+  bmiRight: { flex: 1 },
+  bmiLabel: { fontSize: 16, fontWeight: '700', color: COLORS.text },
+  bmiHint: { fontSize: 12, color: COLORS.textSecondary, marginTop: 2 },
 
   historyLabel: {
     fontSize: 16,

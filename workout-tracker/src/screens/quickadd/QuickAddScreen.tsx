@@ -80,6 +80,7 @@ export default function QuickAddScreen() {
     resetDraft,
     repeatYesterday,
     loadRecentLogs,
+    setActiveProgramDay,
   } = useWorkoutStore();
 
   const { activeState, loadActiveProgram, getActiveProgram, getTodayDay } = useProgramStore();
@@ -178,8 +179,9 @@ export default function QuickAddScreen() {
         durationSeconds: ex.unit !== 'reps' ? ex.durationSeconds : undefined,
       });
     });
+    setActiveProgramDay(todayDay.id);
     navigation.navigate('WorkoutSummary');
-  }, [getTodayDay, resetDraft, startDraft, addExercise, navigation]);
+  }, [getTodayDay, resetDraft, startDraft, addExercise, setActiveProgramDay, navigation]);
 
   const activeProg = getActiveProgram();
   const todayProgramDay = getTodayDay();

@@ -16,6 +16,7 @@ export async function activateProgram(uid: string, programId: string): Promise<A
     startedAt: todayString(),
     currentDayIndex: 0,
     completedDates: [],
+    completedDayIds: [],
   };
   await updateDoc(doc(db, 'users', uid), { activeProgram: state });
   return state;
@@ -25,13 +26,18 @@ export async function advanceProgramDay(
   uid: string,
   currentState: ActiveProgramState,
   totalDays: number,
+  completedDayId?: string,
 ): Promise<ActiveProgramState> {
   const today = todayString();
   const completedDates = currentState.completedDates.includes(today)
     ? currentState.completedDates
     : [...currentState.completedDates, today];
+  const existingDayIds = currentState.completedDayIds ?? [];
+  const completedDayIds = completedDayId && !existingDayIds.includes(completedDayId)
+    ? [...existingDayIds, completedDayId]
+    : existingDayIds;
   const nextIndex = (currentState.currentDayIndex + 1) % totalDays;
-  const updated: ActiveProgramState = { ...currentState, currentDayIndex: nextIndex, completedDates };
+  const updated: ActiveProgramState = { ...currentState, currentDayIndex: nextIndex, completedDates, completedDayIds };
   await updateDoc(doc(db, 'users', uid), { activeProgram: updated });
   return updated;
 }

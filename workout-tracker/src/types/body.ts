@@ -5,6 +5,7 @@ export interface BodyMetric {
   userId: string;
   date: string;
   weight?: number;
+  heightCm?: number;
   chestCm?: number;
   hipCm?: number;
   armCm?: number;

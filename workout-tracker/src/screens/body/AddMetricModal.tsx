@@ -23,6 +23,7 @@ export default function AddMetricModal() {
   const { addMetric } = useBodyStore();
 
   const [weight, setWeight] = useState('');
+  const [height, setHeight] = useState('');
   const [chest, setChest] = useState('');
   const [hip, setHip] = useState('');
   const [arm, setArm] = useState('');
@@ -30,7 +31,7 @@ export default function AddMetricModal() {
 
   const handleSave = async () => {
     if (!profile?.uid) return;
-    if (!weight && !chest && !hip && !arm) {
+    if (!weight && !height && !chest && !hip && !arm) {
       Alert.alert('Thiếu dữ liệu', 'Hãy nhập ít nhất 1 chỉ số');
       return;
     }
@@ -39,6 +40,7 @@ export default function AddMetricModal() {
     try {
       await addMetric(profile.uid, {
         weight: weight ? parseFloat(weight) : undefined,
+        heightCm: height ? parseFloat(height) : undefined,
         chestCm: chest ? parseFloat(chest) : undefined,
         hipCm: hip ? parseFloat(hip) : undefined,
         armCm: arm ? parseFloat(arm) : undefined,
@@ -78,6 +80,19 @@ export default function AddMetricModal() {
               placeholderTextColor={COLORS.textMuted}
               value={weight}
               onChangeText={setWeight}
+              keyboardType="decimal-pad"
+              returnKeyType="next"
+            />
+          </View>
+
+          <View style={styles.field}>
+            <Text style={styles.label}>📏 Chiều cao (cm)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="170"
+              placeholderTextColor={COLORS.textMuted}
+              value={height}
+              onChangeText={setHeight}
               keyboardType="decimal-pad"
               returnKeyType="next"
             />
