@@ -150,6 +150,12 @@ function ExerciseRow({
     if (!isNaN(num) && num > 0) onUpdate({ sets: num });
   };
 
+  const handleWeightChange = (text: string) => {
+    const num = parseFloat(text);
+    if (isNaN(num) || num < 0) return;
+    onUpdate({ weight: num || undefined });
+  };
+
   return (
     <View style={styles.exerciseRow}>
       <View style={styles.exerciseTop}>
@@ -192,6 +198,22 @@ function ExerciseRow({
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Weight input — strength exercises only */}
+      {unit === 'reps' && (
+        <View style={styles.weightRow}>
+          <Text style={styles.weightLabel}>🏋️ Tạ (kg)</Text>
+          <TextInput
+            style={styles.weightInput}
+            value={exercise.weight ? String(exercise.weight) : ''}
+            onChangeText={handleWeightChange}
+            keyboardType="decimal-pad"
+            placeholder="--"
+            placeholderTextColor={COLORS.textMuted}
+            selectTextOnFocus
+          />
+        </View>
+      )}
     </View>
   );
 }
@@ -456,6 +478,30 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     fontWeight: '600',
     paddingRight: 8,
+  },
+
+  weightRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+  },
+  weightLabel: { fontSize: 12, fontWeight: '600', color: COLORS.textSecondary, flex: 1 },
+  weightInput: {
+    backgroundColor: COLORS.card2,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    fontSize: 15,
+    fontWeight: '700',
+    color: COLORS.text,
+    minWidth: 72,
+    textAlign: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
 
   addExerciseBtn: {
