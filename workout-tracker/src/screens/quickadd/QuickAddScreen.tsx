@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   FlatList,
   StyleSheet,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -15,8 +16,10 @@ import { useWorkoutStore } from '../../stores/workoutStore';
 import { useUserStore } from '../../stores/userStore';
 import { SYSTEM_PRESETS, CATEGORY_LABELS } from '../../constants/exercises';
 import { COLORS } from '../../constants/colors';
-import { WorkoutPreset, ExerciseCategory } from '../../types/workout';
+import { WorkoutPreset, ExerciseCategory, WorkoutTemplate } from '../../types/workout';
 import { RootStackParamList } from '../../navigation/types';
+import { getTemplates, deleteTemplate } from '../../services/templateService';
+import { useProgramStore } from '../../stores/programStore';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -79,13 +82,18 @@ export default function QuickAddScreen() {
     loadRecentLogs,
   } = useWorkoutStore();
 
+  const { activeState, loadActiveProgram, getActiveProgram, getTodayDay } = useProgramStore();
+
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>('all');
+  const [templates, setTemplates] = useState<WorkoutTemplate[]>([]);
   const uid = profile?.uid;
 
   useFocusEffect(
     useCallback(() => {
       if (!uid) return;
       loadRecentLogs(uid);
+      loadActiveProgram(uid);
+      getTemplates(uid).then(setTemplates).catch(() => {});
     }, [uid])
   );
 
@@ -127,6 +135,55 @@ export default function QuickAddScreen() {
     navigation.navigate('WorkoutSummary');
   }, [uid, yesterdayLog, repeatYesterday, navigation]);
 
+  const handleLoadTemplate = useCallback(
+    (template: WorkoutTemplate) => {
+      startDraft();
+      template.exercises.forEach((ex) => addExercise({ ...ex }));
+      navigation.navigate('WorkoutSummary');
+    },
+    [startDraft, addExercise, navigation]
+  );
+
+  const handleDeleteTemplate = useCallback(
+    (template: WorkoutTemplate) => {
+      Alert.alert('Xoá template?', `"${template.name}" sẽ bị xoá`, [
+        { text: 'Huỷ', style: 'cancel' },
+        {
+          text: 'Xoá',
+          style: 'destructive',
+          onPress: async () => {
+            await deleteTemplate(template.id).catch(() => {});
+            setTemplates((prev) => prev.filter((t) => t.id !== template.id));
+          },
+        },
+      ]);
+    },
+    []
+  );
+
+  const handleLoadProgramDay = useCallback(() => {
+    const todayDay = getTodayDay();
+    if (!todayDay) return;
+    resetDraft();
+    startDraft();
+    todayDay.exercises.forEach((ex) => {
+      const preset = SYSTEM_PRESETS.find((p) => p.id === ex.presetId);
+      addExercise({
+        presetId: ex.presetId,
+        name: preset?.nameVi ?? ex.nameVi,
+        category: preset?.category ?? 'strength',
+        unit: preset?.unit ?? ex.unit,
+        sets: ex.sets,
+        reps: ex.unit === 'reps' ? ex.reps : undefined,
+        durationSeconds: ex.unit !== 'reps' ? ex.durationSeconds : undefined,
+      });
+    });
+    navigation.navigate('WorkoutSummary');
+  }, [getTodayDay, resetDraft, startDraft, addExercise, navigation]);
+
+  const activeProg = getActiveProgram();
+  const todayProgramDay = getTodayDay();
+
   const hasDraft = draft.exercises.length > 0;
   const streak = profile?.streak?.current || 0;
   const targetMinutes = profile?.weeklyStats?.targetMinutes || profile?.weeklyGoalMinutes || 150;
@@ -149,7 +206,16 @@ export default function QuickAddScreen() {
             <Text style={styles.greeting}>Chào {profile?.displayName?.split(' ')[0] || 'anh'} 👋</Text>
             <Text style={styles.subtitle}>{today}</Text>
           </View>
-          <StreakBadge streak={streak} />
+          <View style={styles.headerRight}>
+            <TouchableOpacity
+              style={styles.programsBtn}
+              onPress={() => navigation.navigate('ProgramsList')}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="barbell-outline" size={20} color={COLORS.primary} />
+            </TouchableOpacity>
+            <StreakBadge streak={streak} />
+          </View>
         </View>
 
         {/* Weekly progress card */}
@@ -198,6 +264,48 @@ export default function QuickAddScreen() {
             </View>
             <Ionicons name="chevron-forward" size={20} color={COLORS.primary} />
           </TouchableOpacity>
+        )}
+
+        {/* Active program day card */}
+        {activeProg && todayProgramDay && !todayLog && (
+          <TouchableOpacity style={styles.programCard} onPress={handleLoadProgramDay} activeOpacity={0.7}>
+            <View style={styles.programCardLeft}>
+              <Text style={styles.programCardEmoji}>{todayProgramDay.emoji}</Text>
+              <View>
+                <Text style={styles.programCardTitle}>{activeProg.nameVi}</Text>
+                <Text style={styles.programCardDay}>{todayProgramDay.nameVi} · {todayProgramDay.focusVi}</Text>
+              </View>
+            </View>
+            <Ionicons name="play-circle" size={28} color={COLORS.primary} />
+          </TouchableOpacity>
+        )}
+
+        {/* Saved templates */}
+        {templates.length > 0 && (
+          <View style={styles.templatesSection}>
+            <Text style={styles.templatesSectionTitle}>📌 Template đã lưu</Text>
+            <FlatList
+              data={templates}
+              horizontal
+              keyExtractor={(item) => item.id}
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.templatesList}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.templateCard}
+                  onPress={() => handleLoadTemplate(item)}
+                  onLongPress={() => handleDeleteTemplate(item)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.templateName} numberOfLines={1}>{item.name}</Text>
+                  <Text style={styles.templateMeta}>{item.exercises.length} bài</Text>
+                  <Text style={styles.templateExercises} numberOfLines={1}>
+                    {item.exercises.map((e) => e.name).join(' · ')}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
         )}
 
         {/* Category filter tabs */}
@@ -364,6 +472,33 @@ const styles = StyleSheet.create({
   repeatTitle: { fontSize: 15, fontWeight: '700', color: COLORS.text },
   repeatSub: { fontSize: 12, color: COLORS.textSecondary, marginTop: 4 },
 
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  programsBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: COLORS.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  programCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: COLORS.primaryLight,
+    borderRadius: 14,
+    padding: 14,
+    marginHorizontal: 20,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: COLORS.primary + '33',
+  },
+  programCardLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
+  programCardEmoji: { fontSize: 28 },
+  programCardTitle: { fontSize: 13, fontWeight: '700', color: COLORS.primary },
+  programCardDay: { fontSize: 12, color: COLORS.textSecondary, marginTop: 2 },
+
   categoryTabList: { paddingHorizontal: 20, gap: 8, marginBottom: 16 },
   categoryTab: {
     flexDirection: 'row',
@@ -424,4 +559,27 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
   },
   browseBtnText: { fontSize: 14, fontWeight: '600', color: COLORS.primary },
+
+  templatesSection: { marginBottom: 16, paddingHorizontal: 20 },
+  templatesSectionTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 8,
+  },
+  templatesList: { gap: 8, paddingRight: 4 },
+  templateCard: {
+    backgroundColor: COLORS.cardBackground,
+    borderRadius: 12,
+    padding: 12,
+    minWidth: 130,
+    maxWidth: 160,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  templateName: { fontSize: 13, fontWeight: '700', color: COLORS.text, marginBottom: 2 },
+  templateMeta: { fontSize: 11, color: COLORS.primary, fontWeight: '600', marginBottom: 2 },
+  templateExercises: { fontSize: 10, color: COLORS.textSecondary },
 });

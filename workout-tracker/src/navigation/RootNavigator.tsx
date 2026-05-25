@@ -12,6 +12,9 @@ import WorkoutSummaryModal from '../screens/quickadd/WorkoutSummaryModal';
 import ExercisePickerModal from '../screens/quickadd/ExercisePickerModal';
 import HistoryDetailScreen from '../screens/history/HistoryDetailScreen';
 import AddMetricModal from '../screens/body/AddMetricModal';
+import ExerciseProgressScreen from '../screens/stats/ExerciseProgressScreen';
+import ProgramsScreen from '../screens/programs/ProgramsScreen';
+import ProgramDetailScreen from '../screens/programs/ProgramDetailScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -54,6 +57,9 @@ export default function RootNavigator() {
               component={AddMetricModal}
               options={{ presentation: 'modal' }}
             />
+            <Stack.Screen name="ExerciseProgress" component={ExerciseProgressScreen} />
+            <Stack.Screen name="ProgramsList" component={ProgramsScreen} />
+            <Stack.Screen name="ProgramDetail" component={ProgramDetailScreen} />
           </>
         )}
       </Stack.Navigator>

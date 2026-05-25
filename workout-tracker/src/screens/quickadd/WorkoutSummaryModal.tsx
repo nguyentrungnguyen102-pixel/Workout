@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import { useWorkoutStore } from '../../stores/workoutStore';
 import { useUserStore } from '../../stores/userStore';
 import { COLORS } from '../../constants/colors';
 import { Intensity } from '../../types/workout';
+import { saveTemplate } from '../../services/templateService';
 
 const REST_PRESETS = [30, 60, 90];
 
@@ -232,6 +233,28 @@ export default function WorkoutSummaryModal() {
     resetDraft,
   } = useWorkoutStore();
   const [saving, setSaving] = useState(false);
+  const [showTemplateSave, setShowTemplateSave] = useState(false);
+  const [templateName, setTemplateName] = useState('');
+  const [savingTemplate, setSavingTemplate] = useState(false);
+
+  const handleSaveTemplate = useCallback(async () => {
+    if (!profile?.uid) return;
+    if (!templateName.trim()) {
+      Alert.alert('Thiếu tên', 'Nhập tên template');
+      return;
+    }
+    setSavingTemplate(true);
+    try {
+      await saveTemplate(profile.uid, templateName.trim(), draft.exercises);
+      setShowTemplateSave(false);
+      setTemplateName('');
+      Alert.alert('Đã lưu! ✅', `Template "${templateName.trim()}" đã được lưu.`);
+    } catch {
+      Alert.alert('Lỗi', 'Không lưu được template. Thử lại nhé!');
+    } finally {
+      setSavingTemplate(false);
+    }
+  }, [profile?.uid, templateName, draft.exercises]);
 
   const handleLog = async () => {
     if (!profile?.uid) return;
@@ -360,6 +383,47 @@ export default function WorkoutSummaryModal() {
 
       {/* Log button */}
       <View style={styles.footer}>
+        {/* Save as template inline form */}
+        {showTemplateSave && (
+          <View style={styles.templateSaveRow}>
+            <TextInput
+              style={styles.templateNameInput}
+              placeholder="Tên template..."
+              placeholderTextColor={COLORS.textMuted}
+              value={templateName}
+              onChangeText={setTemplateName}
+              autoFocus
+            />
+            <TouchableOpacity
+              style={[styles.templateSaveBtn, savingTemplate && { opacity: 0.5 }]}
+              onPress={handleSaveTemplate}
+              disabled={savingTemplate}
+              activeOpacity={0.8}
+            >
+              {savingTemplate ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <Text style={styles.templateSaveBtnText}>Lưu</Text>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => { setShowTemplateSave(false); setTemplateName(''); }} style={{ padding: 6 }}>
+              <Ionicons name="close" size={20} color={COLORS.textSecondary} />
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Save as template trigger */}
+        {draft.exercises.length > 0 && !showTemplateSave && (
+          <TouchableOpacity
+            style={styles.saveTemplateLink}
+            onPress={() => setShowTemplateSave(true)}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="bookmark-outline" size={16} color={COLORS.primary} />
+            <Text style={styles.saveTemplateLinkText}>Lưu thành template</Text>
+          </TouchableOpacity>
+        )}
+
         <TouchableOpacity
           style={[styles.logBtn, (saving || draft.exercises.length === 0) && styles.logBtnDisabled]}
           onPress={handleLog}
@@ -576,6 +640,43 @@ const styles = StyleSheet.create({
   },
   logBtnDisabled: { opacity: 0.5, shadowOpacity: 0 },
   logBtnText: { fontSize: 17, fontWeight: '800', color: '#fff' },
+
+  saveTemplateLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 8,
+  },
+  saveTemplateLinkText: { fontSize: 13, color: COLORS.primary, fontWeight: '600' },
+
+  templateSaveRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: COLORS.cardBackground,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginBottom: 10,
+  },
+  templateNameInput: {
+    flex: 1,
+    fontSize: 15,
+    color: COLORS.text,
+    paddingVertical: 6,
+  },
+  templateSaveBtn: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    minWidth: 52,
+    alignItems: 'center',
+  },
+  templateSaveBtnText: { fontSize: 14, fontWeight: '700', color: '#fff' },
 });
 
 const timerStyles = StyleSheet.create({
