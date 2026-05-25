@@ -18,6 +18,7 @@ export interface WorkoutPreset {
   userId?: string;
   usageCount: number;
   lastUsedAt?: string;
+  muscleGroups?: string[];
 }
 
 export interface ExerciseEntry {
@@ -53,4 +54,14 @@ export interface DraftWorkout {
   startedAt: Date | null;
   intensity: Intensity;
   notes: string;
+  activeProgramDayId?: string;
+}
+
+// Saved workout template (named routine)
+export interface WorkoutTemplate {
+  id: string;
+  userId: string;
+  name: string;
+  exercises: ExerciseEntry[];
+  createdAt?: import('firebase/firestore').Timestamp;
 }

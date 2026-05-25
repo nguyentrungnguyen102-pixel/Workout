@@ -23,13 +23,15 @@ export default function AddMetricModal() {
   const { addMetric } = useBodyStore();
 
   const [weight, setWeight] = useState('');
-  const [bodyFat, setBodyFat] = useState('');
-  const [waist, setWaist] = useState('');
+  const [height, setHeight] = useState('');
+  const [chest, setChest] = useState('');
+  const [hip, setHip] = useState('');
+  const [arm, setArm] = useState('');
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
     if (!profile?.uid) return;
-    if (!weight && !bodyFat && !waist) {
+    if (!weight && !height && !chest && !hip && !arm) {
       Alert.alert('Thiếu dữ liệu', 'Hãy nhập ít nhất 1 chỉ số');
       return;
     }
@@ -38,8 +40,10 @@ export default function AddMetricModal() {
     try {
       await addMetric(profile.uid, {
         weight: weight ? parseFloat(weight) : undefined,
-        bodyFatPercent: bodyFat ? parseFloat(bodyFat) : undefined,
-        waistCm: waist ? parseFloat(waist) : undefined,
+        heightCm: height ? parseFloat(height) : undefined,
+        chestCm: chest ? parseFloat(chest) : undefined,
+        hipCm: hip ? parseFloat(hip) : undefined,
+        armCm: arm ? parseFloat(arm) : undefined,
       });
       navigation.goBack();
     } catch {
@@ -82,26 +86,52 @@ export default function AddMetricModal() {
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>🔥 Body fat (%)</Text>
+            <Text style={styles.label}>📏 Chiều cao (cm)</Text>
             <TextInput
               style={styles.input}
-              placeholder="15.0"
+              placeholder="170"
               placeholderTextColor={COLORS.textMuted}
-              value={bodyFat}
-              onChangeText={setBodyFat}
+              value={height}
+              onChangeText={setHeight}
               keyboardType="decimal-pad"
               returnKeyType="next"
             />
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>📏 Vòng bụng (cm)</Text>
+            <Text style={styles.label}>📐 Vòng ngực (cm)</Text>
             <TextInput
               style={styles.input}
-              placeholder="80"
+              placeholder="90"
               placeholderTextColor={COLORS.textMuted}
-              value={waist}
-              onChangeText={setWaist}
+              value={chest}
+              onChangeText={setChest}
+              keyboardType="decimal-pad"
+              returnKeyType="next"
+            />
+          </View>
+
+          <View style={styles.field}>
+            <Text style={styles.label}>🍑 Vòng mông (cm)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="95"
+              placeholderTextColor={COLORS.textMuted}
+              value={hip}
+              onChangeText={setHip}
+              keyboardType="decimal-pad"
+              returnKeyType="next"
+            />
+          </View>
+
+          <View style={styles.field}>
+            <Text style={styles.label}>💪 Vòng tay (cm)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="35"
+              placeholderTextColor={COLORS.textMuted}
+              value={arm}
+              onChangeText={setArm}
               keyboardType="decimal-pad"
               returnKeyType="done"
             />

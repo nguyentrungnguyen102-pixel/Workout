@@ -4,22 +4,19 @@ import {
   ExerciseEntry,
   Intensity,
   WorkoutLog,
-  WorkoutPreset,
 } from '../types/workout';
-import { logWorkout as saveLog, getYesterdayLog, getTodayLog } from '../services/workoutService';
+import { logWorkout as saveLog, getRecentLogs } from '../services/workoutService';
 import { updateStreakAfterLog, updateWeeklyMinutes } from '../services/userService';
+import { todayString, yesterdayString } from '../lib/date';
 
 interface WorkoutStore {
-  // Draft state during Quick Add
   draft: DraftWorkout;
   isLogging: boolean;
 
-  // Fetched data
   yesterdayLog: WorkoutLog | null;
   todayLog: WorkoutLog | null;
   recentLogs: WorkoutLog[];
 
-  // Draft actions
   startDraft: () => void;
   addExercise: (exercise: ExerciseEntry) => void;
   removeExercise: (presetId: string) => void;
@@ -27,13 +24,14 @@ interface WorkoutStore {
   setDraftFromLog: (log: WorkoutLog) => void;
   setIntensity: (intensity: Intensity) => void;
   setNotes: (notes: string) => void;
+  setActiveProgramDay: (dayId: string) => void;
   resetDraft: () => void;
 
-  // Async actions
-  logWorkout: (uid: string) => Promise<void>;
+  logWorkout: (uid: string) => Promise<string | undefined>;
   repeatYesterday: (uid: string) => Promise<void>;
   loadYesterdayLog: (uid: string) => Promise<void>;
   loadTodayLog: (uid: string) => Promise<void>;
+  loadRecentLogs: (uid: string) => Promise<void>;
 }
 
 const emptyDraft = (): DraftWorkout => ({
@@ -42,6 +40,21 @@ const emptyDraft = (): DraftWorkout => ({
   intensity: 'moderate',
   notes: '',
 });
+
+// Merge exercises from multiple logs (deduplicated by presetId, keep most recent)
+function mergeExercises(logs: WorkoutLog[]): WorkoutLog['exercises'] {
+  const merged: WorkoutLog['exercises'] = [];
+  const seen = new Set<string>();
+  logs.forEach((log) => {
+    log.exercises.forEach((e) => {
+      if (!seen.has(e.presetId)) {
+        seen.add(e.presetId);
+        merged.push(e);
+      }
+    });
+  });
+  return merged;
+}
 
 export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
   draft: emptyDraft(),
@@ -100,13 +113,17 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
   setNotes: (notes) =>
     set((s) => ({ draft: { ...s.draft, notes } })),
 
+  setActiveProgramDay: (dayId) =>
+    set((s) => ({ draft: { ...s.draft, activeProgramDayId: dayId } })),
+
   resetDraft: () => set({ draft: emptyDraft() }),
 
   logWorkout: async (uid) => {
     const { draft } = get();
+    const activeProgramDayId = draft.activeProgramDayId;
     set({ isLogging: true });
     try {
-      const logId = await saveLog(uid, draft);
+      await saveLog(uid, draft);
       await updateStreakAfterLog(uid);
       await updateWeeklyMinutes(uid, draft.exercises.reduce((sum, e) => {
         if (e.unit === 'minutes') return sum + (e.durationSeconds || 0) / 60;
@@ -114,7 +131,8 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
         return sum + 3;
       }, 0));
       set({ draft: emptyDraft(), isLogging: false });
-      await get().loadTodayLog(uid);
+      await get().loadRecentLogs(uid);
+      return activeProgramDayId;
     } catch (err) {
       set({ isLogging: false });
       throw err;
@@ -124,7 +142,6 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
   repeatYesterday: async (uid) => {
     const { yesterdayLog } = get();
     if (!yesterdayLog) return;
-
     set({
       draft: {
         exercises: yesterdayLog.exercises.map((e) => ({ ...e })),
@@ -135,13 +152,26 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
     });
   },
 
-  loadYesterdayLog: async (uid) => {
-    const log = await getYesterdayLog(uid);
-    set({ yesterdayLog: log });
+  // Fetches recent logs and derives todayLog + yesterdayLog from the same dataset
+  loadRecentLogs: async (uid) => {
+    const logs = await getRecentLogs(uid, 30);
+    const today = todayString();
+    const yesterday = yesterdayString();
+
+    const todayLogs = logs.filter((l) => l.date === today);
+    const todayLog = todayLogs[0] || null;
+
+    const yesterdayLogs = logs.filter((l) => l.date === yesterday);
+    let yesterdayLog: WorkoutLog | null = null;
+    if (yesterdayLogs.length === 1) {
+      yesterdayLog = yesterdayLogs[0];
+    } else if (yesterdayLogs.length > 1) {
+      yesterdayLog = { ...yesterdayLogs[0], exercises: mergeExercises(yesterdayLogs) };
+    }
+
+    set({ recentLogs: logs, todayLog, yesterdayLog });
   },
 
-  loadTodayLog: async (uid) => {
-    const log = await getTodayLog(uid);
-    set({ todayLog: log });
-  },
+  loadYesterdayLog: async (uid) => { await get().loadRecentLogs(uid); },
+  loadTodayLog: async (uid) => { await get().loadRecentLogs(uid); },
 }));
