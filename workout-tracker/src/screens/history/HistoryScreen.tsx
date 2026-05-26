@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useUserStore } from '../../stores/userStore';
 import { getRecentLogs } from '../../services/workoutService';
 import { useHeatmap } from '../../hooks/useHeatmap';
@@ -112,6 +112,10 @@ function LogCard({ log, onPress }: { log: WorkoutLog; onPress: () => void }) {
   const dayName = dateObj.toLocaleDateString('vi-VN', { weekday: 'short' });
   const dateStr = dateObj.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
 
+  const timeStr = (log as any).createdAt?.seconds
+    ? new Date((log as any).createdAt.seconds * 1000).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+    : '';
+
   const intensityColor = {
     light:    COLORS.success,
     moderate: '#FF9800',
@@ -123,6 +127,7 @@ function LogCard({ log, onPress }: { log: WorkoutLog; onPress: () => void }) {
       <View style={logStyles.dateCol}>
         <Text style={logStyles.dateDay}>{dateStr}</Text>
         <Text style={logStyles.dateDayName}>{dayName}</Text>
+        {timeStr ? <Text style={logStyles.dateTime}>{timeStr}</Text> : null}
       </View>
       <View style={logStyles.divider} />
       <View style={logStyles.info}>
@@ -159,6 +164,7 @@ const logStyles = StyleSheet.create({
   dateCol: { alignItems: 'center', minWidth: 44 },
   dateDay: { fontSize: 16, fontWeight: '700', color: COLORS.text },
   dateDayName: { fontSize: 10, color: COLORS.textSecondary, marginTop: 2 },
+  dateTime: { fontSize: 10, color: COLORS.textMuted, marginTop: 2 },
   divider: { width: 1, height: 36, backgroundColor: COLORS.border },
   info: { flex: 1 },
   exercises: { fontSize: 14, fontWeight: '600', color: COLORS.text },
@@ -176,14 +182,16 @@ export default function HistoryScreen() {
 
   const uid = profile?.uid;
 
-  useEffect(() => {
-    if (!uid) return;
-    setLoading(true);
-    getRecentLogs(uid, 20)
-      .then(setLogs)
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [uid]);
+  useFocusEffect(
+    useCallback(() => {
+      if (!uid) return;
+      setLoading(true);
+      getRecentLogs(uid, 20)
+        .then(setLogs)
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    }, [uid])
+  );
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
