@@ -314,6 +314,130 @@ export const PROGRAM_TEMPLATES: WorkoutProgram[] = [
       },
     ],
   },
+
+  // ─── Phase 5: Home Dumbbell Programs ───────────────────────────────────────
+  {
+    id: 'home_dumbbell_beginner',
+    nameVi: 'Tạ đơn tại nhà — Người mới',
+    descriptionVi: 'Chương trình toàn thân với tạ đơn, 3 buổi/tuần. Phù hợp người mới bắt đầu tập tại nhà với cặp tạ đơn nhẹ (5–10kg).',
+    emoji: '🏠',
+    daysPerWeek: 3,
+    difficulty: 'beginner',
+    focus: 'weights',
+    estimatedMinutes: 40,
+    days: [
+      {
+        id: 'hdb_a',
+        order: 1,
+        nameVi: 'Buổi A — Đẩy + Chân',
+        focusVi: 'Ngực · Vai · Tứ đầu',
+        emoji: '🫸',
+        exercises: [
+          { presetId: 'goblet_squat',        nameVi: 'Squat ôm tạ',        sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'dumbbell_chest_press', nameVi: 'Đẩy ngực tạ đơn',   sets: 3, reps: 10, unit: 'reps' },
+          { presetId: 'shoulder_press_db',   nameVi: 'Đẩy vai tạ đơn',     sets: 3, reps: 10, unit: 'reps' },
+          { presetId: 'tricep_extension',    nameVi: 'Mở rộng tay sau',     sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'plank',               nameVi: 'Plank',               sets: 3, durationSeconds: 30, unit: 'seconds' },
+        ],
+      },
+      {
+        id: 'hdb_b',
+        order: 2,
+        nameVi: 'Buổi B — Kéo + Tay sau',
+        focusVi: 'Lưng · Tay trước · Vai sau',
+        emoji: '🚣',
+        exercises: [
+          { presetId: 'bent_over_row',   nameVi: 'Rowing tạ đơn',     sets: 3, reps: 10, unit: 'reps' },
+          { presetId: 'dumbbell_row',    nameVi: 'Kéo tạ đơn tay',   sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'bicep_curl',      nameVi: 'Curl tạ đơn',       sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'hammer_curl',     nameVi: 'Hammer Curl',        sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'lateral_raise',   nameVi: 'Nâng vai ngang',    sets: 3, reps: 12, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'hdb_c',
+        order: 3,
+        nameVi: 'Buổi C — Chân + Core',
+        focusVi: 'Đùi sau · Mông · Bụng',
+        emoji: '🦵',
+        exercises: [
+          { presetId: 'romanian_deadlift', nameVi: 'Deadlift tạ đơn', sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'dumbbell_lunge',    nameVi: 'Lunge tạ đơn',    sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'goblet_squat',      nameVi: 'Squat ôm tạ',     sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'plank',             nameVi: 'Plank',            sets: 3, durationSeconds: 45, unit: 'seconds' },
+          { presetId: 'stretching',        nameVi: 'Giãn cơ',         sets: 1, durationSeconds: 300, unit: 'seconds' },
+        ],
+      },
+    ],
+  },
+
+  {
+    id: 'home_dumbbell_intermediate',
+    nameVi: 'Tạ đơn tại nhà — Trung cấp',
+    descriptionVi: 'Chương trình 4 buổi/tuần chia nhóm cơ Thượng/Hạ thân. Dùng tạ đơn 8–15kg, tăng tải dần mỗi tuần.',
+    emoji: '🏋️',
+    daysPerWeek: 4,
+    difficulty: 'intermediate',
+    focus: 'weights',
+    estimatedMinutes: 50,
+    days: [
+      {
+        id: 'hdi_upper1',
+        order: 1,
+        nameVi: 'Thượng Thân A — Đẩy',
+        focusVi: 'Ngực · Vai · Tay sau',
+        emoji: '🫸',
+        exercises: [
+          { presetId: 'dumbbell_chest_press', nameVi: 'Đẩy ngực tạ đơn',  sets: 4, reps: 10, unit: 'reps' },
+          { presetId: 'arnold_press',         nameVi: 'Arnold Press',       sets: 3, reps: 10, unit: 'reps' },
+          { presetId: 'lateral_raise',        nameVi: 'Nâng vai ngang',    sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'tricep_extension',     nameVi: 'Mở rộng tay sau',   sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'pushup',               nameVi: 'Hít đất',           sets: 3, reps: 20, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'hdi_lower1',
+        order: 2,
+        nameVi: 'Hạ Thân A — Tứ đầu',
+        focusVi: 'Tứ đầu · Mông · Bắp chân',
+        emoji: '🦵',
+        exercises: [
+          { presetId: 'goblet_squat',   nameVi: 'Squat ôm tạ',   sets: 4, reps: 15, unit: 'reps' },
+          { presetId: 'dumbbell_lunge', nameVi: 'Lunge tạ đơn',  sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'squat',          nameVi: 'Squat tự do',   sets: 3, reps: 20, unit: 'reps' },
+          { presetId: 'plank',          nameVi: 'Plank',          sets: 3, durationSeconds: 45, unit: 'seconds' },
+        ],
+      },
+      {
+        id: 'hdi_upper2',
+        order: 3,
+        nameVi: 'Thượng Thân B — Kéo',
+        focusVi: 'Lưng · Tay trước · Vai sau',
+        emoji: '🚣',
+        exercises: [
+          { presetId: 'bent_over_row', nameVi: 'Rowing tạ đơn',    sets: 4, reps: 10, unit: 'reps' },
+          { presetId: 'dumbbell_row',  nameVi: 'Kéo tạ đơn tay',  sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'bicep_curl',    nameVi: 'Curl tạ đơn',      sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'hammer_curl',   nameVi: 'Hammer Curl',       sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'pullup',        nameVi: 'Kéo xà',           sets: 3, reps: 8,  unit: 'reps' },
+        ],
+      },
+      {
+        id: 'hdi_lower2',
+        order: 4,
+        nameVi: 'Hạ Thân B — Đùi sau',
+        focusVi: 'Hamstring · Mông · Core',
+        emoji: '⬆️',
+        exercises: [
+          { presetId: 'romanian_deadlift', nameVi: 'Deadlift tạ đơn',  sets: 4, reps: 10, unit: 'reps' },
+          { presetId: 'dumbbell_lunge',    nameVi: 'Lunge tạ đơn',     sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'goblet_squat',      nameVi: 'Squat ôm tạ',      sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'plank',             nameVi: 'Plank',             sets: 3, durationSeconds: 60, unit: 'seconds' },
+          { presetId: 'stretching',        nameVi: 'Giãn cơ',          sets: 1, durationSeconds: 300, unit: 'seconds' },
+        ],
+      },
+    ],
+  },
 ];
 
 export const DIFFICULTY_LABELS: Record<string, string> = {
@@ -327,4 +451,5 @@ export const FOCUS_LABELS: Record<string, string> = {
   cardio:   'Cardio',
   mixed:    'Kết hợp',
   mobility: 'Dẻo dai',
+  weights:  'Tạ đơn',
 };

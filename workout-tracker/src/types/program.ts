@@ -1,5 +1,5 @@
 export type ProgramDifficulty = 'beginner' | 'intermediate' | 'advanced';
-export type ProgramFocus = 'strength' | 'cardio' | 'mixed' | 'mobility';
+export type ProgramFocus = 'strength' | 'cardio' | 'mixed' | 'mobility' | 'weights';
 
 export interface ProgramExercise {
   presetId: string;

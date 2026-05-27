@@ -27,6 +27,7 @@ type CategoryFilter = ExerciseCategory | 'all';
 
 const CATEGORY_FILTERS: { key: CategoryFilter; label: string; emoji: string }[] = [
   { key: 'all',       label: 'Tất cả',    emoji: '⚡' },
+  { key: 'weights',   label: 'Tạ đơn',    emoji: '🏋️' },
   { key: 'strength',  label: 'Sức mạnh',  emoji: '💪' },
   { key: 'cardio',    label: 'Cardio',    emoji: '🏃' },
   { key: 'mobility',  label: 'Linh hoạt', emoji: '🧘' },
@@ -41,6 +42,7 @@ function getCategoryStyle(category: string) {
     case 'cardio':   return COLORS.catCardio;
     case 'mobility': return COLORS.catMobility;
     case 'recovery': return COLORS.catRecovery;
+    case 'weights':  return COLORS.catWeights;
     default:         return COLORS.catStrength;
   }
 }
@@ -58,7 +60,7 @@ function StreakBadge({ streak }: { streak: number }) {
 function CategoryBadge({ category }: { category: string }) {
   const cat = getCategoryStyle(category);
   const shortLabels: Record<string, string> = {
-    strength: 'STR', cardio: 'CAR', mobility: 'MOB', recovery: 'REC',
+    strength: 'STR', cardio: 'CAR', mobility: 'MOB', recovery: 'REC', weights: 'TẠ',
   };
   return (
     <View style={[styles.catBadge, { backgroundColor: cat.bg }]}>
@@ -122,6 +124,7 @@ export default function QuickAddScreen() {
         durationSeconds: (preset.unit === 'seconds' || preset.unit === 'minutes')
           ? (suggested?.durationSeconds ?? (preset.unit === 'minutes' ? preset.defaultValue * 60 : preset.defaultValue))
           : undefined,
+        weight: suggested?.weight,
       };
       addExercise(entry);
       navigation.navigate('WorkoutSummary');
