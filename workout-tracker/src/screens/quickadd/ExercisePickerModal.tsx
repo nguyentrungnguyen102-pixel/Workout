@@ -23,7 +23,7 @@ import { COLORS } from '../../constants/colors';
 import { WorkoutPreset, ExerciseCategory, ExerciseUnit } from '../../types/workout';
 import { getCustomPresets, saveCustomPreset, deleteCustomPreset } from '../../services/customExerciseService';
 
-const CATEGORIES: ExerciseCategory[] = ['strength', 'cardio', 'mobility', 'recovery'];
+const CATEGORIES: ExerciseCategory[] = ['strength', 'cardio', 'mobility', 'recovery', 'weights'];
 
 const UNIT_OPTIONS: { label: string; value: ExerciseUnit }[] = [
   { label: 'Reps', value: 'reps' },

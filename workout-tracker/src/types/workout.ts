@@ -1,6 +1,6 @@
 import { Timestamp } from 'firebase/firestore';
 
-export type ExerciseCategory = 'strength' | 'cardio' | 'mobility' | 'recovery';
+export type ExerciseCategory = 'strength' | 'cardio' | 'mobility' | 'recovery' | 'weights';
 export type ExerciseUnit = 'reps' | 'seconds' | 'minutes' | 'km';
 export type Intensity = 'light' | 'moderate' | 'heavy';
 export type LogSource = 'manual' | 'voice' | 'repeat_yesterday';

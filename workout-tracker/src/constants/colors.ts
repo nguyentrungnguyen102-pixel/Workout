@@ -36,4 +36,5 @@ export const COLORS = {
   catCardio:       { text: '#2563EB', bg: '#EFF6FF' },
   catMobility:     { text: '#059669', bg: '#ECFDF5' },
   catRecovery:     { text: '#7C3AED', bg: '#F5F3FF' },
+  catWeights:      { text: '#B45309', bg: '#FEF3C7' },
 };
