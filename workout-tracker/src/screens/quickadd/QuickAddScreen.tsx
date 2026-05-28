@@ -41,6 +41,7 @@ function getCategoryStyle(category: string) {
     case 'cardio':   return COLORS.catCardio;
     case 'mobility': return COLORS.catMobility;
     case 'recovery': return COLORS.catRecovery;
+    case 'dumbbell': return COLORS.catDumbbell;
     default:         return COLORS.catStrength;
   }
 }

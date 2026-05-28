@@ -314,6 +314,62 @@ export const PROGRAM_TEMPLATES: WorkoutProgram[] = [
       },
     ],
   },
+
+  // Phase 5 — Home Dumbbell program
+  {
+    id: 'dumbbell_home_3x',
+    nameVi: 'Tạ Đơn Tại Nhà 3x',
+    descriptionVi: 'Tập toàn thân với tạ đơn tại nhà, 3 buổi/tuần. Phù hợp người mới bắt đầu muốn tăng cơ cơ bản.',
+    emoji: '🏠',
+    daysPerWeek: 3,
+    difficulty: 'beginner',
+    focus: 'strength',
+    estimatedMinutes: 40,
+    days: [
+      {
+        id: 'db_home_a',
+        order: 1,
+        nameVi: 'Ngực & Vai',
+        focusVi: 'Ngực · Vai · Tay sau',
+        emoji: '💪',
+        exercises: [
+          { presetId: 'db_press',          nameVi: 'Đẩy ngực (tạ)',       sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_fly',            nameVi: 'Dang ngực (tạ)',      sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_shoulder_press', nameVi: 'Đẩy vai (tạ)',        sets: 3, reps: 10, unit: 'reps' },
+          { presetId: 'db_lateral_raise',  nameVi: 'Dang ngang vai (tạ)', sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'db_tricep_ext',     nameVi: 'Duỗi tay sau (tạ)',   sets: 3, reps: 12, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'db_home_b',
+        order: 2,
+        nameVi: 'Lưng & Tay',
+        focusVi: 'Lưng · Tay trước · Vai trước',
+        emoji: '🏋️',
+        exercises: [
+          { presetId: 'db_bent_row',    nameVi: 'Kéo cúi người (tạ)', sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_row',         nameVi: 'Kéo lưng (tạ)',      sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_curl',        nameVi: 'Cuộn tay (tạ)',      sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_hammer_curl', nameVi: 'Cuộn búa (tạ)',      sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_front_raise', nameVi: 'Giơ trước vai (tạ)', sets: 3, reps: 12, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'db_home_c',
+        order: 3,
+        nameVi: 'Chân & Toàn thân',
+        focusVi: 'Đùi · Mông · Bắp chân',
+        emoji: '🦵',
+        exercises: [
+          { presetId: 'db_goblet_squat', nameVi: 'Squat tạ đơn',          sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'db_rdl',          nameVi: 'Deadlift Romania (tạ)', sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_lunge',        nameVi: 'Lunge (tạ)',             sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_calf_raise',   nameVi: 'Nâng gót chân (tạ)',    sets: 3, reps: 20, unit: 'reps' },
+          { presetId: 'db_arnold_press', nameVi: 'Arnold Press (tạ)',      sets: 3, reps: 10, unit: 'reps' },
+        ],
+      },
+    ],
+  },
 ];
 
 export const DIFFICULTY_LABELS: Record<string, string> = {
