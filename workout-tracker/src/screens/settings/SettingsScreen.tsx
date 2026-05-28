@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../services/firebase';
 import { useUserStore } from '../../stores/userStore';
+import { scheduleWorkoutReminder } from '../../services/notificationService';
 import { COLORS } from '../../constants/colors';
 
 function SettingRow({ label, children }: { label: string; children: React.ReactNode }) {
@@ -29,7 +30,7 @@ export default function SettingsScreen() {
   const [reminderEnabled, setReminderEnabled] = useState(profile?.reminderEnabled ?? true);
   const [reminderTime, setReminderTime] = useState(profile?.reminderTime || '07:30');
   const [weeklyGoal, setWeeklyGoal] = useState(String(profile?.weeklyGoalMinutes || 150));
-  const [webhookUrl, setWebhookUrl] = useState(profile?.n8nWebhookUrl || '');
+  const [sheetsId, setSheetsId] = useState(profile?.sheetsId || '');
 
   const handleSave = async () => {
     if (!profile?.uid) return;
@@ -37,8 +38,9 @@ export default function SettingsScreen() {
       reminderEnabled,
       reminderTime,
       weeklyGoalMinutes: parseInt(weeklyGoal) || 150,
-      n8nWebhookUrl: webhookUrl.trim() || undefined,
+      sheetsId: sheetsId.trim() || undefined,
     });
+    await scheduleWorkoutReminder(reminderTime, reminderEnabled);
     Alert.alert('Đã lưu', 'Cài đặt đã được cập nhật');
   };
 
@@ -110,17 +112,17 @@ export default function SettingsScreen() {
         <Text style={styles.sectionLabel}>🔗 Tích hợp Google Sheets</Text>
         <View style={styles.card}>
           <Text style={styles.webhookHint}>
-            Nhập URL webhook n8n để tự động ghi dữ liệu vào Google Sheets sau mỗi buổi tập.
+            Nhập Google Sheet ID để tự động ghi dữ liệu sau mỗi buổi tập. Lấy ID từ URL của Sheet: docs.google.com/spreadsheets/d/[ID]/edit
           </Text>
           <TextInput
             style={[styles.timeInput, styles.webhookInput]}
-            value={webhookUrl}
-            onChangeText={setWebhookUrl}
-            placeholder="https://your-n8n.app/webhook/..."
+            value={sheetsId}
+            onChangeText={setSheetsId}
+            placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms"
             placeholderTextColor={COLORS.textSecondary}
             autoCapitalize="none"
             autoCorrect={false}
-            keyboardType="url"
+            keyboardType="default"
           />
         </View>
 
