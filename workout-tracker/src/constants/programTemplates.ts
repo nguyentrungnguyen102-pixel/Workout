@@ -314,6 +314,123 @@ export const PROGRAM_TEMPLATES: WorkoutProgram[] = [
       },
     ],
   },
+
+  {
+    id: 'home_dumbbell_basic',
+    nameVi: 'Tạ Nhà Cơ Bản',
+    descriptionVi: 'Chương trình tạ đơn tại nhà cho người mới. Chỉ cần 1 cặp tạ, 3 buổi/tuần.',
+    emoji: '🏋️',
+    daysPerWeek: 3,
+    difficulty: 'beginner',
+    focus: 'strength',
+    estimatedMinutes: 40,
+    days: [
+      {
+        id: 'hdb_upper',
+        order: 1,
+        nameVi: 'Thân Trên',
+        focusVi: 'Vai · Ngực · Tay',
+        emoji: '💪',
+        exercises: [
+          { presetId: 'db_shoulder_press',   nameVi: 'Đẩy tạ vai',        sets: 3, reps: 10, unit: 'reps' },
+          { presetId: 'db_lateral_raise',    nameVi: 'Nâng tạ ngang',     sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_bicep_curl',       nameVi: 'Cuộn tay (tạ)',     sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_tricep_extension', nameVi: 'Duỗi tay sau đầu', sets: 3, reps: 12, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'hdb_lower',
+        order: 2,
+        nameVi: 'Thân Dưới',
+        focusVi: 'Đùi · Mông · Bắp chân',
+        emoji: '🦵',
+        exercises: [
+          { presetId: 'db_goblet_squat',  nameVi: 'Squat tạ trước ngực', sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'db_romanian_dl',   nameVi: 'Deadlift tạ đôi',    sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'lunge',            nameVi: 'Lunge',               sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'plank',            nameVi: 'Plank',               sets: 3, durationSeconds: 40, unit: 'seconds' },
+        ],
+      },
+      {
+        id: 'hdb_full',
+        order: 3,
+        nameVi: 'Toàn Thân',
+        focusVi: 'Lưng · Ngực · Core',
+        emoji: '🔥',
+        exercises: [
+          { presetId: 'db_row',       nameVi: 'Kéo tạ một tay',  sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_chest_fly', nameVi: 'Bay tạ ngực',     sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'pushup',       nameVi: 'Hít đất',         sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'plank',        nameVi: 'Plank',           sets: 3, durationSeconds: 45, unit: 'seconds' },
+        ],
+      },
+    ],
+  },
+
+  {
+    id: 'home_dumbbell_advanced',
+    nameVi: 'Tạ Nhà Nâng Cao',
+    descriptionVi: 'Lịch tập tạ đơn tại nhà 4 buổi/tuần. Chia nhóm cơ, tăng tải dần.',
+    emoji: '⚡',
+    daysPerWeek: 4,
+    difficulty: 'intermediate',
+    focus: 'strength',
+    estimatedMinutes: 50,
+    days: [
+      {
+        id: 'hda_chest_arm',
+        order: 1,
+        nameVi: 'Ngực + Tay trước',
+        focusVi: 'Ngực · Bắp tay',
+        emoji: '💪',
+        exercises: [
+          { presetId: 'db_chest_fly',  nameVi: 'Bay tạ ngực',      sets: 4, reps: 12, unit: 'reps' },
+          { presetId: 'pushup',        nameVi: 'Hít đất',          sets: 3, reps: 20, unit: 'reps' },
+          { presetId: 'db_bicep_curl', nameVi: 'Cuộn tay (tạ)',    sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_hammer_curl',nameVi: 'Cuộn tay búa',     sets: 3, reps: 12, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'hda_back_tricep',
+        order: 2,
+        nameVi: 'Lưng + Tay sau',
+        focusVi: 'Lưng · Cơ tam đầu',
+        emoji: '🤸',
+        exercises: [
+          { presetId: 'db_row',              nameVi: 'Kéo tạ một tay',     sets: 4, reps: 12, unit: 'reps' },
+          { presetId: 'db_tricep_extension', nameVi: 'Duỗi tay sau đầu',  sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'dip',                 nameVi: 'Chống đẩy ghế',      sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'plank',               nameVi: 'Plank',              sets: 3, durationSeconds: 50, unit: 'seconds' },
+        ],
+      },
+      {
+        id: 'hda_legs',
+        order: 3,
+        nameVi: 'Ngày Chân',
+        focusVi: 'Đùi · Mông · Bắp chân',
+        emoji: '🦵',
+        exercises: [
+          { presetId: 'db_goblet_squat', nameVi: 'Squat tạ trước ngực', sets: 4, reps: 15, unit: 'reps' },
+          { presetId: 'db_romanian_dl',  nameVi: 'Deadlift tạ đôi',    sets: 4, reps: 12, unit: 'reps' },
+          { presetId: 'lunge',           nameVi: 'Lunge',               sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'squat',           nameVi: 'Squat',               sets: 3, reps: 15, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'hda_shoulder_core',
+        order: 4,
+        nameVi: 'Vai + Core',
+        focusVi: 'Vai · Cơ core · Toàn thân',
+        emoji: '🏆',
+        exercises: [
+          { presetId: 'db_shoulder_press', nameVi: 'Đẩy tạ vai',       sets: 4, reps: 10, unit: 'reps' },
+          { presetId: 'db_lateral_raise',  nameVi: 'Nâng tạ ngang',    sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'db_front_raise',    nameVi: 'Nâng tạ trước',    sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'plank',             nameVi: 'Plank',             sets: 4, durationSeconds: 60, unit: 'seconds' },
+        ],
+      },
+    ],
+  },
 ];
 
 export const DIFFICULTY_LABELS: Record<string, string> = {
