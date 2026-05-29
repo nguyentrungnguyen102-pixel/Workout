@@ -6,18 +6,15 @@ import {
   getDocs,
   query,
   where,
-  orderBy,
   limit,
   serverTimestamp,
   increment,
   updateDoc,
-  Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { DraftWorkout, WorkoutLog, WorkoutPreset, Intensity } from '../types/workout';
 import { todayString, yesterdayString } from '../lib/date';
 
-// Returns intensity label and score (1-10) from exercises
 function deriveIntensity(exercises: WorkoutLog['exercises']): { intensity: Intensity; score: number } {
   const totalSets = exercises.reduce((s, e) => s + e.sets, 0);
   if (totalSets >= 12) return { intensity: 'heavy', score: 8 };
@@ -29,22 +26,18 @@ export async function logWorkout(uid: string, draft: DraftWorkout): Promise<stri
   if (draft.exercises.length === 0) throw new Error('No exercises');
 
   const date = todayString();
-  // One log per user per day — compound key for upsert
-  const logId = `${uid}_${date}`;
-  const logRef = doc(db, 'logs', logId);
 
   const totalDurationMinutes = draft.startedAt
     ? Math.max(1, Math.round((Date.now() - draft.startedAt.getTime()) / 60_000))
     : draft.exercises.reduce((sum, e) => {
         if (e.unit === 'minutes') return sum + e.durationSeconds! / 60;
         if (e.unit === 'seconds') return sum + (e.durationSeconds || 0) / 60;
-        return sum + 3; // estimate 3 min per strength exercise
+        return sum + 3;
       }, 0);
 
   const { intensity, score } = deriveIntensity(draft.exercises);
   const caloriesEstimate = Math.round(totalDurationMinutes * 7);
 
-  // Strip undefined fields from each exercise — Firestore rejects undefined values
   const cleanExercises = draft.exercises.map((e) => {
     const c: Record<string, any> = {
       presetId: e.presetId,
@@ -60,7 +53,10 @@ export async function logWorkout(uid: string, draft: DraftWorkout): Promise<stri
     return c;
   });
 
+  // Each log call creates a new document (multiple logs per day supported)
+  const logRef = doc(collection(db, 'logs'));
   const logData: Record<string, any> = {
+    id: logRef.id,
     userId: uid,
     date,
     exercises: cleanExercises,
@@ -70,17 +66,12 @@ export async function logWorkout(uid: string, draft: DraftWorkout): Promise<stri
     caloriesEstimate,
     source: 'manual',
     syncedToSheets: false,
-    id: logId,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   };
   if (draft.notes) logData.notes = draft.notes;
 
-  await setDoc(
-    logRef,
-    logData,
-    { merge: true }
-  );
+  await setDoc(logRef, logData);
 
   // Increment usageCount on presets
   await Promise.all(
@@ -88,27 +79,14 @@ export async function logWorkout(uid: string, draft: DraftWorkout): Promise<stri
       updateDoc(doc(db, 'workouts', e.presetId), {
         usageCount: increment(1),
         lastUsedAt: todayString(),
-      }).catch(() => null) // preset may not exist in Firestore yet for system presets
+      }).catch(() => null)
     )
   );
 
-  return logId;
-}
-
-export async function getTodayLog(uid: string): Promise<WorkoutLog | null> {
-  const logId = `${uid}_${todayString()}`;
-  const snap = await getDoc(doc(db, 'logs', logId));
-  return snap.exists() ? (snap.data() as WorkoutLog) : null;
-}
-
-export async function getYesterdayLog(uid: string): Promise<WorkoutLog | null> {
-  const logId = `${uid}_${yesterdayString()}`;
-  const snap = await getDoc(doc(db, 'logs', logId));
-  return snap.exists() ? (snap.data() as WorkoutLog) : null;
+  return logRef.id;
 }
 
 export async function getRecentLogs(uid: string, count = 10): Promise<WorkoutLog[]> {
-  // No orderBy — avoids composite index requirement; sort client-side
   const q = query(
     collection(db, 'logs'),
     where('userId', '==', uid),
@@ -122,7 +100,6 @@ export async function getRecentLogs(uid: string, count = 10): Promise<WorkoutLog
 }
 
 export async function getLogsForHeatmap(uid: string, startDate: string): Promise<WorkoutLog[]> {
-  // Single where clause only — avoids composite index; filter date client-side
   const q = query(
     collection(db, 'logs'),
     where('userId', '==', uid),
@@ -147,4 +124,13 @@ export function buildDraftFromLog(log: WorkoutLog): DraftWorkout {
 export async function getLogById(logId: string): Promise<WorkoutLog | null> {
   const snap = await getDoc(doc(db, 'logs', logId));
   return snap.exists() ? (snap.data() as WorkoutLog) : null;
+}
+
+export async function getLogsForExercise(uid: string, presetId: string): Promise<WorkoutLog[]> {
+  const q = query(collection(db, 'logs'), where('userId', '==', uid), limit(200));
+  const snap = await getDocs(q);
+  return snap.docs
+    .map((d) => d.data() as WorkoutLog)
+    .filter((log) => log.exercises.some((e) => e.presetId === presetId))
+    .sort((a, b) => b.date.localeCompare(a.date));
 }
