@@ -23,7 +23,7 @@ import { COLORS } from '../../constants/colors';
 import { WorkoutPreset, ExerciseCategory, ExerciseUnit } from '../../types/workout';
 import { getCustomPresets, saveCustomPreset, deleteCustomPreset } from '../../services/customExerciseService';
 
-const CATEGORIES: ExerciseCategory[] = ['strength', 'cardio', 'mobility', 'recovery'];
+const CATEGORIES: ExerciseCategory[] = ['dumbbell', 'strength', 'cardio', 'mobility', 'recovery'];
 
 const UNIT_OPTIONS: { label: string; value: ExerciseUnit }[] = [
   { label: 'Reps', value: 'reps' },
@@ -44,7 +44,7 @@ function CreateExerciseModal({
 }) {
   const { profile } = useUserStore();
   const [name, setName] = useState('');
-  const [category, setCategory] = useState<ExerciseCategory>('strength');
+  const [category, setCategory] = useState<ExerciseCategory>('dumbbell');
   const [unit, setUnit] = useState<ExerciseUnit>('reps');
   const [defaultValue, setDefaultValue] = useState('10');
   const [defaultSets, setDefaultSets] = useState('3');
@@ -53,7 +53,7 @@ function CreateExerciseModal({
 
   const reset = () => {
     setName('');
-    setCategory('strength');
+    setCategory('dumbbell');
     setUnit('reps');
     setDefaultValue('10');
     setDefaultSets('3');
