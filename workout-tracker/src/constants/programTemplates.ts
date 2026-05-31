@@ -268,6 +268,61 @@ export const PROGRAM_TEMPLATES: WorkoutProgram[] = [
   },
 
   {
+    id: 'home_dumbbell_3x',
+    nameVi: 'Tạ Đơn Tại Nhà 3x/tuần',
+    descriptionVi: 'Tập toàn thân với tạ đơn ngay tại nhà. Phù hợp người mới, chỉ cần 1 đôi tạ.',
+    emoji: '🏋️',
+    daysPerWeek: 3,
+    difficulty: 'beginner',
+    focus: 'strength',
+    estimatedMinutes: 40,
+    days: [
+      {
+        id: 'hd_a',
+        order: 1,
+        nameVi: 'Buổi A — Ngực & Tay',
+        focusVi: 'Ngực · Bắp tay · Tay sau',
+        emoji: '💪',
+        exercises: [
+          { presetId: 'db_press',      nameVi: 'Đẩy tạ ngực',  sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_fly',        nameVi: 'Dang tạ ngực', sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_curl',       nameVi: 'Cuốn tạ bắp tay', sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_tricep_ext', nameVi: 'Duỗi tay sau', sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'plank',         nameVi: 'Plank',         sets: 3, durationSeconds: 40, unit: 'seconds' },
+        ],
+      },
+      {
+        id: 'hd_b',
+        order: 2,
+        nameVi: 'Buổi B — Lưng & Vai',
+        focusVi: 'Lưng · Vai · Cuốn búa',
+        emoji: '🤜',
+        exercises: [
+          { presetId: 'db_row',            nameVi: 'Kéo tạ lưng',    sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_shoulder_press', nameVi: 'Đẩy tạ vai',     sets: 3, reps: 10, unit: 'reps' },
+          { presetId: 'db_lateral_raise',  nameVi: 'Nâng ngang vai', sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'db_hammer_curl',    nameVi: 'Cuốn búa',       sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'plank',             nameVi: 'Plank',           sets: 2, durationSeconds: 45, unit: 'seconds' },
+        ],
+      },
+      {
+        id: 'hd_c',
+        order: 3,
+        nameVi: 'Buổi C — Chân & Core',
+        focusVi: 'Đùi · Mông · Bụng',
+        emoji: '🦵',
+        exercises: [
+          { presetId: 'db_goblet_squat', nameVi: 'Squat ôm tạ',     sets: 4, reps: 15, unit: 'reps' },
+          { presetId: 'db_rdl',          nameVi: 'Deadlift tạ đơn',  sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_lunge',        nameVi: 'Bước tấn tạ',      sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'plank',           nameVi: 'Plank',             sets: 3, durationSeconds: 50, unit: 'seconds' },
+          { presetId: 'stretching',      nameVi: 'Giãn cơ',          sets: 1, durationSeconds: 300, unit: 'seconds' },
+        ],
+      },
+    ],
+  },
+
+  {
     id: 'mobility_flow',
     nameVi: 'Mobility & Flow',
     descriptionVi: 'Tăng độ dẻo dai và linh hoạt. Phù hợp tập sau workout nặng.',
