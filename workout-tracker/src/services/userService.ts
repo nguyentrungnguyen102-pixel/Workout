@@ -69,9 +69,8 @@ export async function updateStreakAfterLog(uid: string): Promise<void> {
     'streak.updatedAt': serverTimestamp(),
     'weeklyStats.weekStartDate': weekStart,
     'weeklyStats.sessionCount': isNewWeek ? 1 : increment(1),
-    'weeklyStats.totalMinutes': isNewWeek
-      ? 0
-      : increment(0), // updated by caller with actual minutes
+    'weeklyStats.totalMinutes': isNewWeek ? 0 : increment(0),
+    'weeklyStats.targetMinutes': user.weeklyGoalMinutes || 150,
   });
 }
 
