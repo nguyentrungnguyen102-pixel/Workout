@@ -314,6 +314,124 @@ export const PROGRAM_TEMPLATES: WorkoutProgram[] = [
       },
     ],
   },
+
+  // ─── Phase 5: Home Dumbbell Programs ────────────────────────────────────────
+  {
+    id: 'db_fullbody_3x',
+    nameVi: 'Tạ Đơn Toàn Thân - 3x/tuần',
+    descriptionVi: 'Bài tập tạ đơn tại nhà cho người mới. Mỗi buổi tập toàn bộ cơ thể, chỉ cần một đôi tạ.',
+    emoji: '🏋️',
+    daysPerWeek: 3,
+    difficulty: 'beginner',
+    focus: 'strength',
+    estimatedMinutes: 40,
+    days: [
+      {
+        id: 'db3_a',
+        order: 1,
+        nameVi: 'Buổi A',
+        focusVi: 'Ngực · Lưng · Tay trước',
+        emoji: '💪',
+        exercises: [
+          { presetId: 'db_chest_press',    nameVi: 'Đẩy ngực tạ đơn', sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_row',            nameVi: 'Kéo lưng tạ đơn', sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_goblet_squat',   nameVi: 'Squat ôm tạ',      sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'db_curl',           nameVi: 'Gập tay tạ đơn',  sets: 3, reps: 12, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'db3_b',
+        order: 2,
+        nameVi: 'Buổi B',
+        focusVi: 'Vai · Chân · Tay sau',
+        emoji: '🔥',
+        exercises: [
+          { presetId: 'db_shoulder_press', nameVi: 'Đẩy vai tạ đơn',  sets: 3, reps: 10, unit: 'reps' },
+          { presetId: 'db_romanian_dl',    nameVi: 'Kéo tạ đứng',      sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_lateral_raise',  nameVi: 'Nâng bên vai tạ', sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'db_tricep_ext',     nameVi: 'Duỗi tay sau tạ', sets: 3, reps: 12, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'db3_c',
+        order: 3,
+        nameVi: 'Buổi C',
+        focusVi: 'Toàn thân · Hoàn thiện',
+        emoji: '🌟',
+        exercises: [
+          { presetId: 'db_lunge_db',       nameVi: 'Lunge tạ đơn',     sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_fly',            nameVi: 'Mở ngực tạ',       sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_row',            nameVi: 'Kéo lưng tạ đơn', sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_curl',           nameVi: 'Gập tay tạ đơn',  sets: 3, reps: 12, unit: 'reps' },
+        ],
+      },
+    ],
+  },
+
+  {
+    id: 'db_push_pull_4x',
+    nameVi: 'Tạ Đơn Đẩy-Kéo - 4x/tuần',
+    descriptionVi: 'Chương trình Push-Pull với tạ đơn tại nhà. Chia nhóm cơ hợp lý, tăng khối lượng dần.',
+    emoji: '💪',
+    daysPerWeek: 4,
+    difficulty: 'intermediate',
+    focus: 'strength',
+    estimatedMinutes: 50,
+    days: [
+      {
+        id: 'dbpp_push1',
+        order: 1,
+        nameVi: 'Ngày Đẩy A',
+        focusVi: 'Ngực · Vai · Tay sau',
+        emoji: '🫸',
+        exercises: [
+          { presetId: 'db_chest_press',    nameVi: 'Đẩy ngực tạ đơn', sets: 4, reps: 12, unit: 'reps' },
+          { presetId: 'db_shoulder_press', nameVi: 'Đẩy vai tạ đơn',  sets: 3, reps: 10, unit: 'reps' },
+          { presetId: 'db_lateral_raise',  nameVi: 'Nâng bên vai tạ', sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'db_tricep_ext',     nameVi: 'Duỗi tay sau tạ', sets: 3, reps: 12, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'dbpp_pull1',
+        order: 2,
+        nameVi: 'Ngày Kéo A',
+        focusVi: 'Lưng · Tay trước',
+        emoji: '🫷',
+        exercises: [
+          { presetId: 'db_row',            nameVi: 'Kéo lưng tạ đơn', sets: 4, reps: 12, unit: 'reps' },
+          { presetId: 'db_romanian_dl',    nameVi: 'Kéo tạ đứng',      sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_curl',           nameVi: 'Gập tay tạ đơn',  sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_fly',            nameVi: 'Mở ngực tạ',       sets: 3, reps: 12, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'dbpp_push2',
+        order: 3,
+        nameVi: 'Ngày Đẩy B + Chân',
+        focusVi: 'Ngực · Vai · Chân trước',
+        emoji: '🔥',
+        exercises: [
+          { presetId: 'db_goblet_squat',   nameVi: 'Squat ôm tạ',      sets: 4, reps: 15, unit: 'reps' },
+          { presetId: 'db_chest_press',    nameVi: 'Đẩy ngực tạ đơn', sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_shoulder_press', nameVi: 'Đẩy vai tạ đơn',  sets: 3, reps: 10, unit: 'reps' },
+          { presetId: 'db_tricep_ext',     nameVi: 'Duỗi tay sau tạ', sets: 3, reps: 12, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'dbpp_pull2',
+        order: 4,
+        nameVi: 'Ngày Kéo B + Chân',
+        focusVi: 'Lưng · Chân sau · Tay trước',
+        emoji: '💥',
+        exercises: [
+          { presetId: 'db_lunge_db',       nameVi: 'Lunge tạ đơn',     sets: 4, reps: 12, unit: 'reps' },
+          { presetId: 'db_romanian_dl',    nameVi: 'Kéo tạ đứng',      sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_row',            nameVi: 'Kéo lưng tạ đơn', sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_curl',           nameVi: 'Gập tay tạ đơn',  sets: 3, reps: 12, unit: 'reps' },
+        ],
+      },
+    ],
+  },
 ];
 
 export const DIFFICULTY_LABELS: Record<string, string> = {
