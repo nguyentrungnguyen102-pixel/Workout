@@ -23,6 +23,20 @@ export const SYSTEM_PRESETS: WorkoutPreset[] = [
   // Recovery
   { id: 'walking', name: 'Walking', nameVi: 'Đi bộ', category: 'recovery', unit: 'minutes', defaultValue: 30, defaultSets: 1, icon: '🚶', isCustom: false, usageCount: 0 },
   { id: 'foam_rolling', name: 'Foam Rolling', nameVi: 'Lăn cơ', category: 'recovery', unit: 'minutes', defaultValue: 10, defaultSets: 1, icon: '🧻', isCustom: false, usageCount: 0 },
+
+  // Dumbbell — tạ đơn tại nhà
+  { id: 'db_bicep_curl',     name: 'Bicep Curl',        nameVi: 'Tập bắp tay (tạ)',  category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '💪', isCustom: false, usageCount: 0 },
+  { id: 'db_shoulder_press', name: 'Shoulder Press',    nameVi: 'Đẩy vai (tạ)',       category: 'dumbbell', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '🏋️', isCustom: false, usageCount: 0 },
+  { id: 'db_lateral_raise',  name: 'Lateral Raise',     nameVi: 'Nâng tạ ngang',      category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '↔️', isCustom: false, usageCount: 0 },
+  { id: 'db_tricep_ext',     name: 'Tricep Extension',  nameVi: 'Tạ sau đầu',         category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '💥', isCustom: false, usageCount: 0 },
+  { id: 'db_bent_row',       name: 'Bent-over Row',     nameVi: 'Chèo tạ (lưng)',     category: 'dumbbell', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '🤸', isCustom: false, usageCount: 0 },
+  { id: 'db_rdl',            name: 'Romanian Deadlift', nameVi: 'Deadlift tạ đơn',    category: 'dumbbell', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '⚡', isCustom: false, usageCount: 0 },
+  { id: 'db_goblet_squat',   name: 'Goblet Squat',      nameVi: 'Squat giữ tạ',       category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🦵', isCustom: false, usageCount: 0 },
+  { id: 'db_chest_fly',      name: 'Chest Fly',         nameVi: 'Bay ngực (sàn)',     category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🎯', isCustom: false, usageCount: 0 },
+  { id: 'db_hammer_curl',    name: 'Hammer Curl',       nameVi: 'Tạ búa',             category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🔨', isCustom: false, usageCount: 0 },
+  { id: 'db_front_raise',    name: 'Front Raise',       nameVi: 'Nâng tạ trước',      category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '⬆️', isCustom: false, usageCount: 0 },
+  { id: 'db_arnold_press',   name: 'Arnold Press',      nameVi: 'Arnold Press',       category: 'dumbbell', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '🌟', isCustom: false, usageCount: 0 },
+  { id: 'db_kickback',       name: 'Tricep Kickback',   nameVi: 'Đá tay sau (tạ)',    category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🔙', isCustom: false, usageCount: 0 },
 ];
 
 export const CATEGORY_LABELS: Record<string, string> = {
@@ -30,4 +44,5 @@ export const CATEGORY_LABELS: Record<string, string> = {
   cardio: 'Cardio',
   mobility: 'Linh hoạt',
   recovery: 'Phục hồi',
+  dumbbell: 'Tạ đơn',
 };
