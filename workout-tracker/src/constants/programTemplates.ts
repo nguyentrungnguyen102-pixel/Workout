@@ -314,6 +314,58 @@ export const PROGRAM_TEMPLATES: WorkoutProgram[] = [
       },
     ],
   },
+
+  {
+    id: 'dumbbell_home_3x',
+    nameVi: 'Tạ Đơn Tại Nhà 3x',
+    descriptionVi: 'Chương trình tạ đơn đơn giản tại nhà. 3 buổi/tuần, không cần máy móc, chỉ cần một đôi tạ.',
+    emoji: '🏋️',
+    daysPerWeek: 3,
+    difficulty: 'beginner',
+    focus: 'strength',
+    estimatedMinutes: 40,
+    days: [
+      {
+        id: 'db_day1',
+        order: 1,
+        nameVi: 'Ngực · Vai',
+        focusVi: 'Ngực · Vai · Tay sau',
+        emoji: '💪',
+        exercises: [
+          { presetId: 'dumbbell_fly',            nameVi: 'Bay ngực tạ',      sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'dumbbell_shoulder_press', nameVi: 'Đẩy tạ vai',       sets: 3, reps: 10, unit: 'reps' },
+          { presetId: 'lateral_raise',           nameVi: 'Nâng ngang tạ',   sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'tricep_ext',              nameVi: 'Duỗi bắp tay sau', sets: 3, reps: 12, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'db_day2',
+        order: 2,
+        nameVi: 'Lưng · Tay',
+        focusVi: 'Lưng · Bắp tay · Core',
+        emoji: '🤸',
+        exercises: [
+          { presetId: 'dumbbell_row',  nameVi: 'Rowing tạ đơn',  sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'dumbbell_curl', nameVi: 'Curl tạ đơn',    sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'dumbbell_shrug',nameVi: 'Nhún vai tạ',    sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'plank',         nameVi: 'Plank',          sets: 3, durationSeconds: 45, unit: 'seconds' },
+        ],
+      },
+      {
+        id: 'db_day3',
+        order: 3,
+        nameVi: 'Chân · Core',
+        focusVi: 'Đùi · Mông · Core',
+        emoji: '🦵',
+        exercises: [
+          { presetId: 'goblet_squat',   nameVi: 'Goblet Squat tạ',     sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'dumbbell_lunge', nameVi: 'Lunge tạ đơn',        sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'dumbbell_rdl',   nameVi: 'Romanian Deadlift tạ',sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'plank',          nameVi: 'Plank',               sets: 3, durationSeconds: 60, unit: 'seconds' },
+        ],
+      },
+    ],
+  },
 ];
 
 export const DIFFICULTY_LABELS: Record<string, string> = {

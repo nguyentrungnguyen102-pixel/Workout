@@ -27,6 +27,7 @@ type CategoryFilter = ExerciseCategory | 'all';
 
 const CATEGORY_FILTERS: { key: CategoryFilter; label: string; emoji: string }[] = [
   { key: 'all',       label: 'Tất cả',    emoji: '⚡' },
+  { key: 'dumbbell',  label: 'Tạ đơn',    emoji: '🏋️' },
   { key: 'strength',  label: 'Sức mạnh',  emoji: '💪' },
   { key: 'cardio',    label: 'Cardio',    emoji: '🏃' },
   { key: 'mobility',  label: 'Linh hoạt', emoji: '🧘' },
@@ -41,6 +42,7 @@ function getCategoryStyle(category: string) {
     case 'cardio':   return COLORS.catCardio;
     case 'mobility': return COLORS.catMobility;
     case 'recovery': return COLORS.catRecovery;
+    case 'dumbbell': return COLORS.catDumbbell;
     default:         return COLORS.catStrength;
   }
 }
