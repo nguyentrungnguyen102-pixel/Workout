@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../services/firebase';
 import { useUserStore } from '../../stores/userStore';
+import { scheduleWorkoutReminder } from '../../services/notificationService';
 import { COLORS } from '../../constants/colors';
 
 function SettingRow({ label, children }: { label: string; children: React.ReactNode }) {
@@ -39,6 +40,7 @@ export default function SettingsScreen() {
       weeklyGoalMinutes: parseInt(weeklyGoal) || 150,
       sheetsId: sheetsId.trim() || undefined,
     });
+    await scheduleWorkoutReminder(reminderTime, reminderEnabled).catch(() => {});
     Alert.alert('Đã lưu', 'Cài đặt đã được cập nhật');
   };
 
