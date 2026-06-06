@@ -8,13 +8,21 @@ function isExpoGoStoreClient(): boolean {
   return (Constants as any).executionEnvironment === 'storeClient';
 }
 
+export async function requestNotificationPermission(): Promise<boolean> {
+  if (!Device.isDevice || isExpoGoStoreClient()) return false;
+  const { status: existing } = await Notifications.getPermissionsAsync();
+  if (existing === 'granted') return true;
+  const { status } = await Notifications.requestPermissionsAsync();
+  return status === 'granted';
+}
+
 export async function scheduleWorkoutReminder(time: string, enabled: boolean): Promise<void> {
   await cancelWorkoutReminders();
   if (!enabled) return;
   if (!Device.isDevice || isExpoGoStoreClient()) return;
 
-  const { status } = await Notifications.getPermissionsAsync();
-  if (status !== 'granted') return;
+  const granted = await requestNotificationPermission();
+  if (!granted) return;
 
   const [hourStr, minStr] = (time || '07:30').split(':');
   const hour = parseInt(hourStr, 10);

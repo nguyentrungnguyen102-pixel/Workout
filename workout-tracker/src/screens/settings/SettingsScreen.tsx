@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../services/firebase';
 import { useUserStore } from '../../stores/userStore';
+import { scheduleWorkoutReminder, requestNotificationPermission } from '../../services/notificationService';
 import { COLORS } from '../../constants/colors';
 
 function SettingRow({ label, children }: { label: string; children: React.ReactNode }) {
@@ -31,6 +32,17 @@ export default function SettingsScreen() {
   const [weeklyGoal, setWeeklyGoal] = useState(String(profile?.weeklyGoalMinutes || 150));
   const [sheetsId, setSheetsId] = useState(profile?.sheetsId || '');
 
+  const handleReminderToggle = async (val: boolean) => {
+    if (val) {
+      const granted = await requestNotificationPermission();
+      if (!granted) {
+        Alert.alert('Cần quyền thông báo', 'Vui lòng cấp quyền thông báo trong cài đặt điện thoại để bật nhắc nhở.');
+        return;
+      }
+    }
+    setReminderEnabled(val);
+  };
+
   const handleSave = async () => {
     if (!profile?.uid) return;
     await updateProfile(profile.uid, {
@@ -39,6 +51,7 @@ export default function SettingsScreen() {
       weeklyGoalMinutes: parseInt(weeklyGoal) || 150,
       sheetsId: sheetsId.trim() || undefined,
     });
+    await scheduleWorkoutReminder(reminderTime, reminderEnabled);
     Alert.alert('Đã lưu', 'Cài đặt đã được cập nhật');
   };
 
@@ -72,7 +85,7 @@ export default function SettingsScreen() {
           <SettingRow label="Bật nhắc nhở">
             <Switch
               value={reminderEnabled}
-              onValueChange={setReminderEnabled}
+              onValueChange={handleReminderToggle}
               trackColor={{ true: COLORS.primary, false: COLORS.border }}
               thumbColor="#fff"
             />
