@@ -314,6 +314,127 @@ export const PROGRAM_TEMPLATES: WorkoutProgram[] = [
       },
     ],
   },
+
+  // ── Phase 5: Dumbbell Home Workout Programs ──────────────────────────────
+  {
+    id: 'dumbbell_full_body_3x',
+    nameVi: 'Tạ Đơn Toàn Thân 3x/tuần',
+    descriptionVi: 'Chỉ cần 1 đôi tạ đơn tại nhà. Tập toàn thân 3 buổi/tuần, phù hợp người mới bắt đầu với tạ.',
+    emoji: '🏠',
+    daysPerWeek: 3,
+    difficulty: 'beginner',
+    focus: 'strength',
+    estimatedMinutes: 40,
+    days: [
+      {
+        id: 'db_fb3_a',
+        order: 1,
+        nameVi: 'Buổi A — Ngực · Vai · Tay trước',
+        focusVi: 'Đẩy + Curl tạ đơn',
+        emoji: '💪',
+        exercises: [
+          { presetId: 'db_chest_press',    nameVi: 'Đẩy ngực (tạ đơn)',     sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_shoulder_press', nameVi: 'Đẩy vai (tạ đơn)',      sets: 3, reps: 10, unit: 'reps' },
+          { presetId: 'db_lateral_raise',  nameVi: 'Nâng vai ngang (tạ đơn)', sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'db_bicep_curl',     nameVi: 'Curl tay trước (tạ đơn)', sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'plank',             nameVi: 'Plank',                  sets: 3, durationSeconds: 45, unit: 'seconds' },
+        ],
+      },
+      {
+        id: 'db_fb3_b',
+        order: 2,
+        nameVi: 'Buổi B — Lưng · Tay sau · Chân',
+        focusVi: 'Kéo + Deadlift tạ đơn',
+        emoji: '🏋️',
+        exercises: [
+          { presetId: 'db_bent_row',   nameVi: 'Kéo lưng (tạ đơn)',           sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_tricep_ext', nameVi: 'Duỗi tay sau (tạ đơn)',        sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_rdl',        nameVi: 'Romanian Deadlift (tạ đơn)',   sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_goblet_squat', nameVi: 'Goblet Squat (tạ đơn)',      sets: 3, reps: 15, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'db_fb3_c',
+        order: 3,
+        nameVi: 'Buổi C — Toàn thân + Cardio',
+        focusVi: 'Kết hợp tạ đơn + Bốc lửa',
+        emoji: '🔥',
+        exercises: [
+          { presetId: 'db_fly',          nameVi: 'Bay ngực (tạ đơn)',      sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_hammer_curl',  nameVi: 'Hammer Curl (tạ đơn)',   sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_goblet_squat', nameVi: 'Goblet Squat (tạ đơn)',  sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'burpee',          nameVi: 'Burpee',                 sets: 3, reps: 10, unit: 'reps' },
+          { presetId: 'stretching',      nameVi: 'Giãn cơ',                sets: 1, durationSeconds: 600, unit: 'seconds' },
+        ],
+      },
+    ],
+  },
+
+  {
+    id: 'dumbbell_upper_lower',
+    nameVi: 'Tạ Đơn Upper/Lower 4x/tuần',
+    descriptionVi: 'Chia thân trên/dưới với tạ đơn. Tăng cơ hiệu quả tại nhà, 4 buổi/tuần cho người trung cấp.',
+    emoji: '🏠',
+    daysPerWeek: 4,
+    difficulty: 'intermediate',
+    focus: 'strength',
+    estimatedMinutes: 50,
+    days: [
+      {
+        id: 'db_ul_upper_a',
+        order: 1,
+        nameVi: 'Thân Trên A — Đẩy',
+        focusVi: 'Ngực · Vai · Tay sau (tạ đơn)',
+        emoji: '💪',
+        exercises: [
+          { presetId: 'db_chest_press',    nameVi: 'Đẩy ngực (tạ đơn)',     sets: 4, reps: 12, unit: 'reps' },
+          { presetId: 'db_fly',            nameVi: 'Bay ngực (tạ đơn)',      sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_shoulder_press', nameVi: 'Đẩy vai (tạ đơn)',      sets: 3, reps: 10, unit: 'reps' },
+          { presetId: 'db_lateral_raise',  nameVi: 'Nâng vai ngang (tạ đơn)', sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'db_tricep_ext',     nameVi: 'Duỗi tay sau (tạ đơn)',  sets: 3, reps: 12, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'db_ul_lower_a',
+        order: 2,
+        nameVi: 'Thân Dưới A — Đùi · Mông',
+        focusVi: 'Squat · Deadlift tạ đơn',
+        emoji: '🦵',
+        exercises: [
+          { presetId: 'db_goblet_squat', nameVi: 'Goblet Squat (tạ đơn)',       sets: 4, reps: 15, unit: 'reps' },
+          { presetId: 'db_rdl',          nameVi: 'Romanian Deadlift (tạ đơn)',  sets: 4, reps: 12, unit: 'reps' },
+          { presetId: 'lunge',           nameVi: 'Lunge',                       sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'plank',           nameVi: 'Plank',                       sets: 3, durationSeconds: 60, unit: 'seconds' },
+        ],
+      },
+      {
+        id: 'db_ul_upper_b',
+        order: 3,
+        nameVi: 'Thân Trên B — Kéo',
+        focusVi: 'Lưng · Tay trước (tạ đơn)',
+        emoji: '🏋️',
+        exercises: [
+          { presetId: 'db_bent_row',    nameVi: 'Kéo lưng (tạ đơn)',      sets: 4, reps: 12, unit: 'reps' },
+          { presetId: 'pullup',         nameVi: 'Kéo xà',                  sets: 3, reps: 8,  unit: 'reps' },
+          { presetId: 'db_bicep_curl',  nameVi: 'Curl tay trước (tạ đơn)', sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_hammer_curl', nameVi: 'Hammer Curl (tạ đơn)',    sets: 3, reps: 12, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'db_ul_lower_b',
+        order: 4,
+        nameVi: 'Thân Dưới B — Sức mạnh + Cardio',
+        focusVi: 'Đùi · Mông · Đốt mỡ (tạ đơn)',
+        emoji: '🔥',
+        exercises: [
+          { presetId: 'db_goblet_squat', nameVi: 'Goblet Squat (tạ đơn)',      sets: 4, reps: 15, unit: 'reps' },
+          { presetId: 'db_rdl',          nameVi: 'Romanian Deadlift (tạ đơn)', sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'burpee',          nameVi: 'Burpee',                     sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'jump_rope',       nameVi: 'Nhảy dây',                   sets: 1, durationSeconds: 600, unit: 'seconds' },
+        ],
+      },
+    ],
+  },
 ];
 
 export const DIFFICULTY_LABELS: Record<string, string> = {
