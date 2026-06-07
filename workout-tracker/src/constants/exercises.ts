@@ -23,6 +23,18 @@ export const SYSTEM_PRESETS: WorkoutPreset[] = [
   // Recovery
   { id: 'walking', name: 'Walking', nameVi: 'Đi bộ', category: 'recovery', unit: 'minutes', defaultValue: 30, defaultSets: 1, icon: '🚶', isCustom: false, usageCount: 0 },
   { id: 'foam_rolling', name: 'Foam Rolling', nameVi: 'Lăn cơ', category: 'recovery', unit: 'minutes', defaultValue: 10, defaultSets: 1, icon: '🧻', isCustom: false, usageCount: 0 },
+
+  // Dumbbell — Home Workout (Phase 5)
+  { id: 'db_bicep_curl',     name: 'Dumbbell Bicep Curl',      nameVi: 'Curl tay trước (tạ đơn)',     category: 'strength', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '💪', isCustom: false, usageCount: 0 },
+  { id: 'db_hammer_curl',    name: 'Hammer Curl',              nameVi: 'Hammer Curl (tạ đơn)',        category: 'strength', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '💪', isCustom: false, usageCount: 0 },
+  { id: 'db_tricep_ext',     name: 'Dumbbell Tricep Extension', nameVi: 'Duỗi tay sau (tạ đơn)',      category: 'strength', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🏋️', isCustom: false, usageCount: 0 },
+  { id: 'db_shoulder_press', name: 'Dumbbell Shoulder Press',  nameVi: 'Đẩy vai (tạ đơn)',           category: 'strength', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '🏋️', isCustom: false, usageCount: 0 },
+  { id: 'db_lateral_raise',  name: 'Lateral Raise',            nameVi: 'Nâng vai ngang (tạ đơn)',    category: 'strength', unit: 'reps', defaultValue: 15, defaultSets: 3, icon: '🏋️', isCustom: false, usageCount: 0 },
+  { id: 'db_chest_press',    name: 'Dumbbell Chest Press',     nameVi: 'Đẩy ngực (tạ đơn)',          category: 'strength', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🏋️', isCustom: false, usageCount: 0 },
+  { id: 'db_fly',            name: 'Dumbbell Fly',             nameVi: 'Bay ngực (tạ đơn)',           category: 'strength', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🏋️', isCustom: false, usageCount: 0 },
+  { id: 'db_bent_row',       name: 'Dumbbell Bent-Over Row',   nameVi: 'Kéo lưng (tạ đơn)',          category: 'strength', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🏋️', isCustom: false, usageCount: 0 },
+  { id: 'db_goblet_squat',   name: 'Goblet Squat',             nameVi: 'Goblet Squat (tạ đơn)',       category: 'strength', unit: 'reps', defaultValue: 15, defaultSets: 3, icon: '🏋️', isCustom: false, usageCount: 0 },
+  { id: 'db_rdl',            name: 'Romanian Deadlift',        nameVi: 'Romanian Deadlift (tạ đơn)', category: 'strength', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🏋️', isCustom: false, usageCount: 0 },
 ];
 
 export const CATEGORY_LABELS: Record<string, string> = {
