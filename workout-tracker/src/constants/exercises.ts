@@ -23,6 +23,15 @@ export const SYSTEM_PRESETS: WorkoutPreset[] = [
   // Recovery
   { id: 'walking', name: 'Walking', nameVi: 'Đi bộ', category: 'recovery', unit: 'minutes', defaultValue: 30, defaultSets: 1, icon: '🚶', isCustom: false, usageCount: 0 },
   { id: 'foam_rolling', name: 'Foam Rolling', nameVi: 'Lăn cơ', category: 'recovery', unit: 'minutes', defaultValue: 10, defaultSets: 1, icon: '🧻', isCustom: false, usageCount: 0 },
+
+  // Dumbbell (home)
+  { id: 'dumbbell_curl', name: 'Dumbbell Curl', nameVi: 'Cuộn tay tạ đôi', category: 'strength', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '💪', isCustom: false, usageCount: 0 },
+  { id: 'dumbbell_press', name: 'Dumbbell Shoulder Press', nameVi: 'Đẩy tạ vai', category: 'strength', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '🏋️', isCustom: false, usageCount: 0 },
+  { id: 'dumbbell_row', name: 'Dumbbell Row', nameVi: 'Kéo tạ lưng', category: 'strength', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🤸', isCustom: false, usageCount: 0 },
+  { id: 'dumbbell_squat', name: 'Dumbbell Squat', nameVi: 'Squat tạ đôi', category: 'strength', unit: 'reps', defaultValue: 15, defaultSets: 3, icon: '🏋️', isCustom: false, usageCount: 0 },
+  { id: 'dumbbell_deadlift', name: 'Dumbbell Deadlift', nameVi: 'Kéo tạ hông', category: 'strength', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🔱', isCustom: false, usageCount: 0 },
+  { id: 'dumbbell_lunge', name: 'Dumbbell Lunge', nameVi: 'Lunge tạ đôi', category: 'strength', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🦵', isCustom: false, usageCount: 0 },
+  { id: 'dumbbell_fly', name: 'Dumbbell Fly', nameVi: 'Dang tay tạ', category: 'strength', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🦅', isCustom: false, usageCount: 0 },
 ];
 
 export const CATEGORY_LABELS: Record<string, string> = {
