@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  Switch,
   TextInput,
   TouchableOpacity,
   StyleSheet,
@@ -26,16 +25,12 @@ function SettingRow({ label, children }: { label: string; children: React.ReactN
 
 export default function SettingsScreen() {
   const { profile, updateProfile } = useUserStore();
-  const [reminderEnabled, setReminderEnabled] = useState(profile?.reminderEnabled ?? true);
-  const [reminderTime, setReminderTime] = useState(profile?.reminderTime || '07:30');
   const [weeklyGoal, setWeeklyGoal] = useState(String(profile?.weeklyGoalMinutes || 150));
   const [sheetsId, setSheetsId] = useState(profile?.sheetsId || '');
 
   const handleSave = async () => {
     if (!profile?.uid) return;
     await updateProfile(profile.uid, {
-      reminderEnabled,
-      reminderTime,
       weeklyGoalMinutes: parseInt(weeklyGoal) || 150,
       sheetsId: sheetsId.trim() || undefined,
     });
@@ -64,31 +59,6 @@ export default function SettingsScreen() {
               <Text style={styles.profileStreakText}>🔥 {profile.streak.current} ngày streak</Text>
             </View>
           ) : null}
-        </View>
-
-        {/* Notifications */}
-        <Text style={styles.sectionLabel}>🔔 Nhắc nhở</Text>
-        <View style={styles.card}>
-          <SettingRow label="Bật nhắc nhở">
-            <Switch
-              value={reminderEnabled}
-              onValueChange={setReminderEnabled}
-              trackColor={{ true: COLORS.primary, false: COLORS.border }}
-              thumbColor="#fff"
-            />
-          </SettingRow>
-          {reminderEnabled && (
-            <SettingRow label="Giờ nhắc (HH:MM)">
-              <TextInput
-                style={styles.timeInput}
-                value={reminderTime}
-                onChangeText={setReminderTime}
-                placeholder="07:30"
-                placeholderTextColor={COLORS.textSecondary}
-                keyboardType="numbers-and-punctuation"
-              />
-            </SettingRow>
-          )}
         </View>
 
         {/* Goals */}
