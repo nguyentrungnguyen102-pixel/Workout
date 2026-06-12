@@ -314,6 +314,57 @@ export const PROGRAM_TEMPLATES: WorkoutProgram[] = [
       },
     ],
   },
+  {
+    id: 'home_dumbbell_3x',
+    nameVi: 'Tạ đơn tại nhà 3x/tuần',
+    descriptionVi: 'Chương trình tạ đơn đơn giản tại nhà. Chỉ cần 1 đôi tạ, 3 buổi/tuần. Phù hợp người mới bắt đầu muốn tăng cơ tại nhà.',
+    emoji: '🏋️',
+    daysPerWeek: 3,
+    difficulty: 'beginner',
+    focus: 'strength',
+    estimatedMinutes: 40,
+    days: [
+      {
+        id: 'hd3_upper',
+        order: 1,
+        nameVi: 'Thân Trên',
+        focusVi: 'Ngực · Vai · Tay',
+        emoji: '💪',
+        exercises: [
+          { presetId: 'db_chest_press',    nameVi: 'Đẩy ngực tạ',  sets: 3, reps: 10, unit: 'reps' },
+          { presetId: 'db_shoulder_press', nameVi: 'Đẩy vai tạ',   sets: 3, reps: 10, unit: 'reps' },
+          { presetId: 'db_bicep_curl',     nameVi: 'Curl tay đơn', sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_tricep_ext',     nameVi: 'Duỗi tay sau', sets: 3, reps: 12, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'hd3_lower',
+        order: 2,
+        nameVi: 'Thân Dưới',
+        focusVi: 'Chân · Mông · Core',
+        emoji: '🦵',
+        exercises: [
+          { presetId: 'db_goblet_squat', nameVi: 'Squat ôm tạ', sets: 4, reps: 12, unit: 'reps' },
+          { presetId: 'db_rdl',          nameVi: 'Deadlift tạ', sets: 3, reps: 10, unit: 'reps' },
+          { presetId: 'lunge',           nameVi: 'Lunge',       sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'plank',           nameVi: 'Plank',       sets: 3, durationSeconds: 45, unit: 'seconds' },
+        ],
+      },
+      {
+        id: 'hd3_full',
+        order: 3,
+        nameVi: 'Toàn Thân',
+        focusVi: 'Lưng · Vai · Tổng hợp',
+        emoji: '🔥',
+        exercises: [
+          { presetId: 'db_bent_row',      nameVi: 'Chèo tạ cúi',    sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_lateral_raise', nameVi: 'Nâng ngang vai', sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'db_hammer_curl',   nameVi: 'Curl búa',       sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_goblet_squat',  nameVi: 'Squat ôm tạ',   sets: 3, reps: 15, unit: 'reps' },
+        ],
+      },
+    ],
+  },
 ];
 
 export const DIFFICULTY_LABELS: Record<string, string> = {
