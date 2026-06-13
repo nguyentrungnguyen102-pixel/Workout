@@ -314,6 +314,133 @@ export const PROGRAM_TEMPLATES: WorkoutProgram[] = [
       },
     ],
   },
+
+  // ── Phase 5: Home Dumbbell Programs ─────────────────────────────────────────
+
+  {
+    id: 'home_dumbbell_3x',
+    nameVi: 'Tạ đơn tại nhà 3x/tuần',
+    descriptionVi: 'Toàn thân với tạ đơn. Tập tại nhà, không cần phòng gym. Phù hợp người mới bắt đầu dùng tạ.',
+    emoji: '🏠',
+    daysPerWeek: 3,
+    difficulty: 'beginner',
+    focus: 'strength',
+    estimatedMinutes: 40,
+    days: [
+      {
+        id: 'hd3_a',
+        order: 1,
+        nameVi: 'Buổi A · Ngực & Tay',
+        focusVi: 'Ngực · Vai · Tay sau',
+        emoji: '💪',
+        exercises: [
+          { presetId: 'db_chest_press',   nameVi: 'Đẩy tạ nằm',      sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_fly',           nameVi: 'Dạng tạ nằm',      sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_shoulder_press',nameVi: 'Đẩy vai tạ',       sets: 3, reps: 10, unit: 'reps' },
+          { presetId: 'db_tricep_ext',    nameVi: 'Duỗi tay sau tạ',  sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'plank',            nameVi: 'Plank',             sets: 3, durationSeconds: 40, unit: 'seconds' },
+        ],
+      },
+      {
+        id: 'hd3_b',
+        order: 2,
+        nameVi: 'Buổi B · Lưng & Tay trước',
+        focusVi: 'Lưng · Vai · Bắp tay',
+        emoji: '🤸',
+        exercises: [
+          { presetId: 'db_bent_row',     nameVi: 'Chèo tạ cúi người', sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_row',          nameVi: 'Chèo tạ một tay',   sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_shrug',        nameVi: 'Nhún vai tạ',       sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'db_curl',         nameVi: 'Cuốn tạ bắp tay',  sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_hammer_curl',  nameVi: 'Cuốn búa',          sets: 3, reps: 12, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'hd3_c',
+        order: 3,
+        nameVi: 'Buổi C · Chân & Core',
+        focusVi: 'Đùi · Mông · Core',
+        emoji: '🦵',
+        exercises: [
+          { presetId: 'db_goblet_squat', nameVi: 'Squat ôm tạ',      sets: 4, reps: 15, unit: 'reps' },
+          { presetId: 'db_rdl',          nameVi: 'Deadlift Romania',  sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_lunge',        nameVi: 'Lunge tạ',          sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_calf_raise',   nameVi: 'Nâng gót tạ',       sets: 3, reps: 20, unit: 'reps' },
+          { presetId: 'db_russian_twist',nameVi: 'Xoay người tạ',     sets: 3, reps: 20, unit: 'reps' },
+        ],
+      },
+    ],
+  },
+
+  {
+    id: 'home_dumbbell_ul4x',
+    nameVi: 'Tạ đơn Upper/Lower 4x',
+    descriptionVi: 'Chia thân trên/thân dưới với tạ đơn. Tăng cơ hiệu quả tại nhà, 4 buổi/tuần.',
+    emoji: '🏋️',
+    daysPerWeek: 4,
+    difficulty: 'intermediate',
+    focus: 'strength',
+    estimatedMinutes: 50,
+    days: [
+      {
+        id: 'hdul_upper_a',
+        order: 1,
+        nameVi: 'Thân Trên A',
+        focusVi: 'Ngực · Lưng · Vai',
+        emoji: '💪',
+        exercises: [
+          { presetId: 'db_chest_press',    nameVi: 'Đẩy tạ nằm',      sets: 4, reps: 10, unit: 'reps' },
+          { presetId: 'db_bent_row',       nameVi: 'Chèo tạ cúi người',sets: 4, reps: 10, unit: 'reps' },
+          { presetId: 'db_shoulder_press', nameVi: 'Đẩy vai tạ',       sets: 3, reps: 10, unit: 'reps' },
+          { presetId: 'db_fly',            nameVi: 'Dạng tạ nằm',      sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_lateral_raise',  nameVi: 'Dạng vai ngang',   sets: 3, reps: 15, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'hdul_lower_a',
+        order: 2,
+        nameVi: 'Thân Dưới A',
+        focusVi: 'Đùi · Mông · Gót chân',
+        emoji: '🦵',
+        exercises: [
+          { presetId: 'db_goblet_squat', nameVi: 'Squat ôm tạ',      sets: 4, reps: 15, unit: 'reps' },
+          { presetId: 'db_rdl',          nameVi: 'Deadlift Romania',  sets: 4, reps: 12, unit: 'reps' },
+          { presetId: 'db_lunge',        nameVi: 'Lunge tạ',          sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_calf_raise',   nameVi: 'Nâng gót tạ',       sets: 4, reps: 20, unit: 'reps' },
+          { presetId: 'db_russian_twist',nameVi: 'Xoay người tạ',     sets: 3, reps: 20, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'hdul_upper_b',
+        order: 3,
+        nameVi: 'Thân Trên B',
+        focusVi: 'Bắp tay · Tay sau · Vai · Core',
+        emoji: '💪',
+        exercises: [
+          { presetId: 'db_curl',         nameVi: 'Cuốn tạ bắp tay',  sets: 4, reps: 12, unit: 'reps' },
+          { presetId: 'db_hammer_curl',  nameVi: 'Cuốn búa',          sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_overhead_ext', nameVi: 'Duỗi tay sau đầu',  sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_tricep_ext',   nameVi: 'Duỗi tay sau tạ',   sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_front_raise',  nameVi: 'Nâng tạ trước vai', sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'plank',           nameVi: 'Plank',              sets: 3, durationSeconds: 50, unit: 'seconds' },
+        ],
+      },
+      {
+        id: 'hdul_lower_b',
+        order: 4,
+        nameVi: 'Thân Dưới B',
+        focusVi: 'Sức mạnh đùi · Core tăng tải',
+        emoji: '🦵',
+        exercises: [
+          { presetId: 'db_goblet_squat', nameVi: 'Squat ôm tạ (tăng tải)', sets: 5, reps: 12, unit: 'reps' },
+          { presetId: 'db_rdl',          nameVi: 'Deadlift Romania',        sets: 4, reps: 10, unit: 'reps' },
+          { presetId: 'db_lunge',        nameVi: 'Lunge tạ',                sets: 4, reps: 12, unit: 'reps' },
+          { presetId: 'db_side_bend',    nameVi: 'Nghiêng người tạ',        sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'db_russian_twist',nameVi: 'Xoay người tạ',           sets: 3, reps: 20, unit: 'reps' },
+        ],
+      },
+    ],
+  },
 ];
 
 export const DIFFICULTY_LABELS: Record<string, string> = {

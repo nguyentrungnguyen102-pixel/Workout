@@ -53,8 +53,6 @@ export default function OnboardingScreen() {
   const [displayName, setDisplayName] = useState(profile?.displayName || '');
   const [weeklyGoal, setWeeklyGoal] = useState(150);
   const [weeklyGoalSessions, setWeeklyGoalSessions] = useState(4);
-  const [reminderEnabled, setReminderEnabled] = useState(true);
-  const [reminderTime, setReminderTime] = useState('07:30');
   const [saving, setSaving] = useState(false);
 
   const handleNext = () => {
@@ -73,8 +71,6 @@ export default function OnboardingScreen() {
         displayName: displayName.trim() || profile.displayName,
         weeklyGoalMinutes: weeklyGoal,
         weeklyGoalSessions,
-        reminderEnabled,
-        reminderTime,
         onboardingDone: true,
       });
       navigation.reset({ index: 0, routes: [{ name: 'Main' }] });
@@ -183,49 +179,44 @@ export default function OnboardingScreen() {
 
           {step === 2 && (
             <View style={styles.stepContainer}>
-              <Text style={styles.stepEmoji}>🔔</Text>
-              <Text style={styles.stepTitle}>Nhắc nhở tập luyện</Text>
+              <Text style={styles.stepEmoji}>🚀</Text>
+              <Text style={styles.stepTitle}>Sẵn sàng tập!</Text>
               <Text style={styles.stepSub}>
-                Đặt lịch nhắc để không bỏ lỡ buổi tập nào.
+                Tất cả đã được thiết lập. Bắt đầu ngay thôi!
               </Text>
-
-              <View style={styles.reminderToggleRow}>
-                <Text style={styles.fieldLabel}>Bật nhắc nhở hàng ngày</Text>
-                <TouchableOpacity
-                  style={[styles.toggleBtn, reminderEnabled && styles.toggleBtnOn]}
-                  onPress={() => setReminderEnabled((v) => !v)}
-                  activeOpacity={0.7}
-                >
-                  <View style={[styles.toggleThumb, reminderEnabled && styles.toggleThumbOn]} />
-                </TouchableOpacity>
-              </View>
-
-              {reminderEnabled && (
-                <>
-                  <Text style={[styles.fieldLabel, { marginTop: 20 }]}>Giờ nhắc (HH:MM)</Text>
-                  <TextInput
-                    style={[styles.input, styles.timeInput]}
-                    value={reminderTime}
-                    onChangeText={setReminderTime}
-                    placeholder="07:30"
-                    placeholderTextColor={COLORS.textMuted}
-                    keyboardType="numbers-and-punctuation"
-                    returnKeyType="done"
-                  />
-                </>
-              )}
 
               <View style={styles.summaryCard}>
                 <Text style={styles.summaryTitle}>Tóm tắt cài đặt</Text>
-                <Text style={styles.summaryRow2}>
-                  👤 {displayName || 'Người dùng'}
-                </Text>
-                <Text style={styles.summaryRow2}>
-                  🎯 {weeklyGoal} phút / tuần · {weeklyGoalSessions} ngày
-                </Text>
-                <Text style={styles.summaryRow2}>
-                  🔔 {reminderEnabled ? `Nhắc lúc ${reminderTime}` : 'Tắt nhắc nhở'}
-                </Text>
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryIcon}>👤</Text>
+                  <Text style={styles.summaryText}>{displayName || 'Người dùng'}</Text>
+                </View>
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryIcon}>🎯</Text>
+                  <Text style={styles.summaryText}>{weeklyGoal} phút / tuần · {weeklyGoalSessions} ngày</Text>
+                </View>
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryIcon}>🏠</Text>
+                  <Text style={styles.summaryText}>Bài tập tạ đơn tại nhà có sẵn</Text>
+                </View>
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryIcon}>📊</Text>
+                  <Text style={styles.summaryText}>Theo dõi streak & thành tích cá nhân</Text>
+                </View>
+              </View>
+
+              <View style={styles.featureList}>
+                {[
+                  '💪 Ghi lại buổi tập nhanh chóng',
+                  '🏋️ 34 bài tập gồm tạ đơn tại nhà',
+                  '📈 Biểu đồ tiến bộ & kỷ lục cá nhân',
+                  '🔥 Theo dõi streak hàng ngày',
+                  '📋 Chương trình tập theo lộ trình',
+                ].map((f, i) => (
+                  <View key={i} style={styles.featureItem}>
+                    <Text style={styles.featureText}>{f}</Text>
+                  </View>
+                ))}
               </View>
             </View>
           )}
@@ -325,7 +316,6 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     marginBottom: 8,
   },
-  timeInput: { textAlign: 'center', fontSize: 20, fontWeight: '800' },
 
   optionList: { gap: 10 },
   optionCard: {
@@ -379,38 +369,14 @@ const styles = StyleSheet.create({
   sessionChipText: { fontSize: 13, fontWeight: '600', color: COLORS.textSecondary },
   sessionChipTextActive: { color: '#fff' },
 
-  reminderToggleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  toggleBtn: {
-    width: 52,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: COLORS.border,
-    padding: 3,
-    justifyContent: 'center',
-  },
-  toggleBtnOn: { backgroundColor: COLORS.primary },
-  toggleThumb: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#fff',
-    alignSelf: 'flex-start',
-  },
-  toggleThumbOn: { alignSelf: 'flex-end' },
-
   summaryCard: {
     backgroundColor: COLORS.primaryLight,
     borderRadius: 14,
     padding: 16,
-    marginTop: 28,
+    marginBottom: 20,
     borderWidth: 1,
     borderColor: COLORS.primary + '44',
-    gap: 8,
+    gap: 12,
   },
   summaryTitle: {
     fontSize: 13,
@@ -420,7 +386,24 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
     marginBottom: 4,
   },
-  summaryRow2: { fontSize: 14, color: COLORS.text, fontWeight: '600' },
+  summaryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  summaryIcon: { fontSize: 18 },
+  summaryText: { fontSize: 14, color: COLORS.text, fontWeight: '600', flex: 1 },
+
+  featureList: { gap: 8 },
+  featureItem: {
+    backgroundColor: COLORS.cardBackground,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  featureText: { fontSize: 14, color: COLORS.text, fontWeight: '500' },
 
   footer: {
     flexDirection: 'row',
