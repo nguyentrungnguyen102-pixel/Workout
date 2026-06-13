@@ -20,10 +20,11 @@ import { SYSTEM_PRESETS, CATEGORY_LABELS } from '../../constants/exercises';
 import { useWorkoutStore } from '../../stores/workoutStore';
 import { useUserStore } from '../../stores/userStore';
 import { COLORS } from '../../constants/colors';
-import { WorkoutPreset, ExerciseCategory, ExerciseUnit } from '../../types/workout';
+import { WorkoutPreset, ExerciseCategory, ExerciseUnit, ExerciseEquipment } from '../../types/workout';
 import { getCustomPresets, saveCustomPreset, deleteCustomPreset } from '../../services/customExerciseService';
 
 const CATEGORIES: ExerciseCategory[] = ['strength', 'cardio', 'mobility', 'recovery'];
+const EQUIPMENT_FILTERS: Array<ExerciseEquipment | 'all'> = ['all', 'bodyweight', 'dumbbell'];
 
 const UNIT_OPTIONS: { label: string; value: ExerciseUnit }[] = [
   { label: 'Reps', value: 'reps' },
@@ -218,6 +219,7 @@ export default function ExercisePickerModal() {
   const { profile } = useUserStore();
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState<ExerciseCategory | 'all'>('all');
+  const [activeEquipment, setActiveEquipment] = useState<ExerciseEquipment | 'all'>('all');
   const [customPresets, setCustomPresets] = useState<WorkoutPreset[]>([]);
   const [loadingCustom, setLoadingCustom] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -240,9 +242,12 @@ export default function ExercisePickerModal() {
         p.nameVi.toLowerCase().includes(search.toLowerCase()) ||
         p.name.toLowerCase().includes(search.toLowerCase());
       const matchCat = activeCategory === 'all' || p.category === activeCategory;
-      return matchSearch && matchCat;
+      const matchEquip =
+        activeEquipment === 'all' ||
+        (p.equipment ?? 'bodyweight') === activeEquipment;
+      return matchSearch && matchCat && matchEquip;
     });
-  }, [search, activeCategory, allPresets]);
+  }, [search, activeCategory, activeEquipment, allPresets]);
 
   const isSelected = (presetId: string) =>
     draft.exercises.some((e) => e.presetId === presetId);
@@ -335,6 +340,25 @@ export default function ExercisePickerModal() {
         )}
       />
 
+      {/* Equipment filter */}
+      <FlatList
+        data={EQUIPMENT_FILTERS}
+        horizontal
+        keyExtractor={(item) => item}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={[styles.categoryList, { paddingTop: 0 }]}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={[styles.equipmentChip, activeEquipment === item && styles.equipmentChipActive]}
+            onPress={() => setActiveEquipment(item as ExerciseEquipment | 'all')}
+          >
+            <Text style={[styles.equipmentChipText, activeEquipment === item && styles.equipmentChipTextActive]}>
+              {item === 'all' ? '🔍 Tất cả' : item === 'dumbbell' ? '🏋️ Tạ đơn' : '🤸 Tự trọng'}
+            </Text>
+          </TouchableOpacity>
+        )}
+      />
+
       {loadingCustom && <ActivityIndicator color={COLORS.primary} style={{ marginTop: 12 }} />}
 
       {/* Exercise list */}
@@ -367,7 +391,9 @@ export default function ExercisePickerModal() {
                   )}
                 </View>
                 <Text style={styles.exerciseSub}>
-                  {CATEGORY_LABELS[item.category]} · {item.defaultValue} {item.unit}
+                  {CATEGORY_LABELS[item.category]}
+                  {item.equipment === 'dumbbell' ? ' · 🏋️ Tạ đơn' : ''}
+                  {' · '}{item.defaultValue} {item.unit}
                 </Text>
               </View>
               {selected ? (
@@ -438,6 +464,21 @@ const styles = StyleSheet.create({
   },
   categoryChipText: { fontSize: 13, fontWeight: '600', color: COLORS.textSecondary },
   categoryChipTextActive: { color: COLORS.primary },
+
+  equipmentChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 16,
+    backgroundColor: COLORS.background,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  equipmentChipActive: {
+    backgroundColor: '#E8F4FD',
+    borderColor: '#2196F3',
+  },
+  equipmentChipText: { fontSize: 12, fontWeight: '600', color: COLORS.textSecondary },
+  equipmentChipTextActive: { color: '#2196F3' },
 
   exerciseItem: {
     flexDirection: 'row',
