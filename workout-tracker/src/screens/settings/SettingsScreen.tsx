@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  Switch,
   TextInput,
   TouchableOpacity,
   StyleSheet,
@@ -14,6 +13,7 @@ import { signOut } from 'firebase/auth';
 import { auth } from '../../services/firebase';
 import { useUserStore } from '../../stores/userStore';
 import { COLORS } from '../../constants/colors';
+import { APP_VERSION } from '../../constants/version';
 
 function SettingRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -26,18 +26,16 @@ function SettingRow({ label, children }: { label: string; children: React.ReactN
 
 export default function SettingsScreen() {
   const { profile, updateProfile } = useUserStore();
-  const [reminderEnabled, setReminderEnabled] = useState(profile?.reminderEnabled ?? true);
-  const [reminderTime, setReminderTime] = useState(profile?.reminderTime || '07:30');
   const [weeklyGoal, setWeeklyGoal] = useState(String(profile?.weeklyGoalMinutes || 150));
-  const [webhookUrl, setWebhookUrl] = useState(profile?.n8nWebhookUrl || '');
+  const [weeklyGoalSessions, setWeeklyGoalSessions] = useState(String(profile?.weeklyGoalSessions || 4));
+  const [sheetsId, setSheetsId] = useState(profile?.sheetsId || '');
 
   const handleSave = async () => {
     if (!profile?.uid) return;
     await updateProfile(profile.uid, {
-      reminderEnabled,
-      reminderTime,
       weeklyGoalMinutes: parseInt(weeklyGoal) || 150,
-      n8nWebhookUrl: webhookUrl.trim() || undefined,
+      weeklyGoalSessions: parseInt(weeklyGoalSessions) || 4,
+      sheetsId: sheetsId.trim() || undefined,
     });
     Alert.alert('Đã lưu', 'Cài đặt đã được cập nhật');
   };
@@ -66,31 +64,6 @@ export default function SettingsScreen() {
           ) : null}
         </View>
 
-        {/* Notifications */}
-        <Text style={styles.sectionLabel}>🔔 Nhắc nhở</Text>
-        <View style={styles.card}>
-          <SettingRow label="Bật nhắc nhở">
-            <Switch
-              value={reminderEnabled}
-              onValueChange={setReminderEnabled}
-              trackColor={{ true: COLORS.primary, false: COLORS.border }}
-              thumbColor="#fff"
-            />
-          </SettingRow>
-          {reminderEnabled && (
-            <SettingRow label="Giờ nhắc (HH:MM)">
-              <TextInput
-                style={styles.timeInput}
-                value={reminderTime}
-                onChangeText={setReminderTime}
-                placeholder="07:30"
-                placeholderTextColor={COLORS.textSecondary}
-                keyboardType="numbers-and-punctuation"
-              />
-            </SettingRow>
-          )}
-        </View>
-
         {/* Goals */}
         <Text style={styles.sectionLabel}>🎯 Mục tiêu</Text>
         <View style={styles.card}>
@@ -104,23 +77,33 @@ export default function SettingsScreen() {
               placeholderTextColor={COLORS.textSecondary}
             />
           </SettingRow>
+          <SettingRow label="Số buổi tập/tuần">
+            <TextInput
+              style={styles.timeInput}
+              value={weeklyGoalSessions}
+              onChangeText={setWeeklyGoalSessions}
+              keyboardType="numeric"
+              placeholder="4"
+              placeholderTextColor={COLORS.textSecondary}
+            />
+          </SettingRow>
         </View>
 
         {/* Integration */}
         <Text style={styles.sectionLabel}>🔗 Tích hợp Google Sheets</Text>
         <View style={styles.card}>
           <Text style={styles.webhookHint}>
-            Nhập URL webhook n8n để tự động ghi dữ liệu vào Google Sheets sau mỗi buổi tập.
+            Nhập Google Sheet ID để tự động ghi dữ liệu sau mỗi buổi tập. Lấy ID từ URL của Sheet: docs.google.com/spreadsheets/d/[ID]/edit
           </Text>
           <TextInput
             style={[styles.timeInput, styles.webhookInput]}
-            value={webhookUrl}
-            onChangeText={setWebhookUrl}
-            placeholder="https://your-n8n.app/webhook/..."
+            value={sheetsId}
+            onChangeText={setSheetsId}
+            placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms"
             placeholderTextColor={COLORS.textSecondary}
             autoCapitalize="none"
             autoCorrect={false}
-            keyboardType="url"
+            keyboardType="default"
           />
         </View>
 
@@ -133,6 +116,12 @@ export default function SettingsScreen() {
         <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut} activeOpacity={0.8}>
           <Text style={styles.signOutText}>Đăng xuất</Text>
         </TouchableOpacity>
+
+        {/* Version info */}
+        <View style={styles.versionBox}>
+          <Text style={styles.versionText}>Workout Tracker v{APP_VERSION}</Text>
+          <Text style={styles.versionPhase}>Phase 6 · Expo SDK 54</Text>
+        </View>
 
         <View style={{ height: 20 }} />
       </ScrollView>
@@ -241,4 +230,12 @@ const styles = StyleSheet.create({
     borderColor: COLORS.danger,
   },
   signOutText: { fontSize: 16, fontWeight: '600', color: COLORS.danger },
+
+  versionBox: {
+    alignItems: 'center',
+    paddingVertical: 20,
+    gap: 4,
+  },
+  versionText: { fontSize: 13, color: COLORS.textMuted, fontWeight: '600' },
+  versionPhase: { fontSize: 11, color: COLORS.textMuted },
 });

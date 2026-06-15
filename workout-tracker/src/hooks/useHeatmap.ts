@@ -18,13 +18,17 @@ export function useHeatmap(uid?: string) {
     setLoading(true);
     getLogsForHeatmap(uid, getLast90Days())
       .then((logs) => {
+        // Multiple logs per day: keep the highest intensity for each day
         const map: Record<string, HeatmapCell> = {};
         logs.forEach((log) => {
-          map[log.date] = {
-            date: log.date,
-            intensity: log.intensity,
-            intensityScore: log.intensityScore,
-          };
+          const existing = map[log.date];
+          if (!existing || log.intensityScore > existing.intensityScore) {
+            map[log.date] = {
+              date: log.date,
+              intensity: log.intensity,
+              intensityScore: log.intensityScore,
+            };
+          }
         });
         setData(map);
       })

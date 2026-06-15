@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,97 @@ import { useWorkoutStore } from '../../stores/workoutStore';
 import { useUserStore } from '../../stores/userStore';
 import { COLORS } from '../../constants/colors';
 import { Intensity } from '../../types/workout';
+import { saveTemplate } from '../../services/templateService';
+
+const REST_PRESETS = [30, 60, 90];
+
+function ElapsedTimer({ startedAt }: { startedAt: Date | null }) {
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    if (!startedAt) return;
+    const update = () => setElapsed(Math.floor((Date.now() - startedAt.getTime()) / 1000));
+    update();
+    const id = setInterval(update, 1000);
+    return () => clearInterval(id);
+  }, [startedAt]);
+
+  if (!startedAt) return null;
+
+  const mins = Math.floor(elapsed / 60);
+  const secs = elapsed % 60;
+  return (
+    <View style={elapsedStyles.badge}>
+      <Text style={elapsedStyles.text}>⏱ {mins}:{String(secs).padStart(2, '0')}</Text>
+    </View>
+  );
+}
+
+function RestTimer() {
+  const [active, setActive] = useState(false);
+  const [seconds, setSeconds] = useState(60);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const start = (secs: number) => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    setSeconds(secs);
+    setActive(true);
+  };
+
+  const stop = () => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    setActive(false);
+  };
+
+  useEffect(() => {
+    if (!active) return;
+    intervalRef.current = setInterval(() => {
+      setSeconds((s) => {
+        if (s <= 1) {
+          setActive(false);
+          return 0;
+        }
+        return s - 1;
+      });
+    }, 1000);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [active]);
+
+  if (active) {
+    return (
+      <View style={timerStyles.activeCard}>
+        <View style={timerStyles.countdownRow}>
+          <Text style={timerStyles.countdown}>{seconds}</Text>
+          <Text style={timerStyles.countdownUnit}>giây</Text>
+        </View>
+        <Text style={timerStyles.restLabel}>Đang nghỉ giữa hiệp...</Text>
+        <TouchableOpacity onPress={stop} style={timerStyles.skipBtn} activeOpacity={0.7}>
+          <Text style={timerStyles.skipText}>Bỏ qua ⏭</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  return (
+    <View style={timerStyles.card}>
+      <Text style={timerStyles.label}>⏱ Nghỉ giữa hiệp</Text>
+      <View style={timerStyles.presets}>
+        {REST_PRESETS.map((s) => (
+          <TouchableOpacity
+            key={s}
+            style={timerStyles.presetBtn}
+            onPress={() => start(s)}
+            activeOpacity={0.7}
+          >
+            <Text style={timerStyles.presetText}>{s}s</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+}
 
 const INTENSITY_OPTIONS: { label: string; value: Intensity; color: string; emoji: string }[] = [
   { label: 'Nhẹ',  value: 'light',    color: COLORS.success,  emoji: '🟢' },
@@ -47,7 +138,7 @@ function ExerciseRow({
       : Math.round((exercise.durationSeconds ?? 0) / (unit === 'minutes' ? 60 : 1));
 
   const displayUnit =
-    unit === 'reps' ? 'reps' : unit === 'seconds' ? 'giây' : 'phút';
+    unit === 'reps' ? 'lần' : unit === 'seconds' ? 'giây' : 'phút';
 
   const handleDecrement = () => {
     const next = Math.max(step, currentValue - step);
@@ -82,6 +173,12 @@ function ExerciseRow({
     if (!isNaN(num) && num > 0) onUpdate({ sets: num });
   };
 
+  const handleWeightChange = (text: string) => {
+    const num = parseFloat(text);
+    if (isNaN(num) || num < 0) return;
+    onUpdate({ weight: num || undefined });
+  };
+
   return (
     <View style={styles.exerciseRow}>
       <View style={styles.exerciseTop}>
@@ -95,7 +192,7 @@ function ExerciseRow({
         {/* Sets (only for non-duration exercises) */}
         {unit === 'reps' && (
           <View style={styles.setsControl}>
-            <Text style={styles.controlLabel}>Sets</Text>
+            <Text style={styles.controlLabel}>Hiệp</Text>
             <TextInput
               style={styles.setsInput}
               value={String(exercise.sets ?? 3)}
@@ -124,13 +221,29 @@ function ExerciseRow({
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Weight input — strength exercises only */}
+      {unit === 'reps' && (
+        <View style={styles.weightRow}>
+          <Text style={styles.weightLabel}>🏋️ Tạ (kg)</Text>
+          <TextInput
+            style={styles.weightInput}
+            value={exercise.weight ? String(exercise.weight) : ''}
+            onChangeText={handleWeightChange}
+            keyboardType="decimal-pad"
+            placeholder="--"
+            placeholderTextColor={COLORS.textMuted}
+            selectTextOnFocus
+          />
+        </View>
+      )}
     </View>
   );
 }
 
 export default function WorkoutSummaryModal() {
   const navigation = useNavigation<any>();
-  const { profile } = useUserStore();
+  const { profile, loadProfile } = useUserStore();
   const {
     draft,
     isLogging,
@@ -142,6 +255,28 @@ export default function WorkoutSummaryModal() {
     resetDraft,
   } = useWorkoutStore();
   const [saving, setSaving] = useState(false);
+  const [showTemplateSave, setShowTemplateSave] = useState(false);
+  const [templateName, setTemplateName] = useState('');
+  const [savingTemplate, setSavingTemplate] = useState(false);
+
+  const handleSaveTemplate = useCallback(async () => {
+    if (!profile?.uid) return;
+    if (!templateName.trim()) {
+      Alert.alert('Thiếu tên', 'Nhập tên template');
+      return;
+    }
+    setSavingTemplate(true);
+    try {
+      await saveTemplate(profile.uid, templateName.trim(), draft.exercises);
+      setShowTemplateSave(false);
+      setTemplateName('');
+      Alert.alert('Đã lưu! ✅', `Template "${templateName.trim()}" đã được lưu.`);
+    } catch {
+      Alert.alert('Lỗi', 'Không lưu được template. Thử lại nhé!');
+    } finally {
+      setSavingTemplate(false);
+    }
+  }, [profile?.uid, templateName, draft.exercises]);
 
   const handleLog = async () => {
     if (!profile?.uid) return;
@@ -152,6 +287,7 @@ export default function WorkoutSummaryModal() {
     setSaving(true);
     try {
       await logWorkout(profile.uid);
+      await loadProfile(profile.uid);
       navigation.navigate('Main');
     } catch (err) {
       Alert.alert('Lỗi', 'Không lưu được. Thử lại nhé!');
@@ -181,7 +317,10 @@ export default function WorkoutSummaryModal() {
         <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
           <Ionicons name="chevron-down" size={28} color={COLORS.textSecondary} />
         </TouchableOpacity>
-        <Text style={styles.title}>Xác nhận buổi tập</Text>
+        <View style={styles.headerCenter}>
+          <Text style={styles.title}>Xác nhận buổi tập</Text>
+          <ElapsedTimer startedAt={draft.startedAt} />
+        </View>
         <TouchableOpacity onPress={handleDiscard} activeOpacity={0.7}>
           <Text style={styles.discardText}>Huỷ</Text>
         </TouchableOpacity>
@@ -220,28 +359,36 @@ export default function WorkoutSummaryModal() {
           </>
         )}
 
+        {/* Rest Timer */}
+        {draft.exercises.length > 0 && (
+          <>
+            <Text style={styles.sectionLabel}>Nghỉ giữa hiệp</Text>
+            <RestTimer />
+          </>
+        )}
+
         {/* Intensity picker */}
         <Text style={styles.sectionLabel}>Cường độ</Text>
         <View style={styles.intensityRow}>
-          {INTENSITY_OPTIONS.map((opt) => (
-            <TouchableOpacity
-              key={opt.value}
-              style={[
-                styles.intensityBtn,
-                draft.intensity === opt.value && {
-                  borderColor: opt.color,
-                  backgroundColor: opt.color + '18',
-                },
-              ]}
-              onPress={() => setIntensity(opt.value)}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.intensityEmoji}>{opt.emoji}</Text>
-              <Text style={[styles.intensityLabel, draft.intensity === opt.value && { color: opt.color }]}>
-                {opt.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
+          {INTENSITY_OPTIONS.map((opt) => {
+            const active = draft.intensity === opt.value;
+            return (
+              <TouchableOpacity
+                key={opt.value}
+                style={[
+                  styles.intensityBtn,
+                  active && { borderColor: opt.color, backgroundColor: opt.color },
+                ]}
+                onPress={() => setIntensity(opt.value)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.intensityEmoji}>{opt.emoji}</Text>
+                <Text style={[styles.intensityLabel, active && { color: '#fff', fontWeight: '800' }]}>
+                  {opt.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
         {/* Notes */}
@@ -261,6 +408,47 @@ export default function WorkoutSummaryModal() {
 
       {/* Log button */}
       <View style={styles.footer}>
+        {/* Save as template inline form */}
+        {showTemplateSave && (
+          <View style={styles.templateSaveRow}>
+            <TextInput
+              style={styles.templateNameInput}
+              placeholder="Tên template..."
+              placeholderTextColor={COLORS.textMuted}
+              value={templateName}
+              onChangeText={setTemplateName}
+              autoFocus
+            />
+            <TouchableOpacity
+              style={[styles.templateSaveBtn, savingTemplate && { opacity: 0.5 }]}
+              onPress={handleSaveTemplate}
+              disabled={savingTemplate}
+              activeOpacity={0.8}
+            >
+              {savingTemplate ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <Text style={styles.templateSaveBtnText}>Lưu</Text>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => { setShowTemplateSave(false); setTemplateName(''); }} style={{ padding: 6 }}>
+              <Ionicons name="close" size={20} color={COLORS.textSecondary} />
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Save as template trigger */}
+        {draft.exercises.length > 0 && !showTemplateSave && (
+          <TouchableOpacity
+            style={styles.saveTemplateLink}
+            onPress={() => setShowTemplateSave(true)}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="bookmark-outline" size={16} color={COLORS.primary} />
+            <Text style={styles.saveTemplateLinkText}>Lưu thành template</Text>
+          </TouchableOpacity>
+        )}
+
         <TouchableOpacity
           style={[styles.logBtn, (saving || draft.exercises.length === 0) && styles.logBtnDisabled]}
           onPress={handleLog}
@@ -294,6 +482,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
+  headerCenter: { alignItems: 'center', gap: 4 },
   title: { fontSize: 17, fontWeight: '700', color: COLORS.text },
   discardText: { fontSize: 15, color: COLORS.danger },
 
@@ -381,6 +570,30 @@ const styles = StyleSheet.create({
     paddingRight: 8,
   },
 
+  weightRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+  },
+  weightLabel: { fontSize: 12, fontWeight: '600', color: COLORS.textSecondary, flex: 1 },
+  weightInput: {
+    backgroundColor: COLORS.card2,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    fontSize: 15,
+    fontWeight: '700',
+    color: COLORS.text,
+    minWidth: 72,
+    textAlign: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+
   addExerciseBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -453,4 +666,100 @@ const styles = StyleSheet.create({
   },
   logBtnDisabled: { opacity: 0.5, shadowOpacity: 0 },
   logBtnText: { fontSize: 17, fontWeight: '800', color: '#fff' },
+
+  saveTemplateLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 8,
+  },
+  saveTemplateLinkText: { fontSize: 13, color: COLORS.primary, fontWeight: '600' },
+
+  templateSaveRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: COLORS.cardBackground,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginBottom: 10,
+  },
+  templateNameInput: {
+    flex: 1,
+    fontSize: 15,
+    color: COLORS.text,
+    paddingVertical: 6,
+  },
+  templateSaveBtn: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    minWidth: 52,
+    alignItems: 'center',
+  },
+  templateSaveBtnText: { fontSize: 14, fontWeight: '700', color: '#fff' },
+});
+
+const elapsedStyles = StyleSheet.create({
+  badge: {
+    backgroundColor: COLORS.primaryLight,
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderWidth: 1,
+    borderColor: COLORS.primary + '44',
+  },
+  text: { fontSize: 12, fontWeight: '700', color: COLORS.primary },
+});
+
+const timerStyles = StyleSheet.create({
+  card: {
+    backgroundColor: COLORS.cardBackground,
+    borderRadius: 14,
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  label: { fontSize: 13, fontWeight: '600', color: COLORS.textSecondary },
+  presets: { flexDirection: 'row', gap: 8 },
+  presetBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: COLORS.primaryLight,
+    borderWidth: 1,
+    borderColor: COLORS.primary + '44',
+  },
+  presetText: { fontSize: 13, fontWeight: '700', color: COLORS.primary },
+
+  activeCard: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 14,
+    padding: 20,
+    alignItems: 'center',
+  },
+  countdownRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 4 },
+  countdown: {
+    fontSize: 52,
+    fontWeight: '900',
+    color: '#fff',
+    lineHeight: 56,
+  },
+  countdownUnit: { fontSize: 16, color: 'rgba(255,255,255,0.8)', fontWeight: '600', marginBottom: 6 },
+  restLabel: { fontSize: 13, color: 'rgba(255,255,255,0.8)', marginBottom: 16 },
+  skipBtn: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 20,
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+  },
+  skipText: { fontSize: 14, fontWeight: '700', color: '#fff' },
 });
