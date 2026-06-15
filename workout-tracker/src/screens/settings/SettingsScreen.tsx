@@ -13,6 +13,7 @@ import { signOut } from 'firebase/auth';
 import { auth } from '../../services/firebase';
 import { useUserStore } from '../../stores/userStore';
 import { COLORS } from '../../constants/colors';
+import { APP_VERSION } from '../../constants/version';
 
 function SettingRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -26,12 +27,14 @@ function SettingRow({ label, children }: { label: string; children: React.ReactN
 export default function SettingsScreen() {
   const { profile, updateProfile } = useUserStore();
   const [weeklyGoal, setWeeklyGoal] = useState(String(profile?.weeklyGoalMinutes || 150));
+  const [weeklyGoalSessions, setWeeklyGoalSessions] = useState(String(profile?.weeklyGoalSessions || 4));
   const [sheetsId, setSheetsId] = useState(profile?.sheetsId || '');
 
   const handleSave = async () => {
     if (!profile?.uid) return;
     await updateProfile(profile.uid, {
       weeklyGoalMinutes: parseInt(weeklyGoal) || 150,
+      weeklyGoalSessions: parseInt(weeklyGoalSessions) || 4,
       sheetsId: sheetsId.trim() || undefined,
     });
     Alert.alert('Đã lưu', 'Cài đặt đã được cập nhật');
@@ -74,6 +77,16 @@ export default function SettingsScreen() {
               placeholderTextColor={COLORS.textSecondary}
             />
           </SettingRow>
+          <SettingRow label="Số buổi tập/tuần">
+            <TextInput
+              style={styles.timeInput}
+              value={weeklyGoalSessions}
+              onChangeText={setWeeklyGoalSessions}
+              keyboardType="numeric"
+              placeholder="4"
+              placeholderTextColor={COLORS.textSecondary}
+            />
+          </SettingRow>
         </View>
 
         {/* Integration */}
@@ -103,6 +116,12 @@ export default function SettingsScreen() {
         <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut} activeOpacity={0.8}>
           <Text style={styles.signOutText}>Đăng xuất</Text>
         </TouchableOpacity>
+
+        {/* Version info */}
+        <View style={styles.versionBox}>
+          <Text style={styles.versionText}>Workout Tracker v{APP_VERSION}</Text>
+          <Text style={styles.versionPhase}>Phase 6 · Expo SDK 54</Text>
+        </View>
 
         <View style={{ height: 20 }} />
       </ScrollView>
@@ -211,4 +230,12 @@ const styles = StyleSheet.create({
     borderColor: COLORS.danger,
   },
   signOutText: { fontSize: 16, fontWeight: '600', color: COLORS.danger },
+
+  versionBox: {
+    alignItems: 'center',
+    paddingVertical: 20,
+    gap: 4,
+  },
+  versionText: { fontSize: 13, color: COLORS.textMuted, fontWeight: '600' },
+  versionPhase: { fontSize: 11, color: COLORS.textMuted },
 });

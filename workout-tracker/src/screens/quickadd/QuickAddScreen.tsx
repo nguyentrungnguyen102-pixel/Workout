@@ -14,9 +14,9 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useWorkoutStore } from '../../stores/workoutStore';
 import { useUserStore } from '../../stores/userStore';
-import { SYSTEM_PRESETS, CATEGORY_LABELS } from '../../constants/exercises';
+import { SYSTEM_PRESETS, CATEGORY_LABELS, MUSCLE_GROUP_LABELS } from '../../constants/exercises';
 import { COLORS } from '../../constants/colors';
-import { WorkoutPreset, ExerciseCategory, WorkoutTemplate } from '../../types/workout';
+import { WorkoutPreset, ExerciseCategory, WorkoutTemplate, MuscleGroup } from '../../types/workout';
 import { RootStackParamList } from '../../navigation/types';
 import { getTemplates, deleteTemplate } from '../../services/templateService';
 import { useProgramStore } from '../../stores/programStore';
@@ -87,6 +87,7 @@ export default function QuickAddScreen() {
   const { activeState, loadActiveProgram, getActiveProgram, getTodayDay } = useProgramStore();
 
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>('all');
+  const [activeMuscleGroup, setActiveMuscleGroup] = useState<MuscleGroup | 'all'>('all');
   const [templates, setTemplates] = useState<WorkoutTemplate[]>([]);
   const uid = profile?.uid;
 
@@ -192,10 +193,14 @@ export default function QuickAddScreen() {
   const weeklyPct = profile?.weeklyStats?.totalMinutes
     ? Math.min(100, Math.round((profile.weeklyStats.totalMinutes / targetMinutes) * 100))
     : 0;
+  const sessionCount = profile?.weeklyStats?.sessionCount || 0;
+  const weeklyGoalSessions = profile?.weeklyGoalSessions || 4;
 
-  const filteredPresets = SYSTEM_PRESETS.filter(
-    (p) => activeCategory === 'all' || p.category === activeCategory
-  );
+  const filteredPresets = SYSTEM_PRESETS.filter((p) => {
+    if (activeCategory !== 'all' && p.category !== activeCategory) return false;
+    if (activeCategory === 'dumbbell' && activeMuscleGroup !== 'all' && p.muscleGroup !== activeMuscleGroup) return false;
+    return true;
+  });
 
   const today = new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit' });
 
@@ -221,13 +226,18 @@ export default function QuickAddScreen() {
         </View>
 
         {/* Weekly progress card */}
-        {weeklyPct > 0 && (
+        {(weeklyPct > 0 || sessionCount > 0) && (
           <View style={styles.weeklyCard}>
             <Text style={styles.weeklyLabel}>Mục tiêu tuần</Text>
             <View style={styles.progressBar}>
               <View style={[styles.progressFill, { width: `${Math.min(weeklyPct, 100)}%` as any }]} />
             </View>
-            <Text style={styles.weeklyPct}>{weeklyPct}% hoàn thành</Text>
+            <View style={styles.weeklyFooter}>
+              <Text style={styles.weeklyPct}>{weeklyPct}% phút</Text>
+              <Text style={styles.weeklySessions}>
+                {sessionCount}/{weeklyGoalSessions} buổi
+              </Text>
+            </View>
           </View>
         )}
 
@@ -322,7 +332,10 @@ export default function QuickAddScreen() {
             return (
               <TouchableOpacity
                 style={[styles.categoryTab, active && styles.categoryTabActive]}
-                onPress={() => setActiveCategory(item.key)}
+                onPress={() => {
+                  setActiveCategory(item.key);
+                  setActiveMuscleGroup('all');
+                }}
                 activeOpacity={0.7}
               >
                 <Text style={styles.categoryTabEmoji}>{item.emoji}</Text>
@@ -333,6 +346,39 @@ export default function QuickAddScreen() {
             );
           }}
         />
+
+        {/* Muscle group sub-filter — shown only when Tạ đơn is active */}
+        {activeCategory === 'dumbbell' && (
+          <FlatList
+            data={([
+              { key: 'all', label: 'Tất cả', emoji: '🏋️' },
+              ...Object.entries(MUSCLE_GROUP_LABELS).map(([key, val]) => ({
+                key,
+                label: val.label,
+                emoji: val.emoji,
+              })),
+            ] as { key: string; label: string; emoji: string }[])}
+            horizontal
+            keyExtractor={(item) => item.key}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.muscleGroupTabList}
+            renderItem={({ item }) => {
+              const active = activeMuscleGroup === item.key;
+              return (
+                <TouchableOpacity
+                  style={[styles.muscleGroupTab, active && styles.muscleGroupTabActive]}
+                  onPress={() => setActiveMuscleGroup(item.key as MuscleGroup | 'all')}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.categoryTabEmoji}>{item.emoji}</Text>
+                  <Text style={[styles.muscleGroupTabText, active && styles.muscleGroupTabTextActive]}>
+                    {item.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            }}
+          />
+        )}
 
         {/* Exercise grid — 2 columns */}
         <FlatList
@@ -432,7 +478,9 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   progressFill: { height: '100%', backgroundColor: COLORS.primary, borderRadius: 3 },
+  weeklyFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   weeklyPct: { fontSize: 12, color: COLORS.primary, fontWeight: '600' },
+  weeklySessions: { fontSize: 12, color: COLORS.textSecondary, fontWeight: '600' },
 
   todayCard: {
     marginHorizontal: 20,
@@ -501,7 +549,25 @@ const styles = StyleSheet.create({
   programCardTitle: { fontSize: 13, fontWeight: '700', color: COLORS.primary },
   programCardDay: { fontSize: 12, color: COLORS.textSecondary, marginTop: 2 },
 
-  categoryTabList: { paddingHorizontal: 20, gap: 8, marginBottom: 16 },
+  categoryTabList: { paddingHorizontal: 20, gap: 8, marginBottom: 10 },
+  muscleGroupTabList: { paddingHorizontal: 20, gap: 8, marginBottom: 14 },
+  muscleGroupTab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 100,
+    backgroundColor: COLORS.card2,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  muscleGroupTabActive: {
+    backgroundColor: COLORS.catDumbbell.bg,
+    borderColor: COLORS.catDumbbell.text,
+  },
+  muscleGroupTabText: { fontSize: 12, fontWeight: '600', color: COLORS.textSecondary },
+  muscleGroupTabTextActive: { color: COLORS.catDumbbell.text },
   categoryTab: {
     flexDirection: 'row',
     alignItems: 'center',

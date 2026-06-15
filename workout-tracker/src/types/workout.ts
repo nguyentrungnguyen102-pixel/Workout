@@ -4,6 +4,7 @@ export type ExerciseCategory = 'strength' | 'cardio' | 'mobility' | 'recovery' |
 export type ExerciseUnit = 'reps' | 'seconds' | 'minutes' | 'km';
 export type Intensity = 'light' | 'moderate' | 'heavy';
 export type LogSource = 'manual' | 'voice' | 'repeat_yesterday';
+export type MuscleGroup = 'arms' | 'shoulders' | 'chest' | 'back' | 'legs_glutes' | 'full_body';
 
 export interface WorkoutPreset {
   id: string;
@@ -18,6 +19,7 @@ export interface WorkoutPreset {
   userId?: string;
   usageCount: number;
   lastUsedAt?: string;
+  muscleGroup?: MuscleGroup;
 }
 
 export interface ExerciseEntry {

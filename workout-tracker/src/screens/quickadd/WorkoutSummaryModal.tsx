@@ -20,6 +20,28 @@ import { saveTemplate } from '../../services/templateService';
 
 const REST_PRESETS = [30, 60, 90];
 
+function ElapsedTimer({ startedAt }: { startedAt: Date | null }) {
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    if (!startedAt) return;
+    const update = () => setElapsed(Math.floor((Date.now() - startedAt.getTime()) / 1000));
+    update();
+    const id = setInterval(update, 1000);
+    return () => clearInterval(id);
+  }, [startedAt]);
+
+  if (!startedAt) return null;
+
+  const mins = Math.floor(elapsed / 60);
+  const secs = elapsed % 60;
+  return (
+    <View style={elapsedStyles.badge}>
+      <Text style={elapsedStyles.text}>⏱ {mins}:{String(secs).padStart(2, '0')}</Text>
+    </View>
+  );
+}
+
 function RestTimer() {
   const [active, setActive] = useState(false);
   const [seconds, setSeconds] = useState(60);
@@ -295,7 +317,10 @@ export default function WorkoutSummaryModal() {
         <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
           <Ionicons name="chevron-down" size={28} color={COLORS.textSecondary} />
         </TouchableOpacity>
-        <Text style={styles.title}>Xác nhận buổi tập</Text>
+        <View style={styles.headerCenter}>
+          <Text style={styles.title}>Xác nhận buổi tập</Text>
+          <ElapsedTimer startedAt={draft.startedAt} />
+        </View>
         <TouchableOpacity onPress={handleDiscard} activeOpacity={0.7}>
           <Text style={styles.discardText}>Huỷ</Text>
         </TouchableOpacity>
@@ -457,6 +482,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
+  headerCenter: { alignItems: 'center', gap: 4 },
   title: { fontSize: 17, fontWeight: '700', color: COLORS.text },
   discardText: { fontSize: 15, color: COLORS.danger },
 
@@ -677,6 +703,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   templateSaveBtnText: { fontSize: 14, fontWeight: '700', color: '#fff' },
+});
+
+const elapsedStyles = StyleSheet.create({
+  badge: {
+    backgroundColor: COLORS.primaryLight,
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderWidth: 1,
+    borderColor: COLORS.primary + '44',
+  },
+  text: { fontSize: 12, fontWeight: '700', color: COLORS.primary },
 });
 
 const timerStyles = StyleSheet.create({
