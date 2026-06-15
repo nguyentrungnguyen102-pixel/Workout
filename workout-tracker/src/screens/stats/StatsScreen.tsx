@@ -11,13 +11,97 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
-
-type Nav = NativeStackNavigationProp<RootStackParamList>;
 import { useUserStore } from '../../stores/userStore';
 import { getRecentLogs } from '../../services/workoutService';
 import { computePRs, getPRLabel, PersonalRecord } from '../../services/prService';
 import { WorkoutLog } from '../../types/workout';
 import { COLORS } from '../../constants/colors';
+
+type Nav = NativeStackNavigationProp<RootStackParamList>;
+
+interface VolumeEntry {
+  name: string;
+  thisWeek: number;
+  lastWeek: number;
+  delta: number;
+}
+
+function computeVolumeProgress(logs: WorkoutLog[]): VolumeEntry[] {
+  const now = new Date();
+  const startOfThisWeek = new Date(now);
+  startOfThisWeek.setDate(now.getDate() - now.getDay());
+  startOfThisWeek.setHours(0, 0, 0, 0);
+
+  const startOfLastWeek = new Date(startOfThisWeek);
+  startOfLastWeek.setDate(startOfThisWeek.getDate() - 7);
+
+  const thisWeekStr = startOfThisWeek.toISOString().slice(0, 10);
+  const lastWeekStr = startOfLastWeek.toISOString().slice(0, 10);
+
+  const volumes: Record<string, { thisWeek: number; lastWeek: number }> = {};
+
+  for (const log of logs) {
+    const isThisWeek = log.date >= thisWeekStr;
+    const isLastWeek = log.date >= lastWeekStr && log.date < thisWeekStr;
+    if (!isThisWeek && !isLastWeek) continue;
+
+    for (const ex of log.exercises) {
+      if (!ex.weight || !ex.reps) continue;
+      const vol = ex.sets * ex.reps * ex.weight;
+      if (!volumes[ex.name]) volumes[ex.name] = { thisWeek: 0, lastWeek: 0 };
+      if (isThisWeek) volumes[ex.name].thisWeek += vol;
+      else volumes[ex.name].lastWeek += vol;
+    }
+  }
+
+  return Object.entries(volumes)
+    .map(([name, v]) => ({
+      name,
+      thisWeek: Math.round(v.thisWeek),
+      lastWeek: Math.round(v.lastWeek),
+      delta: v.lastWeek > 0 ? Math.round(((v.thisWeek - v.lastWeek) / v.lastWeek) * 100) : 0,
+    }))
+    .filter((e) => e.thisWeek > 0 || e.lastWeek > 0)
+    .sort((a, b) => b.thisWeek - a.thisWeek)
+    .slice(0, 5);
+}
+
+function VolumeCard({ entry }: { entry: VolumeEntry }) {
+  const positive = entry.delta > 0;
+  const neutral = entry.delta === 0 || entry.lastWeek === 0;
+  const arrowColor = neutral ? COLORS.textSecondary : positive ? COLORS.success : COLORS.danger;
+  const arrow = neutral ? '' : positive ? '▲' : '▼';
+  const maxVol = Math.max(entry.thisWeek, entry.lastWeek, 1);
+
+  return (
+    <View style={styles.volCard}>
+      <View style={styles.volHeader}>
+        <Text style={styles.volName} numberOfLines={1}>{entry.name}</Text>
+        {!neutral && (
+          <Text style={[styles.volDelta, { color: arrowColor }]}>
+            {arrow} {Math.abs(entry.delta)}%
+          </Text>
+        )}
+      </View>
+      <View style={styles.volBars}>
+        <View style={styles.volBarRow}>
+          <Text style={styles.volBarLabel}>Tuần này</Text>
+          <View style={styles.volBarTrack}>
+            <View style={[styles.volBarFill, { width: `${(entry.thisWeek / maxVol) * 100}%` as any, backgroundColor: COLORS.primary }]} />
+          </View>
+          <Text style={styles.volBarValue}>{entry.thisWeek} kg</Text>
+        </View>
+        <View style={styles.volBarRow}>
+          <Text style={styles.volBarLabel}>Tuần trước</Text>
+          <View style={styles.volBarTrack}>
+            <View style={[styles.volBarFill, { width: `${(entry.lastWeek / maxVol) * 100}%` as any, backgroundColor: COLORS.border }]} />
+          </View>
+          <Text style={styles.volBarValue}>{entry.lastWeek} kg</Text>
+        </View>
+      </View>
+    </View>
+  );
+}
 
 function StatCard({ label, value, unit, icon }: {
   label: string; value: string | number; unit?: string; icon: string;
@@ -134,6 +218,8 @@ export default function StatsScreen() {
     }, [uid])
   );
 
+  const volumeEntries = computeVolumeProgress(logs);
+
   const streak = profile?.streak?.current || 0;
   const longestStreak = profile?.streak?.longest || 0;
   const targetMinutes = profile?.weeklyStats?.targetMinutes || profile?.weeklyGoalMinutes || 150;
@@ -242,6 +328,16 @@ export default function StatsScreen() {
                   </Text>
                 </TouchableOpacity>
               )}
+            </>
+          )}
+
+          {/* Volume Progress */}
+          {volumeEntries.length > 0 && (
+            <>
+              <Text style={styles.sectionTitle}>📈 Khối lượng tạ (tuần này vs tuần trước)</Text>
+              {volumeEntries.map((entry) => (
+                <VolumeCard key={entry.name} entry={entry} />
+              ))}
             </>
           )}
 
@@ -457,4 +553,31 @@ const styles = StyleSheet.create({
   },
   consistencyFill: { height: '100%', backgroundColor: COLORS.primary, borderRadius: 4 },
   consistencyHint: { fontSize: 12, color: COLORS.textSecondary, textAlign: 'center' },
+
+  volCard: {
+    backgroundColor: COLORS.cardBackground,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  volHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+  volName: { fontSize: 14, fontWeight: '700', color: COLORS.text, flex: 1, marginRight: 8 },
+  volDelta: { fontSize: 13, fontWeight: '700' },
+  volBars: { gap: 6 },
+  volBarRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  volBarLabel: { fontSize: 11, color: COLORS.textSecondary, width: 68 },
+  volBarTrack: {
+    flex: 1,
+    height: 6,
+    backgroundColor: COLORS.border,
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  volBarFill: { height: '100%', borderRadius: 3 },
+  volBarValue: { fontSize: 11, color: COLORS.textSecondary, width: 52, textAlign: 'right' },
 });
