@@ -54,6 +54,7 @@ function ExerciseCard({ exercise }: { exercise: ExerciseEntry }) {
     cardio: '#E24A4A',
     mobility: '#4AE28A',
     recovery: '#E2B44A',
+    dumbbell: '#B45309',
   };
   const dotColor = catColors[exercise.category] || COLORS.primary;
 

@@ -314,6 +314,58 @@ export const PROGRAM_TEMPLATES: WorkoutProgram[] = [
       },
     ],
   },
+
+  {
+    id: 'dumbbell_home_3x',
+    nameVi: 'Tạ Đơn Tại Nhà 3x',
+    descriptionVi: 'Chương trình tạ đơn tại nhà 3 buổi/tuần. Không cần máy móc, chỉ cần 1 đôi tạ.',
+    emoji: '🏋️',
+    daysPerWeek: 3,
+    difficulty: 'beginner',
+    focus: 'strength',
+    estimatedMinutes: 40,
+    days: [
+      {
+        id: 'db_day1',
+        order: 1,
+        nameVi: 'Ngực · Vai · Tay sau',
+        focusVi: 'Ngực · Vai · Tricep',
+        emoji: '💪',
+        exercises: [
+          { presetId: 'db_chest_fly',      nameVi: 'Bay tạ nằm sàn (ngực)', sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_shoulder_press', nameVi: 'Đẩy tạ đôi (vai)',      sets: 3, reps: 10, unit: 'reps' },
+          { presetId: 'db_lateral_raise',  nameVi: 'Nâng tạ ngang vai',     sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'db_tricep_ext',     nameVi: 'Giơ tạ sau đầu (tay sau)', sets: 3, reps: 12, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'db_day2',
+        order: 2,
+        nameVi: 'Lưng · Tay trước · Core',
+        focusVi: 'Lưng · Bicep · Core',
+        emoji: '🤸',
+        exercises: [
+          { presetId: 'db_bent_row',    nameVi: 'Kéo tạ cúi người (lưng)', sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_bicep_curl',  nameVi: 'Curl tạ đơn (bắp tay)',   sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_hammer_curl', nameVi: 'Curl búa (bắp tay)',      sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'plank',          nameVi: 'Plank',                   sets: 3, durationSeconds: 45, unit: 'seconds' },
+        ],
+      },
+      {
+        id: 'db_day3',
+        order: 3,
+        nameVi: 'Chân · Mông · Core',
+        focusVi: 'Đùi · Mông · Core',
+        emoji: '🦵',
+        exercises: [
+          { presetId: 'db_goblet_squat', nameVi: 'Squat ôm tạ (đùi)',          sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'db_lunge',        nameVi: 'Lunge tạ (đùi mông)',        sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_rdl',          nameVi: 'Deadlift tạ Romania (sau đùi)', sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_hip_thrust',   nameVi: 'Hip thrust tạ (mông)',       sets: 3, reps: 15, unit: 'reps' },
+        ],
+      },
+    ],
+  },
 ];
 
 export const DIFFICULTY_LABELS: Record<string, string> = {
