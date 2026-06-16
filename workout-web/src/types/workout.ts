@@ -18,6 +18,7 @@ export interface WorkoutPreset {
   userId?: string;
   usageCount: number;
   lastUsedAt?: string;
+  muscleGroup?: string;
 }
 
 export interface ExerciseEntry {

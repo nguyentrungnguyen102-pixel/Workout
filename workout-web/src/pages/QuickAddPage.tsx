@@ -216,6 +216,29 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
                     </div>
                   )}
                 </div>
+
+                {(ex.category === 'dumbbell' || ex.category === 'strength') && ex.unit === 'reps' && (
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-xs text-text-secondary">Tạ (kg):</span>
+                    <button onClick={() => updateExercise(ex.presetId, { weight: Math.max(0.5, parseFloat(((ex.weight || 0) - 0.5).toFixed(1))) })}
+                      className="w-7 h-7 rounded-full border border-border flex items-center justify-center hover:border-primary hover:text-primary transition-colors">
+                      <Minus size={12} />
+                    </button>
+                    <span className="w-10 text-center font-bold text-text-main text-sm">
+                      {ex.weight ? `${ex.weight}` : '—'}
+                    </span>
+                    <button onClick={() => updateExercise(ex.presetId, { weight: parseFloat(((ex.weight || 0) + 0.5).toFixed(1)) })}
+                      className="w-7 h-7 rounded-full border border-border flex items-center justify-center hover:border-primary hover:text-primary transition-colors">
+                      <Plus size={12} />
+                    </button>
+                    <span className="text-xs text-text-secondary">kg</span>
+                    {ex.weight && ex.reps && (
+                      <span className="text-xs font-semibold text-primary ml-1">
+                        1RM≈{Math.round(ex.weight * (1 + (ex.reps / 30)))}kg
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             );
           })
@@ -492,6 +515,9 @@ export default function QuickAddPage() {
                 </span>
                 {inDraft && <span className="text-xs font-bold text-primary">✓</span>}
               </div>
+              {preset.muscleGroup && (
+                <p className="text-xs text-text-secondary mt-1 leading-tight truncate">{preset.muscleGroup}</p>
+              )}
             </button>
           );
         })}
