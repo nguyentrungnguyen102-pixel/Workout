@@ -50,8 +50,8 @@ function AddMetricForm({ onSave, onClose }: AddMetricFormProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 max-w-md mx-auto">
-      <div className="w-full bg-background rounded-t-3xl p-5 pb-8 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/50">
+      <div className="w-full md:max-w-md bg-background rounded-t-3xl md:rounded-3xl p-5 pb-8 shadow-2xl">
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-lg font-black text-text-main">Thêm chỉ số cơ thể</h3>
           <button onClick={onClose} className="p-2 rounded-full hover:bg-card-2 transition-colors">
@@ -119,7 +119,7 @@ export default function BodyPage() {
   };
 
   return (
-    <div className="px-4 pt-6 pb-8">
+    <div className="px-4 md:px-8 pt-6 md:pt-8 pb-8">
       <div className="flex items-center justify-between mb-5">
         <h1 className="text-2xl font-black text-text-main">Cơ thể</h1>
         <button onClick={() => setShowForm(true)}
@@ -136,7 +136,7 @@ export default function BodyPage() {
       {latestMetric ? (
         <div className="bg-card rounded-2xl border border-border p-4 mb-5">
           <p className="text-xs font-semibold text-text-secondary mb-3">CHỈ SỐ MỚI NHẤT</p>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {latestMetric.weight !== undefined && (
               <div className="bg-primary-light rounded-xl p-3">
                 <p className="text-xs text-text-secondary mb-1">Cân nặng</p>

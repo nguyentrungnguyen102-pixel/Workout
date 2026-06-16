@@ -56,7 +56,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="px-4 pt-6 pb-8">
+    <div className="px-4 md:px-8 pt-6 md:pt-8 pb-8">
       {toast && (
         <div className="fixed top-4 left-4 right-4 max-w-md mx-auto bg-success text-white text-sm font-semibold py-3 px-4 rounded-xl text-center z-50">
           {toast}

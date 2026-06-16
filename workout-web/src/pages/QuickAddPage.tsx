@@ -134,7 +134,8 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-background max-w-md mx-auto">
+    <div className="fixed inset-0 z-50 flex flex-col md:items-center md:justify-center md:bg-black/40 md:p-6">
+      <div className="flex flex-col bg-background w-full h-full md:h-auto md:max-h-[88vh] md:max-w-lg md:rounded-3xl md:shadow-2xl md:overflow-hidden">
       {toast && (
         <div className="absolute top-4 left-4 right-4 bg-success text-white text-sm font-semibold py-3 px-4 rounded-xl text-center z-10">
           {toast}
@@ -280,6 +281,7 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
           {isLogging ? 'Đang lưu...' : `Lưu buổi tập (${draft.exercises.length} bài) ✅`}
         </button>
       </div>
+      </div>
     </div>
   );
 }
@@ -344,7 +346,7 @@ export default function QuickAddPage() {
   };
 
   return (
-    <div className="px-4 pt-6 pb-32">
+    <div className="px-4 md:px-8 pt-6 md:pt-8 pb-32">
       {showModal && uid && (
         <WorkoutSummaryModal onClose={() => setShowModal(false)} uid={uid} />
       )}
@@ -471,7 +473,7 @@ export default function QuickAddPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         {filteredPresets.map((preset) => {
           const inDraft = draftIds.has(preset.id);
           const cc = CATEGORY_COLORS[preset.category] || CATEGORY_COLORS.strength;
@@ -496,7 +498,7 @@ export default function QuickAddPage() {
       </div>
 
       {draft.exercises.length > 0 && (
-        <div className="fixed bottom-20 left-0 right-0 max-w-md mx-auto px-4 z-40">
+        <div className="fixed bottom-20 md:bottom-6 left-0 right-0 md:left-56 lg:left-60 max-w-md md:max-w-3xl lg:max-w-5xl mx-auto px-4 z-40">
           <button onClick={() => setShowModal(true)}
             className="w-full py-4 bg-primary text-white font-black text-base rounded-2xl shadow-lg shadow-primary/40 flex items-center justify-center gap-2">
             <span>Log workout ({draft.exercises.length} bài)</span>

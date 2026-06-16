@@ -11,11 +11,45 @@ const tabs = [
 
 export default function Layout() {
   return (
-    <div className="flex flex-col h-screen max-w-md mx-auto bg-background">
-      <div className="flex-1 overflow-y-auto pb-16">
-        <Outlet />
-      </div>
-      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-card border-t border-border flex z-50">
+    <div className="min-h-screen bg-background md:flex">
+      {/* Sidebar — desktop only */}
+      <aside className="hidden md:flex md:flex-col md:fixed md:inset-y-0 md:w-56 lg:w-60 bg-card border-r border-border z-50 py-6 px-3">
+        <div className="px-3 mb-8 flex items-center gap-2">
+          <span className="text-2xl">💪</span>
+          <span className="font-black text-lg text-text-main">WorkoutTracker</span>
+        </div>
+        <nav className="flex flex-col gap-1">
+          {tabs.map(({ to, label, icon: Icon, end }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={end}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                  isActive ? 'bg-primary-light text-primary' : 'text-text-secondary hover:bg-background'
+                }`
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <Icon size={20} strokeWidth={isActive ? 2.5 : 1.8} />
+                  <span>{label}</span>
+                </>
+              )}
+            </NavLink>
+          ))}
+        </nav>
+      </aside>
+
+      {/* Main content */}
+      <main className="flex-1 md:pl-56 lg:pl-60">
+        <div className="max-w-md md:max-w-3xl lg:max-w-5xl mx-auto min-h-screen pb-20 md:pb-10">
+          <Outlet />
+        </div>
+      </main>
+
+      {/* Bottom nav — mobile only */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-card border-t border-border flex z-50">
         {tabs.map(({ to, label, icon: Icon, end }) => (
           <NavLink
             key={to}

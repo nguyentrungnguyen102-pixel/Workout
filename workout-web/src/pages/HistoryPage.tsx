@@ -86,7 +86,7 @@ export default function HistoryPage() {
   const columns = Math.ceil(paddedCells.length / 7);
 
   return (
-    <div className="px-4 pt-6 pb-6">
+    <div className="px-4 md:px-8 pt-6 md:pt-8 pb-6">
       <h1 className="text-2xl font-black text-text-main mb-5">Lịch sử</h1>
 
       <div className="bg-card rounded-2xl p-4 border border-border mb-5">
@@ -141,8 +141,9 @@ export default function HistoryPage() {
           <p className="text-text-secondary text-sm">Chưa có buổi tập nào được ghi lại</p>
         </div>
       ) : (
-        <div className="space-y-3">
-          <p className="text-xs font-semibold text-text-secondary">GẦN ĐÂY</p>
+        <div className="space-y-3 md:space-y-0">
+          <p className="text-xs font-semibold text-text-secondary md:col-span-2">GẦN ĐÂY</p>
+          <div className="space-y-3 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
           {recentLogs.map((log) => (
             <button key={log.id} onClick={() => navigate(`/history/${log.id}`)}
               className="w-full bg-card rounded-2xl p-4 border border-border text-left hover:border-primary/40 transition-colors active:scale-[0.99]">
@@ -168,6 +169,7 @@ export default function HistoryPage() {
               </div>
             </button>
           ))}
+          </div>
         </div>
       )}
     </div>

@@ -60,7 +60,7 @@ export default function ProgramsPage() {
   const activeProgram = PROGRAM_TEMPLATES.find((p) => p.id === activeState?.programId);
 
   return (
-    <div className="px-4 pt-6 pb-8">
+    <div className="px-4 md:px-8 pt-6 md:pt-8 pb-8">
       {toast && (
         <div className="fixed top-4 left-4 right-4 max-w-md mx-auto bg-success text-white text-sm font-semibold py-3 px-4 rounded-xl text-center z-50">
           {toast}
@@ -93,7 +93,7 @@ export default function ProgramsPage() {
           <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">
           {PROGRAM_TEMPLATES.map((prog) => {
             const isActive = activeState?.programId === prog.id;
             const dc = DIFFICULTY_COLORS[prog.difficulty] || DIFFICULTY_COLORS.beginner;

@@ -78,7 +78,7 @@ export default function LogDetailPage() {
   }
 
   return (
-    <div className="px-4 pt-6 pb-8">
+    <div className="px-4 md:px-8 pt-6 md:pt-8 pb-8">
       <div className="flex items-center justify-between mb-5">
         <button onClick={() => navigate('/history')}
           className="flex items-center gap-1.5 text-text-secondary hover:text-text-main transition-colors">

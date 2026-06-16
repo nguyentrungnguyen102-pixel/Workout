@@ -120,7 +120,7 @@ export default function StatsPage() {
   }
 
   return (
-    <div className="px-4 pt-6 pb-8">
+    <div className="px-4 md:px-8 pt-6 md:pt-8 pb-8">
       <h1 className="text-2xl font-black text-text-main mb-5">Thống kê</h1>
 
       <div className="bg-primary rounded-2xl p-5 mb-4 text-white">
@@ -169,7 +169,7 @@ export default function StatsPage() {
         </ResponsiveContainer>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 mb-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
         <div className="bg-card border border-border rounded-2xl p-4">
           <p className="text-2xl font-black text-primary">{totalTime}</p>
           <p className="text-xs text-text-secondary mt-1">tổng phút tập</p>
@@ -213,7 +213,7 @@ export default function StatsPage() {
       {prs.length > 0 && (
         <div className="bg-card rounded-2xl border border-border p-4 mb-4">
           <p className="text-sm font-bold text-text-main mb-3">Kỷ lục cá nhân 🏆</p>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
             {prs.map((pr) => (
               <button key={pr.presetId}
                 onClick={() => navigate(`/stats/exercise/${pr.presetId}`)}

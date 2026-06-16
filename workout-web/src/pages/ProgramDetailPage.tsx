@@ -39,7 +39,7 @@ export default function ProgramDetailPage() {
 
   if (!program) {
     return (
-      <div className="px-4 pt-6">
+      <div className="px-4 md:px-8 pt-6 md:pt-8">
         <button onClick={() => navigate('/programs')} className="flex items-center gap-2 text-text-secondary mb-4">
           <ArrowLeft size={18} /> Quay lại
         </button>
@@ -96,7 +96,7 @@ export default function ProgramDetailPage() {
   };
 
   return (
-    <div className="px-4 pt-6 pb-28">
+    <div className="px-4 md:px-8 pt-6 md:pt-8 pb-28">
       {toast && (
         <div className="fixed top-4 left-4 right-4 max-w-md mx-auto bg-success text-white text-sm font-semibold py-3 px-4 rounded-xl text-center z-50">
           {toast}
@@ -200,7 +200,7 @@ export default function ProgramDetailPage() {
         })}
       </div>
 
-      <div className="fixed bottom-20 left-0 right-0 max-w-md mx-auto px-4 z-40 space-y-2">
+      <div className="fixed bottom-20 md:bottom-6 left-0 right-0 md:left-56 lg:left-60 max-w-md md:max-w-3xl lg:max-w-5xl mx-auto px-4 z-40 space-y-2">
         {isActive ? (
           <>
             <button onClick={handleAdvanceDay} disabled={advancing}
