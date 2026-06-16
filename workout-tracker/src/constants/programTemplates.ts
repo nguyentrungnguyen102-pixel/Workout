@@ -1,0 +1,382 @@
+import { WorkoutProgram } from '../types/program';
+
+export const PROGRAM_TEMPLATES: WorkoutProgram[] = [
+  {
+    id: 'full_body_3x',
+    nameVi: 'Toàn thân 3 buổi/tuần',
+    descriptionVi: 'Lý tưởng cho người mới. Tập toàn bộ cơ thể mỗi buổi, nghỉ xen kẽ.',
+    emoji: '🏋️',
+    daysPerWeek: 3,
+    difficulty: 'beginner',
+    focus: 'strength',
+    estimatedMinutes: 45,
+    days: [
+      {
+        id: 'fb3_a',
+        order: 1,
+        nameVi: 'Buổi A',
+        focusVi: 'Toàn thân · Sức mạnh cơ bản',
+        emoji: '💪',
+        exercises: [
+          { presetId: 'squat',         nameVi: 'Squat',         sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'pushup',        nameVi: 'Hít đất',       sets: 3, reps: 20, unit: 'reps' },
+          { presetId: 'lunge',         nameVi: 'Lunge',         sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'plank',         nameVi: 'Plank',         sets: 3, durationSeconds: 45, unit: 'seconds' },
+        ],
+      },
+      {
+        id: 'fb3_b',
+        order: 2,
+        nameVi: 'Buổi B',
+        focusVi: 'Toàn thân · Cardio Mix',
+        emoji: '🔥',
+        exercises: [
+          { presetId: 'burpee',        nameVi: 'Burpee',        sets: 3, reps: 10, unit: 'reps' },
+          { presetId: 'pullup',        nameVi: 'Kéo xà',        sets: 3, reps: 8,  unit: 'reps' },
+          { presetId: 'jumping_jacks', nameVi: 'Bật nhảy',      sets: 3, reps: 40, unit: 'reps' },
+          { presetId: 'plank',         nameVi: 'Plank',         sets: 2, durationSeconds: 60, unit: 'seconds' },
+        ],
+      },
+      {
+        id: 'fb3_c',
+        order: 3,
+        nameVi: 'Buổi C',
+        focusVi: 'Toàn thân · Phục hồi + Dẻo dai',
+        emoji: '🧘',
+        exercises: [
+          { presetId: 'squat',         nameVi: 'Squat',         sets: 4, reps: 12,  unit: 'reps' },
+          { presetId: 'dip',           nameVi: 'Chống đẩy ghế', sets: 3, reps: 12,  unit: 'reps' },
+          { presetId: 'stretching',    nameVi: 'Giãn cơ',       sets: 1, durationSeconds: 600, unit: 'seconds' },
+          { presetId: 'walking',       nameVi: 'Đi bộ',         sets: 1, durationSeconds: 1200, unit: 'seconds' },
+        ],
+      },
+    ],
+  },
+
+  {
+    id: 'push_pull_legs',
+    nameVi: 'Push · Pull · Legs',
+    descriptionVi: 'Chương trình PPL kinh điển. Chia nhóm cơ tối ưu, 6 buổi/tuần.',
+    emoji: '💪',
+    daysPerWeek: 6,
+    difficulty: 'intermediate',
+    focus: 'strength',
+    estimatedMinutes: 60,
+    days: [
+      {
+        id: 'ppl_push1',
+        order: 1,
+        nameVi: 'Ngày Đẩy A',
+        focusVi: 'Ngực · Vai · Tay trước',
+        emoji: '🫸',
+        exercises: [
+          { presetId: 'pushup', nameVi: 'Hít đất',       sets: 4, reps: 25, unit: 'reps' },
+          { presetId: 'dip',    nameVi: 'Chống đẩy ghế', sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'plank',  nameVi: 'Plank',         sets: 3, durationSeconds: 60, unit: 'seconds' },
+        ],
+      },
+      {
+        id: 'ppl_pull1',
+        order: 2,
+        nameVi: 'Ngày Kéo A',
+        focusVi: 'Lưng · Vai sau · Tay sau',
+        emoji: '🤸',
+        exercises: [
+          { presetId: 'pullup', nameVi: 'Kéo xà', sets: 4, reps: 10, unit: 'reps' },
+          { presetId: 'plank',  nameVi: 'Plank',  sets: 3, durationSeconds: 45, unit: 'seconds' },
+        ],
+      },
+      {
+        id: 'ppl_legs1',
+        order: 3,
+        nameVi: 'Ngày Chân A',
+        focusVi: 'Đùi · Mông · Bắp chân',
+        emoji: '🦵',
+        exercises: [
+          { presetId: 'squat',         nameVi: 'Squat',    sets: 4, reps: 20, unit: 'reps' },
+          { presetId: 'lunge',         nameVi: 'Lunge',    sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'jumping_jacks', nameVi: 'Bật nhảy', sets: 2, reps: 50, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'ppl_push2',
+        order: 4,
+        nameVi: 'Ngày Đẩy B',
+        focusVi: 'Ngực · Vai · Tay trước (tăng tải)',
+        emoji: '🫸',
+        exercises: [
+          { presetId: 'pushup', nameVi: 'Hít đất',       sets: 5, reps: 20, unit: 'reps' },
+          { presetId: 'dip',    nameVi: 'Chống đẩy ghế', sets: 4, reps: 12, unit: 'reps' },
+          { presetId: 'burpee', nameVi: 'Burpee',        sets: 3, reps: 10, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'ppl_pull2',
+        order: 5,
+        nameVi: 'Ngày Kéo B',
+        focusVi: 'Lưng · Bắp tay (tăng tải)',
+        emoji: '🤸',
+        exercises: [
+          { presetId: 'pullup', nameVi: 'Kéo xà', sets: 5, reps: 8, unit: 'reps' },
+          { presetId: 'plank',  nameVi: 'Plank',  sets: 4, durationSeconds: 60, unit: 'seconds' },
+        ],
+      },
+      {
+        id: 'ppl_legs2',
+        order: 6,
+        nameVi: 'Ngày Chân B',
+        focusVi: 'Sức mạnh đùi · Mông (tăng tải)',
+        emoji: '🦵',
+        exercises: [
+          { presetId: 'squat',     nameVi: 'Squat',    sets: 5, reps: 15, unit: 'reps' },
+          { presetId: 'lunge',     nameVi: 'Lunge',    sets: 4, reps: 12, unit: 'reps' },
+          { presetId: 'jump_rope', nameVi: 'Nhảy dây', sets: 1, durationSeconds: 600, unit: 'seconds' },
+        ],
+      },
+    ],
+  },
+
+  {
+    id: 'upper_lower',
+    nameVi: 'Upper · Lower Split',
+    descriptionVi: 'Tập thân trên và thân dưới xen kẽ. Cân bằng tối ưu, 4 buổi/tuần.',
+    emoji: '⚡',
+    daysPerWeek: 4,
+    difficulty: 'intermediate',
+    focus: 'strength',
+    estimatedMinutes: 55,
+    days: [
+      {
+        id: 'ul_upper_a',
+        order: 1,
+        nameVi: 'Thân Trên A',
+        focusVi: 'Ngực · Lưng · Vai',
+        emoji: '💪',
+        exercises: [
+          { presetId: 'pushup', nameVi: 'Hít đất', sets: 4, reps: 20, unit: 'reps' },
+          { presetId: 'pullup', nameVi: 'Kéo xà',  sets: 3, reps: 10, unit: 'reps' },
+          { presetId: 'dip',    nameVi: 'Chống đẩy ghế', sets: 3, reps: 12, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'ul_lower_a',
+        order: 2,
+        nameVi: 'Thân Dưới A',
+        focusVi: 'Đùi · Mông · Bắp chân',
+        emoji: '🦵',
+        exercises: [
+          { presetId: 'squat',     nameVi: 'Squat',    sets: 4, reps: 18, unit: 'reps' },
+          { presetId: 'lunge',     nameVi: 'Lunge',    sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'jump_rope', nameVi: 'Nhảy dây', sets: 1, durationSeconds: 300, unit: 'seconds' },
+        ],
+      },
+      {
+        id: 'ul_upper_b',
+        order: 3,
+        nameVi: 'Thân Trên B',
+        focusVi: 'Ngực · Bắp tay · Core',
+        emoji: '💪',
+        exercises: [
+          { presetId: 'pushup', nameVi: 'Hít đất', sets: 5, reps: 15, unit: 'reps' },
+          { presetId: 'pullup', nameVi: 'Kéo xà',  sets: 4, reps: 8,  unit: 'reps' },
+          { presetId: 'plank',  nameVi: 'Plank',   sets: 4, durationSeconds: 60, unit: 'seconds' },
+        ],
+      },
+      {
+        id: 'ul_lower_b',
+        order: 4,
+        nameVi: 'Thân Dưới B',
+        focusVi: 'Sức mạnh đùi · Cardio',
+        emoji: '🦵',
+        exercises: [
+          { presetId: 'squat',         nameVi: 'Squat',    sets: 5, reps: 15, unit: 'reps' },
+          { presetId: 'burpee',        nameVi: 'Burpee',   sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'jumping_jacks', nameVi: 'Bật nhảy', sets: 3, reps: 50, unit: 'reps' },
+        ],
+      },
+    ],
+  },
+
+  {
+    id: 'cardio_blast',
+    nameVi: 'Cardio Blast',
+    descriptionVi: 'Cardio cường độ cao xen kẽ active recovery. Đốt mỡ hiệu quả.',
+    emoji: '🏃',
+    daysPerWeek: 5,
+    difficulty: 'intermediate',
+    focus: 'cardio',
+    estimatedMinutes: 35,
+    days: [
+      {
+        id: 'cb_1',
+        order: 1,
+        nameVi: 'HIIT A',
+        focusVi: 'Cường độ cao · Đốt mỡ',
+        emoji: '🔥',
+        exercises: [
+          { presetId: 'burpee',        nameVi: 'Burpee',    sets: 4, reps: 15, unit: 'reps' },
+          { presetId: 'jumping_jacks', nameVi: 'Bật nhảy',  sets: 4, reps: 50, unit: 'reps' },
+          { presetId: 'jump_rope',     nameVi: 'Nhảy dây',  sets: 1, durationSeconds: 600, unit: 'seconds' },
+        ],
+      },
+      {
+        id: 'cb_2',
+        order: 2,
+        nameVi: 'Steady State',
+        focusVi: 'Bền bỉ · Aerobic',
+        emoji: '🚴',
+        exercises: [
+          { presetId: 'cycling',    nameVi: 'Đạp xe',  sets: 1, durationSeconds: 1800, unit: 'seconds' },
+          { presetId: 'stretching', nameVi: 'Giãn cơ', sets: 1, durationSeconds: 600,  unit: 'seconds' },
+        ],
+      },
+      {
+        id: 'cb_3',
+        order: 3,
+        nameVi: 'HIIT B',
+        focusVi: 'Tăng tốc · Endurance',
+        emoji: '⚡',
+        exercises: [
+          { presetId: 'running',       nameVi: 'Chạy bộ',  sets: 1, durationSeconds: 1200, unit: 'seconds' },
+          { presetId: 'jumping_jacks', nameVi: 'Bật nhảy', sets: 3, reps: 60, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'cb_4',
+        order: 4,
+        nameVi: 'Active Recovery',
+        focusVi: 'Nhẹ nhàng · Phục hồi',
+        emoji: '🌿',
+        exercises: [
+          { presetId: 'walking', nameVi: 'Đi bộ', sets: 1, durationSeconds: 1800, unit: 'seconds' },
+          { presetId: 'yoga',    nameVi: 'Yoga',  sets: 1, durationSeconds: 900,  unit: 'seconds' },
+        ],
+      },
+      {
+        id: 'cb_5',
+        order: 5,
+        nameVi: 'Peak Day',
+        focusVi: 'Đỉnh cao tuần',
+        emoji: '🏆',
+        exercises: [
+          { presetId: 'burpee',    nameVi: 'Burpee',    sets: 5, reps: 12, unit: 'reps' },
+          { presetId: 'jump_rope', nameVi: 'Nhảy dây',  sets: 2, durationSeconds: 600, unit: 'seconds' },
+          { presetId: 'running',   nameVi: 'Chạy bộ',   sets: 1, durationSeconds: 600, unit: 'seconds' },
+        ],
+      },
+    ],
+  },
+
+  {
+    id: 'mobility_flow',
+    nameVi: 'Mobility & Flow',
+    descriptionVi: 'Tăng độ dẻo dai và linh hoạt. Phù hợp tập sau workout nặng.',
+    emoji: '🧘',
+    daysPerWeek: 3,
+    difficulty: 'beginner',
+    focus: 'mobility',
+    estimatedMinutes: 30,
+    days: [
+      {
+        id: 'mf_1',
+        order: 1,
+        nameVi: 'Yoga Flow',
+        focusVi: 'Toàn thân · Thư giãn',
+        emoji: '🌅',
+        exercises: [
+          { presetId: 'yoga',       nameVi: 'Yoga',    sets: 1, durationSeconds: 1200, unit: 'seconds' },
+          { presetId: 'stretching', nameVi: 'Giãn cơ', sets: 1, durationSeconds: 600,  unit: 'seconds' },
+        ],
+      },
+      {
+        id: 'mf_2',
+        order: 2,
+        nameVi: 'Deep Stretch',
+        focusVi: 'Linh hoạt · Phục hồi',
+        emoji: '🤸',
+        exercises: [
+          { presetId: 'stretching',    nameVi: 'Giãn cơ',    sets: 1, durationSeconds: 900,  unit: 'seconds' },
+          { presetId: 'foam_rolling',  nameVi: 'Lăn cơ',     sets: 1, durationSeconds: 600,  unit: 'seconds' },
+          { presetId: 'walking',       nameVi: 'Đi bộ nhẹ',  sets: 1, durationSeconds: 1200, unit: 'seconds' },
+        ],
+      },
+      {
+        id: 'mf_3',
+        order: 3,
+        nameVi: 'Strength Mobility',
+        focusVi: 'Sức mạnh + Dẻo dai',
+        emoji: '🌿',
+        exercises: [
+          { presetId: 'plank',         nameVi: 'Plank',    sets: 3, durationSeconds: 45, unit: 'seconds' },
+          { presetId: 'yoga',          nameVi: 'Yoga',     sets: 1, durationSeconds: 900, unit: 'seconds' },
+          { presetId: 'foam_rolling',  nameVi: 'Lăn cơ',  sets: 1, durationSeconds: 300, unit: 'seconds' },
+        ],
+      },
+    ],
+  },
+
+  {
+    id: 'dumbbell_home_3x',
+    nameVi: 'Tạ Đơn Tại Nhà 3x',
+    descriptionVi: 'Chương trình tạ đơn tại nhà 3 buổi/tuần. Không cần máy móc, chỉ cần 1 đôi tạ.',
+    emoji: '🏋️',
+    daysPerWeek: 3,
+    difficulty: 'beginner',
+    focus: 'strength',
+    estimatedMinutes: 40,
+    days: [
+      {
+        id: 'db_day1',
+        order: 1,
+        nameVi: 'Ngực · Vai · Tay sau',
+        focusVi: 'Ngực · Vai · Tricep',
+        emoji: '💪',
+        exercises: [
+          { presetId: 'db_chest_fly',      nameVi: 'Bay tạ nằm sàn (ngực)', sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_shoulder_press', nameVi: 'Đẩy tạ đôi (vai)',      sets: 3, reps: 10, unit: 'reps' },
+          { presetId: 'db_lateral_raise',  nameVi: 'Nâng tạ ngang vai',     sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'db_tricep_ext',     nameVi: 'Giơ tạ sau đầu (tay sau)', sets: 3, reps: 12, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'db_day2',
+        order: 2,
+        nameVi: 'Lưng · Tay trước · Core',
+        focusVi: 'Lưng · Bicep · Core',
+        emoji: '🤸',
+        exercises: [
+          { presetId: 'db_bent_row',    nameVi: 'Kéo tạ cúi người (lưng)', sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_bicep_curl',  nameVi: 'Curl tạ đơn (bắp tay)',   sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_hammer_curl', nameVi: 'Curl búa (bắp tay)',      sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'plank',          nameVi: 'Plank',                   sets: 3, durationSeconds: 45, unit: 'seconds' },
+        ],
+      },
+      {
+        id: 'db_day3',
+        order: 3,
+        nameVi: 'Chân · Mông · Core',
+        focusVi: 'Đùi · Mông · Core',
+        emoji: '🦵',
+        exercises: [
+          { presetId: 'db_goblet_squat', nameVi: 'Squat ôm tạ (đùi)',          sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'db_lunge',        nameVi: 'Lunge tạ (đùi mông)',        sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_rdl',          nameVi: 'Deadlift tạ Romania (sau đùi)', sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_hip_thrust',   nameVi: 'Hip thrust tạ (mông)',       sets: 3, reps: 15, unit: 'reps' },
+        ],
+      },
+    ],
+  },
+];
+
+export const DIFFICULTY_LABELS: Record<string, string> = {
+  beginner:     'Người mới',
+  intermediate: 'Trung cấp',
+  advanced:     'Nâng cao',
+};
+
+export const FOCUS_LABELS: Record<string, string> = {
+  strength: 'Sức mạnh',
+  cardio:   'Cardio',
+  mixed:    'Kết hợp',
+  mobility: 'Dẻo dai',
+};
