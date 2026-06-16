@@ -6,7 +6,7 @@ import { getLogsForExercise } from '../services/workoutService';
 import { computePRs, getPRLabel } from '../services/prService';
 import { SYSTEM_PRESETS } from '../constants/exercises';
 import { WorkoutLog } from '../types/workout';
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
 function formatDateShort(dateStr: string): string {
   const d = new Date(dateStr + 'T00:00:00');
@@ -57,13 +57,20 @@ export default function ExerciseProgressPage() {
     .map((log) => {
       const ex = log.exercises.find((e) => e.presetId === presetId);
       if (!ex) return null;
+      const value = ex.unit === 'reps' ? (ex.reps || 0) : Math.round((ex.durationSeconds || 0) / 60);
+      const orm = ex.weight && ex.reps ? Math.round(ex.weight * (1 + ex.reps / 30)) : undefined;
       return {
         date: formatDateShort(log.date),
-        value: ex.unit === 'reps' ? (ex.reps || 0) : Math.round((ex.durationSeconds || 0) / 60),
+        value,
         sets: ex.sets,
+        weight: ex.weight || undefined,
+        orm,
       };
     })
-    .filter(Boolean) as Array<{ date: string; value: number; sets: number }>;
+    .filter(Boolean) as Array<{ date: string; value: number; sets: number; weight?: number; orm?: number }>;
+
+  const hasWeightData = chartData.some((d) => d.weight);
+  const bestOrm = hasWeightData ? Math.max(...chartData.filter((d) => d.orm).map((d) => d.orm!)) : 0;
 
   return (
     <div className="px-4 md:px-8 pt-6 md:pt-8 pb-8">
@@ -101,6 +108,16 @@ export default function ExerciseProgressPage() {
         </div>
       ) : (
         <>
+          {bestOrm > 0 && (
+            <div className="bg-primary-light border border-primary/20 rounded-2xl p-4 mb-4 flex items-center justify-between">
+              <div>
+                <p className="text-xs text-primary font-semibold">1RM ƯỚC TÍNH 🏋️</p>
+                <p className="text-2xl font-black text-primary mt-0.5">{bestOrm} kg</p>
+                <p className="text-xs text-text-secondary mt-0.5">Công thức Epley: weight × (1 + reps/30)</p>
+              </div>
+            </div>
+          )}
+
           {chartData.length > 1 && (
             <div className="bg-card rounded-2xl border border-border p-4 mb-4">
               <p className="text-sm font-bold text-text-main mb-3">
@@ -115,6 +132,25 @@ export default function ExerciseProgressPage() {
                     formatter={(v: number) => [v, preset?.unit === 'reps' ? 'reps' : 'phút']}
                   />
                   <Line type="monotone" dataKey="value" stroke="#FF5400" strokeWidth={2.5} dot={{ r: 3, fill: '#FF5400' }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          {hasWeightData && chartData.length > 1 && (
+            <div className="bg-card rounded-2xl border border-border p-4 mb-4">
+              <p className="text-sm font-bold text-text-main mb-3">Tiến triển trọng lượng (kg)</p>
+              <ResponsiveContainer width="100%" height={140}>
+                <LineChart data={chartData} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
+                  <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#8A8A8A' }} />
+                  <YAxis tick={{ fontSize: 10, fill: '#8A8A8A' }} domain={['auto', 'auto']} />
+                  <Tooltip
+                    contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #E8E7E2' }}
+                    formatter={(v: number, name: string) => [v, name === 'weight' ? 'kg tạ' : '1RM ước tính']}
+                  />
+                  <Legend formatter={(v) => v === 'weight' ? 'kg tạ' : '1RM ước tính'} wrapperStyle={{ fontSize: 11 }} />
+                  <Line type="monotone" dataKey="weight" stroke="#2563EB" strokeWidth={2.5} dot={{ r: 3, fill: '#2563EB' }} connectNulls />
+                  <Line type="monotone" dataKey="orm" stroke="#7C3AED" strokeWidth={2} dot={{ r: 2, fill: '#7C3AED' }} strokeDasharray="4 2" connectNulls />
                 </LineChart>
               </ResponsiveContainer>
             </div>
