@@ -5,6 +5,7 @@ import { useUserStore } from '../stores/userStore';
 import { useWorkoutStore } from '../stores/workoutStore';
 import { getRecentLogs } from '../services/workoutService';
 import { computePRs, getPRLabel } from '../services/prService';
+import { MUSCLE_GROUPS, MUSCLE_GROUP_LABELS, MUSCLE_GROUP_COLORS } from '../constants/exercises';
 import { WorkoutLog } from '../types/workout';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 
@@ -30,6 +31,30 @@ function getTopExercise(logs: WorkoutLog[]): string | null {
   }
   if (map.size === 0) return null;
   return [...map.entries()].sort((a, b) => b[1] - a[1])[0][0];
+}
+
+function getMuscleGroupVolume(logs: WorkoutLog[]): Array<{ group: string; label: string; volume: number; color: string }> {
+  const now = new Date();
+  const sevenDaysAgo = new Date(now);
+  sevenDaysAgo.setDate(now.getDate() - 7);
+  const cutoff = `${sevenDaysAgo.getFullYear()}-${String(sevenDaysAgo.getMonth() + 1).padStart(2, '0')}-${String(sevenDaysAgo.getDate()).padStart(2, '0')}`;
+  const recent = logs.filter((l) => l.date >= cutoff);
+  const map = new Map<string, number>();
+  for (const log of recent) {
+    for (const ex of log.exercises) {
+      const group = MUSCLE_GROUPS[ex.presetId] ?? 'core';
+      map.set(group, (map.get(group) || 0) + ex.sets * (ex.reps || 1));
+    }
+  }
+  if (map.size === 0) return [];
+  return [...map.entries()]
+    .map(([group, volume]) => ({
+      group,
+      label: MUSCLE_GROUP_LABELS[group] || group,
+      volume,
+      color: MUSCLE_GROUP_COLORS[group] || '#8A8A8A',
+    }))
+    .sort((a, b) => b.volume - a.volume);
 }
 
 function getVolumeProgress(logs: WorkoutLog[]): Array<{ name: string; thisWeek: number; lastWeek: number }> {
@@ -110,6 +135,7 @@ export default function StatsPage() {
   const topExercise = getTopExercise(logs);
   const prs = computePRs(logs).slice(0, 6);
   const volumeProgress = getVolumeProgress(logs);
+  const muscleGroupData = getMuscleGroupVolume(logs);
 
   if (loading) {
     return (
@@ -223,6 +249,30 @@ export default function StatsPage() {
                 <p className="text-xs text-text-secondary mt-0.5">{pr.achievedDate}</p>
               </button>
             ))}
+          </div>
+        </div>
+      )}
+
+      {muscleGroupData.length > 0 && (
+        <div className="bg-card rounded-2xl border border-border p-4 mb-4">
+          <p className="text-sm font-bold text-text-main mb-3">Nhóm cơ 7 ngày 💪</p>
+          <div className="space-y-2.5">
+            {muscleGroupData.map(({ group, label, volume, color }) => {
+              const maxVol = muscleGroupData[0].volume;
+              const pct = Math.round((volume / maxVol) * 100);
+              return (
+                <div key={group}>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="font-semibold text-text-main">{label}</span>
+                    <span className="text-text-muted">{volume} vol</span>
+                  </div>
+                  <div className="h-2 bg-border rounded-full overflow-hidden">
+                    <div className="h-full rounded-full transition-all"
+                      style={{ width: `${pct}%`, backgroundColor: color }} />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

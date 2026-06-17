@@ -75,7 +75,11 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
     set((s) => {
       if (s.draft.exercises.find((e) => e.presetId === exercise.presetId)) return s;
       return {
-        draft: { ...s.draft, exercises: [...s.draft.exercises, exercise] },
+        draft: {
+          ...s.draft,
+          exercises: [...s.draft.exercises, exercise],
+          startedAt: s.draft.startedAt ?? new Date(),
+        },
       };
     }),
 

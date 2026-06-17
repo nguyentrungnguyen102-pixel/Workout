@@ -35,6 +35,8 @@ export default function ExerciseProgressPage() {
   const { firebaseUser } = useUserStore();
   const [logs, setLogs] = useState<WorkoutLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [calcWeight, setCalcWeight] = useState('');
+  const [calcReps, setCalcReps] = useState('');
 
   const uid = firebaseUser?.uid;
   const preset = SYSTEM_PRESETS.find((p) => p.id === presetId);
@@ -50,6 +52,7 @@ export default function ExerciseProgressPage() {
 
   const prs = computePRs(logs);
   const pr = prs.find((p) => p.presetId === presetId);
+  const lastEntry = logs.length > 0 ? logs[0].exercises.find((e) => e.presetId === presetId) : null;
 
   const chartData = [...logs]
     .reverse()
@@ -87,6 +90,66 @@ export default function ExerciseProgressPage() {
             <p className="text-2xl font-black text-primary mt-0.5">{getPRLabel(pr)}</p>
           </div>
           <p className="text-xs text-text-secondary">{pr.achievedDate}</p>
+        </div>
+      )}
+
+      {preset?.unit === 'reps' && !loading && (
+        <div className="bg-card rounded-2xl border border-border p-4 mb-4">
+          <p className="text-sm font-bold text-text-main mb-3">Tính 1RM 🔢</p>
+          {lastEntry?.weight && lastEntry?.reps && (
+            <div className="bg-primary-light rounded-xl p-3 mb-3 flex items-center justify-between">
+              <div>
+                <p className="text-xs text-text-secondary">Lần tập gần nhất</p>
+                <p className="text-xs text-text-muted">{lastEntry.sets}×{lastEntry.reps} reps · {lastEntry.weight}kg</p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-text-secondary">1RM ước tính</p>
+                <p className="text-xl font-black text-primary">
+                  {Math.round(lastEntry.weight * (1 + lastEntry.reps / 30) * 10) / 10} kg
+                </p>
+              </div>
+            </div>
+          )}
+          <div className="flex gap-3 mb-3">
+            <div className="flex-1">
+              <label className="text-xs text-text-secondary mb-1 block">Trọng lượng (kg)</label>
+              <input
+                type="number"
+                min={0}
+                step={0.5}
+                className="w-full bg-card-2 border border-border rounded-xl px-3 py-2 text-sm font-bold text-text-main focus:border-primary outline-none"
+                placeholder="0"
+                value={calcWeight}
+                onChange={(e) => setCalcWeight(e.target.value)}
+              />
+            </div>
+            <div className="flex-1">
+              <label className="text-xs text-text-secondary mb-1 block">Số reps</label>
+              <input
+                type="number"
+                min={1}
+                className="w-full bg-card-2 border border-border rounded-xl px-3 py-2 text-sm font-bold text-text-main focus:border-primary outline-none"
+                placeholder="0"
+                value={calcReps}
+                onChange={(e) => setCalcReps(e.target.value)}
+              />
+            </div>
+          </div>
+          {(() => {
+            const w = parseFloat(calcWeight);
+            const r = parseInt(calcReps);
+            if (!isNaN(w) && !isNaN(r) && w > 0 && r > 0) {
+              const oneRM = Math.round(w * (1 + r / 30) * 10) / 10;
+              return (
+                <div className="bg-success-light rounded-xl p-3 flex items-center justify-between">
+                  <span className="text-sm font-semibold text-success">1RM ước tính</span>
+                  <span className="text-2xl font-black text-success">{oneRM} kg</span>
+                </div>
+              );
+            }
+            return <p className="text-xs text-text-secondary text-center py-1">Nhập kg và reps để tính 1RM</p>;
+          })()}
+          <p className="text-xs text-text-muted mt-2 text-center">Công thức Epley: weight × (1 + reps/30)</p>
         </div>
       )}
 

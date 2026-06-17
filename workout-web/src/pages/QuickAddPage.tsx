@@ -29,13 +29,39 @@ const CATEGORY_COLORS: Record<string, { text: string; bg: string }> = {
 };
 
 function formatValue(e: ExerciseEntry): string {
-  if (e.unit === 'reps') return `${e.sets}×${e.reps ?? '-'} reps`;
+  if (e.unit === 'reps') {
+    const base = `${e.sets}×${e.reps ?? '-'} reps`;
+    return e.weight ? `${base} · ${e.weight}kg` : base;
+  }
   if (e.unit === 'seconds') return `${e.sets}×${e.durationSeconds ?? '-'}s`;
   if (e.unit === 'minutes') {
     const mins = e.durationSeconds ? Math.round(e.durationSeconds / 60) : '-';
     return `${mins} phút`;
   }
   return `${e.sets} hiệp`;
+}
+
+function ActiveTimer({ startedAt }: { startedAt: Date | null }) {
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    if (!startedAt) return;
+    setElapsed(Math.floor((Date.now() - startedAt.getTime()) / 1000));
+    const id = setInterval(() => {
+      setElapsed(Math.floor((Date.now() - startedAt.getTime()) / 1000));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [startedAt]);
+
+  if (!startedAt) return null;
+  const mm = String(Math.floor(elapsed / 60)).padStart(2, '0');
+  const ss = String(elapsed % 60).padStart(2, '0');
+  return (
+    <div className="flex items-center gap-1.5 bg-success-light px-2.5 py-1.5 rounded-xl">
+      <span className="text-xs">⏱</span>
+      <span className="text-xs font-black text-success tabular-nums">{mm}:{ss}</span>
+    </div>
+  );
 }
 
 function RestTimer() {
@@ -191,6 +217,24 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
                         className="w-7 h-7 rounded-full border border-border flex items-center justify-center hover:border-primary hover:text-primary transition-colors">
                         <Plus size={12} />
                       </button>
+                    </div>
+                  )}
+
+                  {ex.unit === 'reps' && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-text-secondary">Kg:</span>
+                      <input
+                        type="number"
+                        min={0}
+                        step={0.5}
+                        className="w-16 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
+                        placeholder="–"
+                        value={ex.weight ?? ''}
+                        onChange={(e) => {
+                          const v = parseFloat(e.target.value);
+                          updateExercise(ex.presetId, { weight: isNaN(v) ? undefined : v });
+                        }}
+                      />
                     </div>
                   )}
 
@@ -394,7 +438,10 @@ export default function QuickAddPage() {
 
   const getSuggestedValue = (preset: typeof SYSTEM_PRESETS[0]) => {
     const y = yesterdayLog?.exercises.find((e) => e.presetId === preset.id);
-    if (preset.unit === 'reps') return `${y?.sets ?? preset.defaultSets ?? 3}×${y?.reps ?? preset.defaultValue} reps`;
+    if (preset.unit === 'reps') {
+      const base = `${y?.sets ?? preset.defaultSets ?? 3}×${y?.reps ?? preset.defaultValue} reps`;
+      return y?.weight ? `${base} · ${y.weight}kg` : base;
+    }
     if (preset.unit === 'seconds') return `${y?.durationSeconds ?? preset.defaultValue}s`;
     if (preset.unit === 'minutes') {
       const secs = y?.durationSeconds ?? preset.defaultValue * 60;
@@ -437,6 +484,7 @@ export default function QuickAddPage() {
               <span className="font-black text-primary text-sm">{streak}</span>
             </div>
           )}
+          <ActiveTimer startedAt={draft.startedAt} />
         </div>
       </div>
 

@@ -54,3 +54,30 @@ export const CATEGORY_LABELS: Record<string, string> = {
   recovery: 'Phục hồi',
   dumbbell: 'Tạ đơn',
 };
+
+// Phase 6 — muscle group mapping for volume balance chart
+export const MUSCLE_GROUPS: Record<string, string> = {
+  pushup: 'chest', pullup: 'back', squat: 'legs', plank: 'core',
+  lunge: 'legs', burpee: 'cardio', dip: 'arms',
+  running: 'cardio', cycling: 'cardio', jumping_jacks: 'cardio', jump_rope: 'cardio',
+  yoga: 'mobility', stretching: 'mobility', walking: 'recovery', foam_rolling: 'recovery',
+  db_bicep_curl: 'arms', db_hammer_curl: 'arms', db_tricep_ext: 'arms', db_tricep_kick: 'arms',
+  db_shoulder_press: 'shoulders', db_lateral_raise: 'shoulders', db_front_raise: 'shoulders',
+  db_arnold_press: 'shoulders', db_upright_row: 'shoulders', db_reverse_fly: 'shoulders',
+  db_chest_press: 'chest', db_chest_fly: 'chest',
+  db_bent_row: 'back', db_single_arm_row: 'back',
+  db_goblet_squat: 'legs', db_lunge: 'legs', db_sumo_squat: 'legs',
+  db_rdl: 'legs', db_deadlift: 'legs', db_hip_thrust: 'glutes',
+};
+
+export const MUSCLE_GROUP_LABELS: Record<string, string> = {
+  chest: 'Ngực', back: 'Lưng', shoulders: 'Vai', arms: 'Tay',
+  core: 'Lõi', legs: 'Chân', glutes: 'Mông',
+  cardio: 'Cardio', mobility: 'Linh hoạt', recovery: 'Phục hồi',
+};
+
+export const MUSCLE_GROUP_COLORS: Record<string, string> = {
+  chest: '#FF5400', back: '#2563EB', shoulders: '#7C3AED', arms: '#B45309',
+  core: '#059669', legs: '#DC2626', glutes: '#D97706',
+  cardio: '#0891B2', mobility: '#065F46', recovery: '#4B5563',
+};
