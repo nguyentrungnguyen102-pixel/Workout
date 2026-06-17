@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { LogOut, ChevronRight } from 'lucide-react';
+import { LogOut, ChevronRight, Plus, X, Target } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../services/firebase';
 import { useUserStore } from '../stores/userStore';
+import { ExerciseGoal } from '../types/user';
+import { SYSTEM_PRESETS } from '../constants/exercises';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -12,6 +14,14 @@ export default function SettingsPage() {
   const [sheetsId, setSheetsId] = useState(profile?.sheetsId || '');
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState('');
+
+  // Exercise goals state
+  const [goals, setGoals] = useState<ExerciseGoal[]>(profile?.exerciseGoals || []);
+  const [showAddGoal, setShowAddGoal] = useState(false);
+  const [goalSearch, setGoalSearch] = useState('');
+  const [newGoalPresetId, setNewGoalPresetId] = useState('');
+  const [newGoalSets, setNewGoalSets] = useState('3');
+  const [newGoalValue, setNewGoalValue] = useState('');
 
   const uid = firebaseUser?.uid;
   const streak = profile?.streak?.current || 0;
@@ -49,10 +59,70 @@ export default function SettingsPage() {
     }
   };
 
+  const saveGoals = async (newGoals: ExerciseGoal[]) => {
+    if (!uid) return;
+    setGoals(newGoals);
+    try {
+      await updateProfile(uid, { exerciseGoals: newGoals });
+    } catch {
+      showToast('Lỗi lưu mục tiêu');
+    }
+  };
+
+  const handleToggleGoal = (presetId: string) => {
+    saveGoals(goals.map(g => g.presetId === presetId ? { ...g, enabled: !g.enabled } : g));
+  };
+
+  const handleRemoveGoal = (presetId: string) => {
+    saveGoals(goals.filter(g => g.presetId !== presetId));
+  };
+
+  const handleAddGoal = () => {
+    const preset = SYSTEM_PRESETS.find(p => p.id === newGoalPresetId);
+    if (!preset) return;
+    const sets = parseInt(newGoalSets) || 3;
+    const val = parseInt(newGoalValue) || preset.defaultValue;
+    const newGoal: ExerciseGoal = {
+      presetId: preset.id,
+      name: preset.nameVi,
+      targetSets: sets,
+      enabled: true,
+      ...(preset.unit === 'reps' ? { targetReps: val } : { targetDurationSeconds: preset.unit === 'minutes' ? val * 60 : val }),
+    };
+    const updated = goals.find(g => g.presetId === preset.id)
+      ? goals.map(g => g.presetId === preset.id ? newGoal : g)
+      : [...goals, newGoal];
+    saveGoals(updated);
+    setShowAddGoal(false);
+    setNewGoalPresetId('');
+    setGoalSearch('');
+    setNewGoalSets('3');
+    setNewGoalValue('');
+    showToast('Đã thêm mục tiêu! 🎯');
+  };
+
   const handleSignOut = async () => {
     if (!confirm('Đăng xuất?')) return;
     await signOut(auth);
     navigate('/login');
+  };
+
+  const filteredPresets = goalSearch.trim()
+    ? SYSTEM_PRESETS.filter(p =>
+        p.nameVi.toLowerCase().includes(goalSearch.toLowerCase()) ||
+        p.name.toLowerCase().includes(goalSearch.toLowerCase())
+      )
+    : SYSTEM_PRESETS.slice(0, 8);
+
+  const selectedPreset = SYSTEM_PRESETS.find(p => p.id === newGoalPresetId);
+
+  const formatGoalTarget = (g: ExerciseGoal) => {
+    if (g.targetReps) return `${g.targetSets}×${g.targetReps} reps`;
+    if (g.targetDurationSeconds) {
+      const s = g.targetDurationSeconds;
+      return s >= 60 ? `${g.targetSets}×${Math.round(s / 60)} phút` : `${g.targetSets}×${s}s`;
+    }
+    return `${g.targetSets} hiệp`;
   };
 
   return (
@@ -65,6 +135,7 @@ export default function SettingsPage() {
 
       <h1 className="text-2xl font-black text-text-main mb-5">Cài đặt</h1>
 
+      {/* Profile */}
       <div className="bg-card rounded-2xl border border-border p-4 mb-4 flex items-center gap-4">
         <div className="w-14 h-14 rounded-full bg-primary-light flex items-center justify-center text-2xl flex-shrink-0">
           👤
@@ -78,6 +149,7 @@ export default function SettingsPage() {
         </div>
       </div>
 
+      {/* Weekly goal */}
       <div className="bg-card rounded-2xl border border-border p-4 mb-4">
         <p className="text-xs font-semibold text-text-secondary mb-3">MỤC TIÊU HÀNG TUẦN</p>
         <div className="flex gap-2 items-center">
@@ -99,6 +171,103 @@ export default function SettingsPage() {
         </p>
       </div>
 
+      {/* Exercise goals */}
+      <div className="bg-card rounded-2xl border border-border p-4 mb-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Target size={14} className="text-primary" />
+            <p className="text-xs font-semibold text-text-secondary">MỤC TIÊU BÀI TẬP</p>
+          </div>
+          <button onClick={() => setShowAddGoal(true)}
+            className="flex items-center gap-1 text-xs font-bold text-primary hover:bg-primary-light px-2 py-1 rounded-lg transition-colors">
+            <Plus size={12} /> Thêm
+          </button>
+        </div>
+
+        {goals.length === 0 ? (
+          <p className="text-sm text-text-secondary text-center py-4">
+            Chưa có mục tiêu. Nhấn "Thêm" để đặt mục tiêu từng bài tập.
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {goals.map((g) => (
+              <div key={g.presetId}
+                className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <button onClick={() => handleToggleGoal(g.presetId)}
+                    className={`w-9 h-5 rounded-full transition-colors flex-shrink-0 relative ${g.enabled ? 'bg-primary' : 'bg-border'}`}>
+                    <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all ${g.enabled ? 'left-4' : 'left-0.5'}`} />
+                  </button>
+                  <div className="min-w-0">
+                    <p className={`text-sm font-semibold truncate ${g.enabled ? 'text-text-main' : 'text-text-secondary'}`}>
+                      {g.name}
+                    </p>
+                    <p className="text-xs text-text-secondary">{formatGoalTarget(g)}</p>
+                  </div>
+                </div>
+                <button onClick={() => handleRemoveGoal(g.presetId)}
+                  className="p-1.5 rounded-full hover:bg-danger-light hover:text-danger text-text-muted transition-colors ml-2 flex-shrink-0">
+                  <X size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Add goal form */}
+        {showAddGoal && (
+          <div className="mt-4 pt-4 border-t border-border">
+            <input
+              className="w-full bg-card-2 border border-border rounded-xl px-3 py-2.5 text-sm text-text-main focus:border-primary outline-none transition-colors mb-2"
+              placeholder="Tìm bài tập..."
+              value={goalSearch}
+              onChange={(e) => { setGoalSearch(e.target.value); setNewGoalPresetId(''); }}
+            />
+            <div className="flex flex-wrap gap-1.5 mb-3 max-h-32 overflow-y-auto">
+              {filteredPresets.map(p => (
+                <button key={p.id} onClick={() => { setNewGoalPresetId(p.id); setNewGoalValue(String(p.defaultValue)); setNewGoalSets(String(p.defaultSets || 3)); }}
+                  className={`text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all ${
+                    newGoalPresetId === p.id ? 'bg-primary text-white border-primary' : 'bg-card-2 text-text-secondary border-border'
+                  }`}>
+                  {p.icon} {p.nameVi}
+                </button>
+              ))}
+            </div>
+
+            {selectedPreset && (
+              <div className="flex gap-2 mb-3">
+                <div className="flex-1">
+                  <label className="text-xs text-text-secondary mb-1 block">Số hiệp</label>
+                  <input type="number" min={1} value={newGoalSets}
+                    onChange={e => setNewGoalSets(e.target.value)}
+                    className="w-full bg-card-2 border border-border rounded-xl px-3 py-2 text-sm text-text-main focus:border-primary outline-none" />
+                </div>
+                <div className="flex-1">
+                  <label className="text-xs text-text-secondary mb-1 block">
+                    {selectedPreset.unit === 'reps' ? 'Số reps' : selectedPreset.unit === 'minutes' ? 'Số phút' : 'Số giây'}
+                  </label>
+                  <input type="number" min={1} value={newGoalValue}
+                    onChange={e => setNewGoalValue(e.target.value)}
+                    className="w-full bg-card-2 border border-border rounded-xl px-3 py-2 text-sm text-text-main focus:border-primary outline-none" />
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <button onClick={handleAddGoal} disabled={!newGoalPresetId}
+                className="flex-1 py-2.5 bg-primary text-white text-sm font-bold rounded-xl disabled:opacity-40">
+                Thêm mục tiêu
+              </button>
+              <button onClick={() => { setShowAddGoal(false); setNewGoalPresetId(''); setGoalSearch(''); }}
+                className="px-4 py-2.5 border border-border text-sm text-text-secondary rounded-xl">
+                Hủy
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Google Sheets */}
       <div className="bg-card rounded-2xl border border-border p-4 mb-4">
         <p className="text-xs font-semibold text-text-secondary mb-1">GOOGLE SHEETS ID</p>
         <p className="text-xs text-text-secondary mb-3">Tự động đồng bộ buổi tập lên Google Sheets</p>

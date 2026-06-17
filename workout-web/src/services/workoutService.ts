@@ -10,6 +10,7 @@ import {
   serverTimestamp,
   increment,
   updateDoc,
+  Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { DraftWorkout, WorkoutLog, WorkoutPreset, Intensity } from '../types/workout';
@@ -70,6 +71,7 @@ export async function logWorkout(uid: string, draft: DraftWorkout): Promise<stri
     updatedAt: serverTimestamp(),
   };
   if (draft.notes) logData.notes = draft.notes;
+  if (draft.startedAt) logData.startedAt = Timestamp.fromDate(draft.startedAt);
 
   await setDoc(logRef, logData);
 
@@ -95,7 +97,10 @@ export async function getRecentLogs(uid: string, count = 10): Promise<WorkoutLog
   const snap = await getDocs(q);
   return snap.docs
     .map((d) => d.data() as WorkoutLog)
-    .sort((a, b) => b.date.localeCompare(a.date))
+    .sort((a, b) => {
+      const d = b.date.localeCompare(a.date);
+      return d !== 0 ? d : (b.createdAt?.toMillis() ?? 0) - (a.createdAt?.toMillis() ?? 0);
+    })
     .slice(0, count);
 }
 

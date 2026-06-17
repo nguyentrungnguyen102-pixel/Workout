@@ -1,12 +1,13 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Plus, Minus, Play, Pause, ChevronRight, Flame } from 'lucide-react';
+import { X, Plus, Minus, Play, Pause, ChevronRight, Flame, Target, ChevronDown, ChevronUp } from 'lucide-react';
 import { useUserStore } from '../stores/userStore';
 import { useWorkoutStore } from '../stores/workoutStore';
 import { useProgramStore } from '../stores/programStore';
 import { SYSTEM_PRESETS, CATEGORY_LABELS } from '../constants/exercises';
 import { getTemplates, saveTemplate } from '../services/templateService';
-import { WorkoutTemplate, ExerciseEntry } from '../types/workout';
+import { WorkoutTemplate, ExerciseEntry, WorkoutLog } from '../types/workout';
+import { ExerciseGoal } from '../types/user';
 
 type Category = 'all' | 'strength' | 'dumbbell' | 'cardio' | 'mobility' | 'recovery';
 
@@ -270,6 +271,79 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
   );
 }
 
+function isGoalMet(goal: ExerciseGoal, todayLog: WorkoutLog | null): boolean {
+  if (!todayLog) return false;
+  const ex = todayLog.exercises.find(e => e.presetId === goal.presetId);
+  if (!ex) return false;
+  const setsOk = ex.sets >= goal.targetSets;
+  const repsOk = !goal.targetReps || (ex.reps || 0) >= goal.targetReps;
+  const durOk = !goal.targetDurationSeconds || (ex.durationSeconds || 0) >= goal.targetDurationSeconds;
+  return setsOk && repsOk && durOk;
+}
+
+function formatGoalTarget(g: ExerciseGoal): string {
+  if (g.targetReps) return `${g.targetSets}×${g.targetReps} reps`;
+  if (g.targetDurationSeconds) {
+    const s = g.targetDurationSeconds;
+    return s >= 60 ? `${g.targetSets}×${Math.round(s / 60)} phút` : `${g.targetSets}×${s}s`;
+  }
+  return `${g.targetSets} hiệp`;
+}
+
+interface GoalsStripProps {
+  goals: ExerciseGoal[];
+  todayLog: WorkoutLog | null;
+}
+
+function GoalsStrip({ goals, todayLog }: GoalsStripProps) {
+  const [collapsed, setCollapsed] = useState(false);
+  const activeGoals = goals.filter(g => g.enabled);
+  if (activeGoals.length === 0) return null;
+
+  const metCount = activeGoals.filter(g => isGoalMet(g, todayLog)).length;
+  const allMet = metCount === activeGoals.length;
+  const isEvening = new Date().getHours() >= 17;
+  const showReminder = isEvening && !allMet;
+
+  return (
+    <div className={`rounded-2xl border mb-3 overflow-hidden ${
+      showReminder ? 'bg-primary-light border-primary/30' : allMet ? 'bg-success-light border-success/30' : 'bg-card border-border'
+    }`}>
+      <button
+        onClick={() => setCollapsed(c => !c)}
+        className="w-full flex items-center justify-between px-3 py-2.5">
+        <div className="flex items-center gap-2">
+          <Target size={14} className={allMet ? 'text-success' : showReminder ? 'text-primary' : 'text-text-secondary'} />
+          <span className={`text-xs font-bold ${allMet ? 'text-success' : showReminder ? 'text-primary' : 'text-text-secondary'}`}>
+            {showReminder ? `🔔 Còn ${activeGoals.length - metCount} mục tiêu chưa đạt` :
+             allMet ? '✅ Đã đạt tất cả mục tiêu hôm nay!' :
+             `Mục tiêu hôm nay`}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className={`text-xs font-black ${allMet ? 'text-success' : 'text-primary'}`}>{metCount}/{activeGoals.length}</span>
+          {collapsed ? <ChevronDown size={14} className="text-text-secondary" /> : <ChevronUp size={14} className="text-text-secondary" />}
+        </div>
+      </button>
+      {!collapsed && (
+        <div className="px-3 pb-3 space-y-1.5">
+          {activeGoals.map(g => {
+            const met = isGoalMet(g, todayLog);
+            return (
+              <div key={g.presetId} className="flex items-center justify-between">
+                <span className={`text-xs font-semibold ${met ? 'text-success' : 'text-text-secondary'}`}>
+                  {met ? '✅' : '❌'} {g.name}
+                </span>
+                <span className="text-xs text-text-muted">{formatGoalTarget(g)}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function QuickAddPage() {
   const navigate = useNavigate();
   const { profile, firebaseUser } = useUserStore();
@@ -378,6 +452,9 @@ export default function QuickAddPage() {
       )}
 
       {/* Templates — horizontal scroll chips, only if exist */}
+      {/* Goals strip */}
+      <GoalsStrip goals={profile?.exerciseGoals || []} todayLog={todayLog} />
+
       {templates.length > 0 && (
         <div className="flex gap-2 overflow-x-auto pb-1 mb-3 scrollbar-hide">
           <span className="flex-shrink-0 text-xs font-semibold text-text-secondary self-center">📋</span>

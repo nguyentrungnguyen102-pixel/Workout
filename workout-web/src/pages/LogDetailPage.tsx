@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, RotateCcw } from 'lucide-react';
+import { ArrowLeft, RotateCcw, Clock } from 'lucide-react';
 import { useWorkoutStore } from '../stores/workoutStore';
 import { getLogById } from '../services/workoutService';
 import { WorkoutLog } from '../types/workout';
+import { formatTimeOfDay } from '../lib/date';
 
 const INTENSITY_LABELS: Record<string, string> = {
-  light: 'Nhẹ 🟢',
-  moderate: 'Vừa 🟡',
-  heavy: 'Nặng 🔴',
+  light: 'Nhẹ',
+  moderate: 'Vừa',
+  heavy: 'Nặng',
 };
 
 const INTENSITY_COLORS: Record<string, string> = {
@@ -94,6 +95,12 @@ export default function LogDetailPage() {
 
       <div className="mb-5">
         <h1 className="text-xl font-black text-text-main">{formatDateVi(log.date)}</h1>
+        {formatTimeOfDay(log.startedAt) && (
+          <div className="flex items-center gap-1.5 mt-1">
+            <Clock size={13} className="text-text-secondary" />
+            <span className="text-sm text-text-secondary">Bắt đầu lúc {formatTimeOfDay(log.startedAt)}</span>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-3 gap-3 mb-5">

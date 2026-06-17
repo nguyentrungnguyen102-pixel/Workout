@@ -45,6 +45,7 @@ export interface WorkoutLog {
   source: LogSource;
   syncedToSheets: boolean;
   createdAt?: Timestamp;
+  startedAt?: Timestamp;
 }
 
 // Draft built up during Quick Add session in Zustand

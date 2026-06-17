@@ -1,5 +1,14 @@
 import { Timestamp } from 'firebase/firestore';
 
+export interface ExerciseGoal {
+  presetId: string;
+  name: string;
+  targetSets: number;
+  targetReps?: number;
+  targetDurationSeconds?: number;
+  enabled: boolean;
+}
+
 export interface UserStreak {
   current: number;
   longest: number;
@@ -27,6 +36,7 @@ export interface UserProfile {
   weeklyGoalSessions: number;
   fcmToken?: string;
   sheetsId?: string;
+  exerciseGoals?: ExerciseGoal[];
   streak: UserStreak;
   weeklyStats: WeeklyStats;
   createdAt?: Timestamp;
