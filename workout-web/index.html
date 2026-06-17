@@ -8,6 +8,19 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <script>
+      // Handle GitHub Pages SPA redirect from 404.html
+      (function(l) {
+        if (l.search[1] === 'p') {
+          var decoded = l.search.slice(1).split('&').map(function(s) {
+            return s.replace(/~and~/g, '&');
+          });
+          var path = '/' + decoded[0].slice(2);
+          var query = decoded[1] ? '?' + decoded[1].slice(2) : '';
+          window.history.replaceState(null, null, '/Workout' + path + query + l.hash);
+        }
+      }(window.location));
+    </script>
   </head>
   <body class="bg-background">
     <div id="root"></div>
