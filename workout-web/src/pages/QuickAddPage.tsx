@@ -90,7 +90,7 @@ interface WorkoutSummaryModalProps {
 }
 
 function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
-  const { draft, removeExercise, updateExercise, setIntensity, setNotes, logWorkout, isLogging } = useWorkoutStore();
+  const { draft, removeExercise, updateExercise, setNotes, logWorkout, isLogging } = useWorkoutStore();
   const [toast, setToast] = useState('');
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [templateName, setTemplateName] = useState('');
@@ -126,12 +126,6 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
       setSavingTemplate(false);
     }
   };
-
-  const INTENSITIES: { key: 'light' | 'moderate' | 'heavy'; label: string; color: string }[] = [
-    { key: 'light', label: 'Nhẹ 🟢', color: '#059669' },
-    { key: 'moderate', label: 'Vừa 🟡', color: '#D97706' },
-    { key: 'heavy', label: 'Nặng 🔴', color: '#DC2626' },
-  ];
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col md:items-center md:justify-center md:bg-black/40 md:p-6">
@@ -201,18 +195,23 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
 
                   {(ex.unit === 'seconds' || ex.unit === 'minutes') && (
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-text-secondary">Thời gian:</span>
-                      <button onClick={() => updateExercise(ex.presetId, { durationSeconds: Math.max(10, (ex.durationSeconds || 30) - 10) })}
-                        className="w-7 h-7 rounded-full border border-border flex items-center justify-center hover:border-primary hover:text-primary transition-colors">
-                        <Minus size={12} />
-                      </button>
-                      <span className="w-10 text-center font-bold text-text-main text-sm">
-                        {ex.unit === 'minutes' ? `${Math.round((ex.durationSeconds || 0) / 60)}m` : `${ex.durationSeconds || 0}s`}
+                      <span className="text-xs text-text-secondary">
+                        {ex.unit === 'minutes' ? 'Phút:' : 'Giây:'}
                       </span>
-                      <button onClick={() => updateExercise(ex.presetId, { durationSeconds: (ex.durationSeconds || 30) + 10 })}
-                        className="w-7 h-7 rounded-full border border-border flex items-center justify-center hover:border-primary hover:text-primary transition-colors">
-                        <Plus size={12} />
-                      </button>
+                      <input
+                        type="number"
+                        min={1}
+                        className="w-16 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
+                        value={ex.unit === 'minutes'
+                          ? Math.round((ex.durationSeconds || 0) / 60)
+                          : (ex.durationSeconds || 0)}
+                        onChange={(e) => {
+                          const v = parseInt(e.target.value) || 0;
+                          updateExercise(ex.presetId, {
+                            durationSeconds: ex.unit === 'minutes' ? v * 60 : v,
+                          });
+                        }}
+                      />
                     </div>
                   )}
                 </div>
@@ -222,21 +221,6 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
         )}
 
         <RestTimer />
-
-        <div className="mt-4">
-          <p className="text-xs font-semibold text-text-secondary mb-2">Cường độ</p>
-          <div className="flex gap-2">
-            {INTENSITIES.map(({ key, label, color }) => (
-              <button key={key} onClick={() => setIntensity(key)}
-                className="flex-1 py-2 rounded-lg border-2 text-xs font-semibold transition-all"
-                style={draft.intensity === key
-                  ? { borderColor: color, backgroundColor: color + '18', color }
-                  : {}}>
-                <span className={draft.intensity === key ? '' : 'text-text-secondary'}>{label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
 
         <div className="mt-4">
           <p className="text-xs font-semibold text-text-secondary mb-2">Ghi chú</p>
@@ -346,117 +330,70 @@ export default function QuickAddPage() {
   };
 
   return (
-    <div className="px-4 md:px-8 pt-6 md:pt-8 pb-32">
+    <div className="px-4 md:px-8 pt-4 md:pt-6 pb-24">
       {showModal && uid && (
         <WorkoutSummaryModal onClose={() => setShowModal(false)} uid={uid} />
       )}
 
-      <div className="flex items-center justify-between mb-5">
-        <div>
-          <p className="text-text-secondary text-sm">Chào,</p>
-          <h1 className="text-2xl font-black text-text-main">{firstName} 👋</h1>
+      {/* Compact header */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <span className="text-base font-black text-text-main">{firstName} 👋</span>
+          {todayLog && (
+            <span className="text-xs font-semibold text-success bg-success-light px-2 py-0.5 rounded-full">✅ Đã tập</span>
+          )}
         </div>
-        {streak > 0 && (
-          <div className="flex items-center gap-1 bg-primary-light px-3 py-2 rounded-xl">
-            <Flame size={16} className="text-primary" />
-            <span className="font-black text-primary text-sm">{streak}</span>
-          </div>
-        )}
-      </div>
-
-      <div className="bg-card rounded-2xl p-4 border border-border mb-4">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-sm font-semibold text-text-main">Mục tiêu tuần</span>
-          <span className="text-sm font-bold text-primary">{weeklyDone}/{weeklyGoal} phút</span>
-        </div>
-        <div className="h-2.5 bg-border rounded-full overflow-hidden">
-          <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${weeklyPct}%` }} />
-        </div>
-        <p className="text-xs text-text-secondary mt-1">{weeklyPct}% hoàn thành</p>
-      </div>
-
-      {todayLog && (
-        <div className="bg-success-light border border-success/20 rounded-2xl p-4 mb-4">
-          <p className="font-bold text-success text-sm mb-1">Đã tập hôm nay ✅</p>
-          <p className="text-text-secondary text-xs">
-            {todayLog.exercises.map((e) => e.name).join(' · ')}
-          </p>
-          <p className="text-text-secondary text-xs mt-1">{todayLog.totalDurationMinutes} phút</p>
-        </div>
-      )}
-
-      {!todayLog && yesterdayLog && (
-        <button
-          onClick={() => { if (uid) { setDraftFromLog(yesterdayLog); setShowModal(true); } }}
-          className="w-full flex items-center justify-between bg-primary-light border border-primary/20 rounded-2xl p-4 mb-4 text-left">
-          <div>
-            <p className="font-bold text-primary text-sm">🔁 Lặp lại hôm qua</p>
-            <p className="text-xs text-text-secondary mt-0.5">
-              {yesterdayLog.exercises.map((e) => e.name).slice(0, 3).join(' · ')}
-              {yesterdayLog.exercises.length > 3 ? ` +${yesterdayLog.exercises.length - 3}` : ''}
-            </p>
-          </div>
-          <ChevronRight size={18} className="text-primary" />
-        </button>
-      )}
-
-      {!todayLog && draft.exercises.length > 0 && (
-        <button onClick={() => setShowModal(true)}
-          className="w-full flex items-center justify-between bg-card-2 border border-border rounded-2xl p-4 mb-4 text-left">
-          <div>
-            <p className="font-bold text-text-main text-sm">⏩ Tiếp tục buổi tập</p>
-            <p className="text-xs text-text-secondary mt-0.5">
-              {draft.exercises.map((e) => e.name).slice(0, 3).join(' · ')}
-              {draft.exercises.length > 3 ? ` +${draft.exercises.length - 3}` : ''}
-            </p>
-          </div>
-          <ChevronRight size={18} className="text-text-secondary" />
-        </button>
-      )}
-
-      {todayDay && (
-        <div className="bg-card border border-border rounded-2xl p-4 mb-4">
-          <p className="text-xs text-text-secondary font-semibold mb-1">CHƯƠNG TRÌNH HÔM NAY</p>
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-xl">{todayDay.emoji}</span>
-            <div>
-              <p className="font-bold text-text-main text-sm">{todayDay.nameVi}</p>
-              <p className="text-xs text-text-secondary">{todayDay.focusVi}</p>
+        <div className="flex items-center gap-2">
+          {!todayLog && yesterdayLog && (
+            <button
+              onClick={() => { if (uid) { setDraftFromLog(yesterdayLog); setShowModal(true); } }}
+              className="flex items-center gap-1 bg-primary-light px-3 py-1.5 rounded-xl text-xs font-bold text-primary">
+              ⚡ Hôm qua
+            </button>
+          )}
+          {!todayLog && draft.exercises.length > 0 && (
+            <button onClick={() => setShowModal(true)}
+              className="flex items-center gap-1 bg-card-2 border border-border px-3 py-1.5 rounded-xl text-xs font-bold text-text-main">
+              ⏩ Tiếp tục
+            </button>
+          )}
+          {streak > 0 && (
+            <div className="flex items-center gap-1 bg-primary-light px-2.5 py-1.5 rounded-xl">
+              <Flame size={14} className="text-primary" />
+              <span className="font-black text-primary text-sm">{streak}</span>
             </div>
-          </div>
-          <div className="flex flex-wrap gap-1">
-            {todayDay.exercises.slice(0, 4).map((ex) => (
-              <span key={ex.presetId} className="text-xs bg-card-2 px-2 py-1 rounded-lg text-text-secondary">
-                {ex.nameVi}
-              </span>
-            ))}
-            {todayDay.exercises.length > 4 && (
-              <span className="text-xs bg-card-2 px-2 py-1 rounded-lg text-text-secondary">
-                +{todayDay.exercises.length - 4}
-              </span>
-            )}
+          )}
+        </div>
+      </div>
+
+      {/* Program of the day — compact strip */}
+      {todayDay && (
+        <div className="flex items-center gap-2 bg-card border border-border rounded-xl px-3 py-2 mb-3">
+          <span className="text-lg">{todayDay.emoji}</span>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-text-main text-xs truncate">{todayDay.nameVi}</p>
+            <p className="text-xs text-text-secondary truncate">{todayDay.focusVi}</p>
           </div>
         </div>
       )}
 
+      {/* Templates — horizontal scroll chips, only if exist */}
       {templates.length > 0 && (
-        <div className="mb-4">
-          <p className="text-xs text-text-secondary font-semibold mb-2">TEMPLATE CỦA TÔI</p>
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-            {templates.map((t) => (
-              <button key={t.id}
-                onClick={() => {
-                  if (!uid) return;
-                  t.exercises.forEach((ex) => {
-                    if (!draftIds.has(ex.presetId)) addExercise(ex);
-                  });
-                  setShowModal(true);
-                }}
-                className="flex-shrink-0 bg-card border border-border rounded-xl px-3 py-2 text-xs font-semibold text-text-main hover:border-primary hover:text-primary transition-colors whitespace-nowrap">
-                {t.name}
-              </button>
-            ))}
-          </div>
+        <div className="flex gap-2 overflow-x-auto pb-1 mb-3 scrollbar-hide">
+          <span className="flex-shrink-0 text-xs font-semibold text-text-secondary self-center">📋</span>
+          {templates.map((t) => (
+            <button key={t.id}
+              onClick={() => {
+                if (!uid) return;
+                t.exercises.forEach((ex) => {
+                  if (!draftIds.has(ex.presetId)) addExercise(ex);
+                });
+                setShowModal(true);
+              }}
+              className="flex-shrink-0 bg-card border border-border rounded-xl px-3 py-1.5 text-xs font-semibold text-text-main hover:border-primary hover:text-primary transition-colors whitespace-nowrap">
+              {t.name}
+            </button>
+          ))}
         </div>
       )}
 
@@ -498,7 +435,7 @@ export default function QuickAddPage() {
       </div>
 
       {draft.exercises.length > 0 && (
-        <div className="fixed bottom-20 md:bottom-6 left-0 right-0 md:left-56 lg:left-60 max-w-md md:max-w-3xl lg:max-w-5xl mx-auto px-4 z-40">
+        <div className="fixed bottom-16 md:bottom-6 left-0 right-0 md:left-56 lg:left-60 max-w-md md:max-w-3xl lg:max-w-5xl mx-auto px-4 z-40">
           <button onClick={() => setShowModal(true)}
             className="w-full py-4 bg-primary text-white font-black text-base rounded-2xl shadow-lg shadow-primary/40 flex items-center justify-center gap-2">
             <span>Log workout ({draft.exercises.length} bài)</span>
