@@ -30,7 +30,7 @@ export const useUserStore = create<UserStore>((set, get) => ({
       email: firebaseUser?.email || '',
       photoURL: firebaseUser?.photoURL || undefined,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      reminderEnabled: true,
+      reminderEnabled: false,
       reminderTime: '07:30',
       weeklyGoalMinutes: 150,
       weeklyGoalSessions: 4,

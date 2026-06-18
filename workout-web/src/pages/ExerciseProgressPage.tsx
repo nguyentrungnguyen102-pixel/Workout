@@ -6,7 +6,7 @@ import { getLogsForExercise } from '../services/workoutService';
 import { computePRs, getPRLabel } from '../services/prService';
 import { SYSTEM_PRESETS } from '../constants/exercises';
 import { WorkoutLog } from '../types/workout';
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
 function formatDateShort(dateStr: string): string {
   const d = new Date(dateStr + 'T00:00:00');
@@ -60,10 +60,14 @@ export default function ExerciseProgressPage() {
       return {
         date: formatDateShort(log.date),
         value: ex.unit === 'reps' ? (ex.reps || 0) : Math.round((ex.durationSeconds || 0) / 60),
+        weight: ex.weight || undefined,
         sets: ex.sets,
       };
     })
-    .filter(Boolean) as Array<{ date: string; value: number; sets: number }>;
+    .filter(Boolean) as Array<{ date: string; value: number; weight?: number; sets: number }>;
+
+  // Phase 6: check if any chart data has weight
+  const hasWeightData = chartData.some((d) => d.weight && d.weight > 0);
 
   return (
     <div className="px-4 md:px-8 pt-6 md:pt-8 pb-8">
@@ -81,12 +85,18 @@ export default function ExerciseProgressPage() {
       </div>
 
       {pr && (
-        <div className="bg-primary-light border border-primary/20 rounded-2xl p-4 mb-4 flex items-center justify-between">
-          <div>
-            <p className="text-xs text-primary font-semibold">KỶ LỤC CÁ NHÂN 🏆</p>
-            <p className="text-2xl font-black text-primary mt-0.5">{getPRLabel(pr)}</p>
+        <div className="bg-primary-light border border-primary/20 rounded-2xl p-4 mb-4">
+          <p className="text-xs text-primary font-semibold">KỶ LỤC CÁ NHÂN 🏆</p>
+          <div className="flex items-end justify-between mt-0.5">
+            <p className="text-2xl font-black text-primary">{getPRLabel(pr)}</p>
+            <p className="text-xs text-text-secondary">{pr.achievedDate}</p>
           </div>
-          <p className="text-xs text-text-secondary">{pr.achievedDate}</p>
+          {/* Phase 6: show best volume if weight tracked */}
+          {pr.bestWeight && pr.bestReps && (
+            <p className="text-xs text-text-secondary mt-1">
+              Best vol: {((pr.bestSets || 1) * (pr.bestReps || 0) * pr.bestWeight).toLocaleString()} kg
+            </p>
+          )}
         </div>
       )}
 
@@ -104,17 +114,41 @@ export default function ExerciseProgressPage() {
           {chartData.length > 1 && (
             <div className="bg-card rounded-2xl border border-border p-4 mb-4">
               <p className="text-sm font-bold text-text-main mb-3">
-                {preset?.unit === 'reps' ? 'Số reps' : 'Thời gian (phút)'}
+                {preset?.unit === 'reps' ? 'Reps' : 'Thời gian (phút)'}
+                {hasWeightData ? ' & Tạ (kg)' : ''}
               </p>
-              <ResponsiveContainer width="100%" height={140}>
+              <ResponsiveContainer width="100%" height={hasWeightData ? 160 : 140}>
                 <LineChart data={chartData} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
                   <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#8A8A8A' }} />
-                  <YAxis tick={{ fontSize: 10, fill: '#8A8A8A' }} domain={['auto', 'auto']} />
+                  <YAxis tick={{ fontSize: 10, fill: '#8A8A8A' }} domain={['auto', 'auto']} yAxisId="left" />
+                  {hasWeightData && (
+                    <YAxis tick={{ fontSize: 10, fill: '#8A8A8A' }} domain={['auto', 'auto']} yAxisId="right" orientation="right" />
+                  )}
                   <Tooltip
                     contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #E8E7E2' }}
-                    formatter={(v: number) => [v, preset?.unit === 'reps' ? 'reps' : 'phút']}
                   />
-                  <Line type="monotone" dataKey="value" stroke="#FF5400" strokeWidth={2.5} dot={{ r: 3, fill: '#FF5400' }} />
+                  {hasWeightData && <Legend wrapperStyle={{ fontSize: 11 }} />}
+                  <Line
+                    type="monotone"
+                    dataKey="value"
+                    stroke="#FF5400"
+                    strokeWidth={2.5}
+                    dot={{ r: 3, fill: '#FF5400' }}
+                    name={preset?.unit === 'reps' ? 'Reps' : 'Phút'}
+                    yAxisId="left"
+                  />
+                  {hasWeightData && (
+                    <Line
+                      type="monotone"
+                      dataKey="weight"
+                      stroke="#B45309"
+                      strokeWidth={2}
+                      strokeDasharray="4 2"
+                      dot={{ r: 3, fill: '#B45309' }}
+                      name="Tạ (kg)"
+                      yAxisId="right"
+                    />
+                  )}
                 </LineChart>
               </ResponsiveContainer>
             </div>
