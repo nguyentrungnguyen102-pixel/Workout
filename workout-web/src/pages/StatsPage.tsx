@@ -254,10 +254,16 @@ export default function StatsPage() {
         </div>
       )}
 
-      <button onClick={() => navigate('/programs')}
-        className="w-full py-4 border border-border rounded-2xl text-sm font-semibold text-text-secondary hover:border-primary hover:text-primary transition-colors">
-        Xem chương trình tập →
-      </button>
+      <div className="grid grid-cols-2 gap-3">
+        <button onClick={() => navigate('/programs')}
+          className="py-4 border border-border rounded-2xl text-sm font-semibold text-text-secondary hover:border-primary hover:text-primary transition-colors">
+          Chương trình tập →
+        </button>
+        <button onClick={() => navigate('/tools')}
+          className="py-4 border border-border rounded-2xl text-sm font-semibold text-text-secondary hover:border-primary hover:text-primary transition-colors">
+          🔧 Công cụ (1RM) →
+        </button>
+      </div>
     </div>
   );
 }

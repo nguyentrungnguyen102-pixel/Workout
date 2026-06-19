@@ -1,5 +1,4 @@
 import { useEffect, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { X, Play, Pause, ChevronRight, Flame, Target, ChevronDown, ChevronUp } from 'lucide-react';
 import { useUserStore } from '../stores/userStore';
 import { useWorkoutStore } from '../stores/workoutStore';
@@ -52,7 +51,6 @@ function RestTimer() {
   }, [running, seconds]);
 
   const toggle = () => setRunning((r) => !r);
-
   const mm = String(Math.floor(seconds / 60)).padStart(2, '0');
   const ss = String(seconds % 60).padStart(2, '0');
 
@@ -79,17 +77,39 @@ function RestTimer() {
   );
 }
 
+interface CompletionStats {
+  exerciseCount: number;
+  totalSets: number;
+  totalReps: number;
+  weightedVolume: number;
+  cheer: string;
+}
+
+function formatPrevHint(prev: ExerciseEntry): string {
+  const parts: string[] = [`${prev.sets}s`];
+  if (prev.unit === 'reps' && prev.reps) parts.push(`${prev.reps}`);
+  else if (prev.durationSeconds) {
+    parts.push(prev.durationSeconds >= 60
+      ? `${Math.round(prev.durationSeconds / 60)}ph`
+      : `${prev.durationSeconds}s`);
+  }
+  if (prev.weight) parts.push(`${prev.weight}kg`);
+  return parts.join(' × ');
+}
+
 interface WorkoutSummaryModalProps {
   onClose: () => void;
   uid: string;
 }
 
 function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
-  const { draft, removeExercise, updateExercise, setNotes, logWorkout, isLogging } = useWorkoutStore();
+  const { draft, removeExercise, updateExercise, setNotes, logWorkout, isLogging, yesterdayLog } = useWorkoutStore();
   const [toast, setToast] = useState('');
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [templateName, setTemplateName] = useState('');
   const [showTemplateInput, setShowTemplateInput] = useState(false);
+  const [showCompletion, setShowCompletion] = useState(false);
+  const [completionStats, setCompletionStats] = useState<CompletionStats | null>(null);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -98,10 +118,29 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
 
   const handleLog = async () => {
     if (draft.exercises.length === 0) return;
+
+    // Capture stats before store resets draft
+    const exerciseCount = draft.exercises.length;
+    const totalSets = draft.exercises.reduce((s, e) => s + (e.sets || 1), 0);
+    const totalReps = draft.exercises.reduce((s, e) => {
+      if (e.unit === 'reps') return s + (e.sets || 1) * (e.reps || 0);
+      return s;
+    }, 0);
+    const weightedVolume = draft.exercises.reduce((s, e) => {
+      if (e.weight && e.reps) return s + (e.sets || 1) * e.reps * e.weight;
+      return s;
+    }, 0);
+
     try {
       await logWorkout(uid);
-      showToast('Đã lưu buổi tập! 🎉');
-      setTimeout(onClose, 800);
+      setCompletionStats({
+        exerciseCount,
+        totalSets,
+        totalReps,
+        weightedVolume,
+        cheer: pickCheer(todayString()),
+      });
+      setShowCompletion(true);
     } catch {
       showToast('Lỗi lưu buổi tập');
     }
@@ -122,136 +161,226 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
     }
   };
 
+  // --- Completion celebration screen ---
+  if (showCompletion && completionStats) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <div className="bg-background w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden">
+          <div className="bg-primary px-6 pt-8 pb-6 text-center text-white">
+            <div className="text-5xl mb-3">🏆</div>
+            <h2 className="text-2xl font-black mb-1">Hoàn thành!</h2>
+            <p className="text-sm opacity-80">{completionStats.cheer}</p>
+          </div>
+          <div className="p-5">
+            <div className="grid grid-cols-2 gap-3 mb-5">
+              <div className="bg-card border border-border rounded-2xl p-3 text-center">
+                <p className="text-2xl font-black text-primary">{completionStats.exerciseCount}</p>
+                <p className="text-xs text-text-secondary mt-0.5">bài tập</p>
+              </div>
+              <div className="bg-card border border-border rounded-2xl p-3 text-center">
+                <p className="text-2xl font-black text-text-main">{completionStats.totalSets}</p>
+                <p className="text-xs text-text-secondary mt-0.5">tổng sets</p>
+              </div>
+              {completionStats.weightedVolume > 0 ? (
+                <div className="bg-card border border-border rounded-2xl p-3 text-center col-span-2">
+                  <p className="text-2xl font-black text-text-main">
+                    {completionStats.weightedVolume.toLocaleString()}
+                  </p>
+                  <p className="text-xs text-text-secondary mt-0.5">kg tổng khối lượng</p>
+                </div>
+              ) : completionStats.totalReps > 0 ? (
+                <div className="bg-card border border-border rounded-2xl p-3 text-center col-span-2">
+                  <p className="text-2xl font-black text-text-main">
+                    {completionStats.totalReps.toLocaleString()}
+                  </p>
+                  <p className="text-xs text-text-secondary mt-0.5">tổng reps</p>
+                </div>
+              ) : null}
+            </div>
+            <button onClick={onClose}
+              className="w-full py-3.5 bg-primary text-white font-black text-base rounded-2xl shadow-lg shadow-primary/30">
+              Tuyệt vời! 💪
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex flex-col md:items-center md:justify-center md:bg-black/40 md:p-6">
       <div className="flex flex-col bg-background w-full h-full md:h-auto md:max-h-[88vh] md:max-w-lg md:rounded-3xl md:shadow-2xl md:overflow-hidden">
-      {toast && (
-        <div className="absolute top-4 left-4 right-4 bg-success text-white text-sm font-semibold py-3 px-4 rounded-xl text-center z-10">
-          {toast}
+        {toast && (
+          <div className="absolute top-4 left-4 right-4 bg-success text-white text-sm font-semibold py-3 px-4 rounded-xl text-center z-10">
+            {toast}
+          </div>
+        )}
+        <div className="flex items-center justify-between px-4 py-4 border-b border-border bg-card">
+          <h2 className="text-lg font-black text-text-main">Buổi tập hôm nay</h2>
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-card-2 transition-colors">
+            <X size={20} className="text-text-secondary" />
+          </button>
         </div>
-      )}
-      <div className="flex items-center justify-between px-4 py-4 border-b border-border bg-card">
-        <h2 className="text-lg font-black text-text-main">Buổi tập hôm nay</h2>
-        <button onClick={onClose} className="p-2 rounded-full hover:bg-card-2 transition-colors">
-          <X size={20} className="text-text-secondary" />
-        </button>
-      </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
-        {draft.exercises.length === 0 ? (
-          <p className="text-text-secondary text-center py-8 text-sm">Chưa có bài tập nào. Quay lại để thêm.</p>
-        ) : (
-          draft.exercises.map((ex) => {
-            const cc = CATEGORY_COLORS[ex.category] || CATEGORY_COLORS.strength;
-            return (
-              <div key={ex.presetId} className="bg-card rounded-2xl p-4 border border-border">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <p className="font-bold text-text-main">{ex.name}</p>
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full mt-1 inline-block"
-                      style={{ color: cc.text, backgroundColor: cc.bg }}>
-                      {CATEGORY_LABELS[ex.category] || ex.category}
-                    </span>
-                  </div>
-                  <button onClick={() => removeExercise(ex.presetId)}
-                    className="p-1.5 rounded-full hover:bg-danger-light text-text-secondary hover:text-danger transition-colors">
-                    <X size={16} />
-                  </button>
-                </div>
-
-                <div className="flex items-center gap-3 flex-wrap">
-                  {ex.unit === 'reps' && (
-                    <div className="flex items-center gap-2 flex-1">
-                      <label className="text-xs text-text-secondary">Số lượng:</label>
-                      <input
-                        type="number"
-                        min={1}
-                        className="w-20 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
-                        value={ex.reps ?? 0}
-                        onChange={(e) => {
-                          const v = parseInt(e.target.value) || 0;
-                          updateExercise(ex.presetId, { reps: Math.max(1, v) });
-                        }}
-                      />
-                      <span className="text-xs text-text-secondary">cái</span>
-                    </div>
-                  )}
-
-                  {(ex.unit === 'seconds' || ex.unit === 'minutes') && (
-                    <div className="flex items-center gap-2 flex-1">
-                      <label className="text-xs text-text-secondary">
-                        {ex.unit === 'minutes' ? 'Số phút:' : 'Số giây:'}
-                      </label>
-                      <input
-                        type="number"
-                        min={1}
-                        className="w-20 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
-                        value={ex.unit === 'minutes'
-                          ? Math.round((ex.durationSeconds || 0) / 60)
-                          : (ex.durationSeconds || 0)}
-                        onChange={(e) => {
-                          const v = parseInt(e.target.value) || 0;
-                          updateExercise(ex.presetId, {
-                            durationSeconds: ex.unit === 'minutes' ? v * 60 : v,
-                          });
-                        }}
-                      />
-                      <span className="text-xs text-text-secondary">
-                        {ex.unit === 'minutes' ? 'phút' : 'giây'}
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+          {draft.exercises.length === 0 ? (
+            <p className="text-text-secondary text-center py-8 text-sm">Chưa có bài tập nào. Quay lại để thêm.</p>
+          ) : (
+            draft.exercises.map((ex) => {
+              const cc = CATEGORY_COLORS[ex.category] || CATEGORY_COLORS.strength;
+              const prevEntry = yesterdayLog?.exercises.find((e2) => e2.presetId === ex.presetId);
+              return (
+                <div key={ex.presetId} className="bg-card rounded-2xl p-4 border border-border">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <p className="font-bold text-text-main">{ex.name}</p>
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full mt-1 inline-block"
+                        style={{ color: cc.text, backgroundColor: cc.bg }}>
+                        {CATEGORY_LABELS[ex.category] || ex.category}
                       </span>
                     </div>
-                  )}
+                    <button onClick={() => removeExercise(ex.presetId)}
+                      className="p-1.5 rounded-full hover:bg-danger-light text-text-secondary hover:text-danger transition-colors">
+                      <X size={16} />
+                    </button>
+                  </div>
+
+                  {/* Sets stepper */}
+                  <div className="flex items-center gap-2 mb-2.5">
+                    <span className="text-xs text-text-secondary w-8">Sets</span>
+                    <button
+                      onClick={() => updateExercise(ex.presetId, { sets: Math.max(1, (ex.sets || 1) - 1) })}
+                      className="w-7 h-7 rounded-lg bg-card-2 border border-border text-sm font-black text-text-secondary hover:border-primary hover:text-primary transition-colors flex items-center justify-center select-none"
+                    >−</button>
+                    <span className="w-8 text-center font-black text-text-main text-sm tabular-nums">
+                      {ex.sets || 1}
+                    </span>
+                    <button
+                      onClick={() => updateExercise(ex.presetId, { sets: (ex.sets || 1) + 1 })}
+                      className="w-7 h-7 rounded-lg bg-card-2 border border-border text-sm font-black text-text-secondary hover:border-primary hover:text-primary transition-colors flex items-center justify-center select-none"
+                    >+</button>
+                    {prevEntry && (
+                      <span className="text-xs text-text-muted ml-1">
+                        Hôm qua: {formatPrevHint(prevEntry)}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-3 flex-wrap">
+                    {ex.unit === 'reps' && (
+                      <div className="flex items-center gap-2">
+                        <label className="text-xs text-text-secondary">Reps:</label>
+                        <input
+                          type="number"
+                          min={1}
+                          className="w-16 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
+                          value={ex.reps ?? 0}
+                          onChange={(e) => {
+                            const v = parseInt(e.target.value) || 0;
+                            updateExercise(ex.presetId, { reps: Math.max(1, v) });
+                          }}
+                        />
+                        <span className="text-xs text-text-secondary">cái</span>
+                      </div>
+                    )}
+
+                    {/* Weight input for dumbbell exercises */}
+                    {ex.category === 'dumbbell' && (
+                      <div className="flex items-center gap-2">
+                        <label className="text-xs text-text-secondary">Tạ:</label>
+                        <input
+                          type="number"
+                          min={0}
+                          step={0.5}
+                          placeholder="0"
+                          className="w-16 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
+                          value={ex.weight ?? ''}
+                          onChange={(e) => {
+                            const v = parseFloat(e.target.value);
+                            updateExercise(ex.presetId, {
+                              weight: isNaN(v) ? undefined : Math.max(0, v),
+                            });
+                          }}
+                        />
+                        <span className="text-xs text-text-secondary">kg</span>
+                      </div>
+                    )}
+
+                    {(ex.unit === 'seconds' || ex.unit === 'minutes') && (
+                      <div className="flex items-center gap-2 flex-1">
+                        <label className="text-xs text-text-secondary">
+                          {ex.unit === 'minutes' ? 'Phút:' : 'Giây:'}
+                        </label>
+                        <input
+                          type="number"
+                          min={1}
+                          className="w-16 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
+                          value={ex.unit === 'minutes'
+                            ? Math.round((ex.durationSeconds || 0) / 60)
+                            : (ex.durationSeconds || 0)}
+                          onChange={(e) => {
+                            const v = parseInt(e.target.value) || 0;
+                            updateExercise(ex.presetId, {
+                              durationSeconds: ex.unit === 'minutes' ? v * 60 : v,
+                            });
+                          }}
+                        />
+                        <span className="text-xs text-text-secondary">
+                          {ex.unit === 'minutes' ? 'phút' : 'giây'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })
-        )}
+              );
+            })
+          )}
 
-        <RestTimer />
+          <RestTimer />
 
-        <div className="mt-4">
-          <p className="text-xs font-semibold text-text-secondary mb-2">Ghi chú</p>
-          <textarea
-            className="w-full bg-card border border-border rounded-xl px-3 py-3 text-sm text-text-main resize-none focus:border-primary outline-none transition-colors"
-            rows={3}
-            placeholder="Cảm giác hôm nay, chấn thương, mục tiêu..."
-            value={draft.notes}
-            onChange={(e) => setNotes(e.target.value)}
-          />
+          <div className="mt-4">
+            <p className="text-xs font-semibold text-text-secondary mb-2">Ghi chú</p>
+            <textarea
+              className="w-full bg-card border border-border rounded-xl px-3 py-3 text-sm text-text-main resize-none focus:border-primary outline-none transition-colors"
+              rows={3}
+              placeholder="Cảm giác hôm nay, chấn thương, mục tiêu..."
+              value={draft.notes}
+              onChange={(e) => setNotes(e.target.value)}
+            />
+          </div>
+
+          {showTemplateInput ? (
+            <div className="flex gap-2 mt-2">
+              <input
+                className="flex-1 bg-card border border-border rounded-xl px-3 py-2 text-sm text-text-main focus:border-primary outline-none"
+                placeholder="Tên template..."
+                value={templateName}
+                onChange={(e) => setTemplateName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSaveTemplate()}
+              />
+              <button onClick={handleSaveTemplate} disabled={savingTemplate}
+                className="px-4 py-2 bg-primary text-white text-sm font-bold rounded-xl disabled:opacity-50">
+                Lưu
+              </button>
+              <button onClick={() => setShowTemplateInput(false)}
+                className="px-3 py-2 border border-border text-sm rounded-xl text-text-secondary">
+                Hủy
+              </button>
+            </div>
+          ) : (
+            <button onClick={() => setShowTemplateInput(true)}
+              className="w-full py-3 border border-border rounded-xl text-sm font-semibold text-text-secondary hover:border-primary hover:text-primary transition-colors mt-2">
+              💾 Lưu thành template
+            </button>
+          )}
         </div>
 
-        {showTemplateInput ? (
-          <div className="flex gap-2 mt-2">
-            <input
-              className="flex-1 bg-card border border-border rounded-xl px-3 py-2 text-sm text-text-main focus:border-primary outline-none"
-              placeholder="Tên template..."
-              value={templateName}
-              onChange={(e) => setTemplateName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSaveTemplate()}
-            />
-            <button onClick={handleSaveTemplate} disabled={savingTemplate}
-              className="px-4 py-2 bg-primary text-white text-sm font-bold rounded-xl disabled:opacity-50">
-              Lưu
-            </button>
-            <button onClick={() => setShowTemplateInput(false)}
-              className="px-3 py-2 border border-border text-sm rounded-xl text-text-secondary">
-              Hủy
-            </button>
-          </div>
-        ) : (
-          <button onClick={() => setShowTemplateInput(true)}
-            className="w-full py-3 border border-border rounded-xl text-sm font-semibold text-text-secondary hover:border-primary hover:text-primary transition-colors mt-2">
-            💾 Lưu thành template
+        <div className="px-4 py-4 border-t border-border bg-card">
+          <button onClick={handleLog} disabled={isLogging || draft.exercises.length === 0}
+            className="w-full py-4 bg-primary text-white font-black text-base rounded-2xl disabled:opacity-50 shadow-lg shadow-primary/30 transition-opacity">
+            {isLogging ? 'Đang lưu...' : `Lưu buổi tập (${draft.exercises.length} bài) ✅`}
           </button>
-        )}
-      </div>
-
-      <div className="px-4 py-4 border-t border-border bg-card">
-        <button onClick={handleLog} disabled={isLogging || draft.exercises.length === 0}
-          className="w-full py-4 bg-primary text-white font-black text-base rounded-2xl disabled:opacity-50 shadow-lg shadow-primary/30 transition-opacity">
-          {isLogging ? 'Đang lưu...' : `Lưu buổi tập (${draft.exercises.length} bài) ✅`}
-        </button>
-      </div>
+        </div>
       </div>
     </div>
   );
@@ -418,7 +547,6 @@ function SuggestionsCard({ recentLogs, onAddWithValue }: SuggestionsCardProps) {
 }
 
 export default function QuickAddPage() {
-  const navigate = useNavigate();
   const { profile, firebaseUser } = useUserStore();
   const { draft, todayLog, yesterdayLog, recentLogs, addExercise, updateExercise, setDraftFromLog, loadRecentLogs } = useWorkoutStore();
   const { loadActiveProgram, getTodayDay } = useProgramStore();
@@ -453,28 +581,27 @@ export default function QuickAddPage() {
       name: preset.nameVi,
       category: preset.category,
       unit: preset.unit,
-      sets: 1,
+      sets: yesterday?.sets ?? preset.defaultSets ?? 3,
       reps: preset.unit === 'reps' ? (yesterday?.reps ?? preset.defaultValue) : undefined,
       durationSeconds: (preset.unit === 'seconds' || preset.unit === 'minutes')
         ? (yesterday?.durationSeconds ?? (preset.unit === 'seconds' ? preset.defaultValue : preset.defaultValue * 60))
         : undefined,
+      weight: yesterday?.weight,
     };
     addExercise(entry);
   };
 
   const handleAddWithValue = (preset: typeof SYSTEM_PRESETS[0], value: number) => {
-    // Remove existing entry for this preset if it exists so we can re-add with new value
     const entry: ExerciseEntry = {
       presetId: preset.id,
       name: preset.nameVi,
       category: preset.category,
       unit: preset.unit,
-      sets: 1,
+      sets: preset.defaultSets ?? 3,
       reps: preset.unit === 'reps' ? value : undefined,
       durationSeconds: (preset.unit === 'seconds' || preset.unit === 'minutes') ? value : undefined,
     };
     if (draftIds.has(preset.id)) {
-      // Update existing
       updateExercise(preset.id, {
         reps: preset.unit === 'reps' ? value : undefined,
         durationSeconds: (preset.unit === 'seconds' || preset.unit === 'minutes') ? value : undefined,
@@ -558,7 +685,7 @@ export default function QuickAddPage() {
       {/* Suggestions card */}
       <SuggestionsCard recentLogs={recentLogs} onAddWithValue={handleAddWithValue} />
 
-      {/* Templates — horizontal scroll chips, only if exist */}
+      {/* Templates — horizontal scroll chips */}
       {templates.length > 0 && (
         <div className="flex gap-2 overflow-x-auto pb-1 mb-3 scrollbar-hide">
           <span className="flex-shrink-0 text-xs font-semibold text-text-secondary self-center">📋</span>

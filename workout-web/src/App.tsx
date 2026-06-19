@@ -17,6 +17,7 @@ import ExerciseProgressPage from './pages/ExerciseProgressPage';
 import SettingsPage from './pages/SettingsPage';
 import ProgramsPage from './pages/ProgramsPage';
 import ProgramDetailPage from './pages/ProgramDetailPage';
+import ToolsPage from './pages/ToolsPage';
 
 class ErrorBoundary extends Component<{ children: React.ReactNode }, { error: Error | null }> {
   state = { error: null };
@@ -72,6 +73,7 @@ export default function App() {
             <Route path="settings" element={<SettingsPage />} />
             <Route path="programs" element={<ProgramsPage />} />
             <Route path="programs/:id" element={<ProgramDetailPage />} />
+            <Route path="tools" element={<ToolsPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

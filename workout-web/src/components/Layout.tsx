@@ -1,5 +1,5 @@
 import { Outlet, NavLink } from 'react-router-dom';
-import { Dumbbell, Calendar, User, BarChart2, Settings } from 'lucide-react';
+import { Dumbbell, Calendar, User, BarChart2, Settings, Wrench } from 'lucide-react';
 
 const tabs = [
   { to: '/', label: 'Tập', icon: Dumbbell, end: true },
@@ -7,6 +7,10 @@ const tabs = [
   { to: '/body', label: 'Cơ thể', icon: User, end: false },
   { to: '/stats', label: 'Thống kê', icon: BarChart2, end: false },
   { to: '/settings', label: 'Cài đặt', icon: Settings, end: false },
+];
+
+const sidebarOnlyTabs = [
+  { to: '/tools', label: 'Công cụ', icon: Wrench, end: false },
 ];
 
 export default function Layout() {
@@ -19,7 +23,7 @@ export default function Layout() {
           <span className="font-black text-lg text-text-main">WorkoutTracker</span>
         </div>
         <nav className="flex flex-col gap-1">
-          {tabs.map(({ to, label, icon: Icon, end }) => (
+          {[...tabs, ...sidebarOnlyTabs].map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
               to={to}
