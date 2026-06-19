@@ -10,6 +10,7 @@ import Layout from './components/Layout';
 import QuickAddPage from './pages/QuickAddPage';
 import HistoryPage from './pages/HistoryPage';
 import LogDetailPage from './pages/LogDetailPage';
+import DayDetailPage from './pages/DayDetailPage';
 import BodyPage from './pages/BodyPage';
 import StatsPage from './pages/StatsPage';
 import ExerciseProgressPage from './pages/ExerciseProgressPage';
@@ -63,6 +64,7 @@ export default function App() {
           <Route element={<AuthGuard><Layout /></AuthGuard>}>
             <Route index element={<QuickAddPage />} />
             <Route path="history" element={<HistoryPage />} />
+            <Route path="history/day/:date" element={<DayDetailPage />} />
             <Route path="history/:logId" element={<LogDetailPage />} />
             <Route path="body" element={<BodyPage />} />
             <Route path="stats" element={<StatsPage />} />

@@ -20,7 +20,6 @@ export default function SettingsPage() {
   const [showAddGoal, setShowAddGoal] = useState(false);
   const [goalSearch, setGoalSearch] = useState('');
   const [newGoalPresetId, setNewGoalPresetId] = useState('');
-  const [newGoalSets, setNewGoalSets] = useState('3');
   const [newGoalValue, setNewGoalValue] = useState('');
 
   const uid = firebaseUser?.uid;
@@ -80,12 +79,11 @@ export default function SettingsPage() {
   const handleAddGoal = () => {
     const preset = SYSTEM_PRESETS.find(p => p.id === newGoalPresetId);
     if (!preset) return;
-    const sets = parseInt(newGoalSets) || 3;
     const val = parseInt(newGoalValue) || preset.defaultValue;
     const newGoal: ExerciseGoal = {
       presetId: preset.id,
       name: preset.nameVi,
-      targetSets: sets,
+      targetSets: 1,
       enabled: true,
       ...(preset.unit === 'reps' ? { targetReps: val } : { targetDurationSeconds: preset.unit === 'minutes' ? val * 60 : val }),
     };
@@ -96,7 +94,6 @@ export default function SettingsPage() {
     setShowAddGoal(false);
     setNewGoalPresetId('');
     setGoalSearch('');
-    setNewGoalSets('3');
     setNewGoalValue('');
     showToast('Đã thêm mục tiêu! 🎯');
   };
@@ -117,10 +114,10 @@ export default function SettingsPage() {
   const selectedPreset = SYSTEM_PRESETS.find(p => p.id === newGoalPresetId);
 
   const formatGoalTarget = (g: ExerciseGoal) => {
-    if (g.targetReps) return `${g.targetSets}×${g.targetReps} reps`;
+    if (g.targetReps) return `${g.targetReps} cái`;
     if (g.targetDurationSeconds) {
       const s = g.targetDurationSeconds;
-      return s >= 60 ? `${g.targetSets}×${Math.round(s / 60)} phút` : `${g.targetSets}×${s}s`;
+      return s >= 60 ? `${Math.round(s / 60)} phút` : `${s}s`;
     }
     return `${g.targetSets} hiệp`;
   };
@@ -225,7 +222,7 @@ export default function SettingsPage() {
             />
             <div className="flex flex-wrap gap-1.5 mb-3 max-h-32 overflow-y-auto">
               {filteredPresets.map(p => (
-                <button key={p.id} onClick={() => { setNewGoalPresetId(p.id); setNewGoalValue(String(p.defaultValue)); setNewGoalSets(String(p.defaultSets || 3)); }}
+                <button key={p.id} onClick={() => { setNewGoalPresetId(p.id); setNewGoalValue(String(p.defaultValue)); }}
                   className={`text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all ${
                     newGoalPresetId === p.id ? 'bg-primary text-white border-primary' : 'bg-card-2 text-text-secondary border-border'
                   }`}>
@@ -235,21 +232,13 @@ export default function SettingsPage() {
             </div>
 
             {selectedPreset && (
-              <div className="flex gap-2 mb-3">
-                <div className="flex-1">
-                  <label className="text-xs text-text-secondary mb-1 block">Số hiệp</label>
-                  <input type="number" min={1} value={newGoalSets}
-                    onChange={e => setNewGoalSets(e.target.value)}
-                    className="w-full bg-card-2 border border-border rounded-xl px-3 py-2 text-sm text-text-main focus:border-primary outline-none" />
-                </div>
-                <div className="flex-1">
-                  <label className="text-xs text-text-secondary mb-1 block">
-                    {selectedPreset.unit === 'reps' ? 'Số reps' : selectedPreset.unit === 'minutes' ? 'Số phút' : 'Số giây'}
-                  </label>
-                  <input type="number" min={1} value={newGoalValue}
-                    onChange={e => setNewGoalValue(e.target.value)}
-                    className="w-full bg-card-2 border border-border rounded-xl px-3 py-2 text-sm text-text-main focus:border-primary outline-none" />
-                </div>
+              <div className="mb-3">
+                <label className="text-xs text-text-secondary mb-1 block">
+                  {selectedPreset.unit === 'reps' ? 'Số lượng (cái)' : selectedPreset.unit === 'minutes' ? 'Thời gian (phút)' : 'Thời gian (giây)'}
+                </label>
+                <input type="number" min={1} value={newGoalValue}
+                  onChange={e => setNewGoalValue(e.target.value)}
+                  className="w-full bg-card-2 border border-border rounded-xl px-3 py-2 text-sm text-text-main focus:border-primary outline-none" />
               </div>
             )}
 

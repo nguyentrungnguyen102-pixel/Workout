@@ -4,11 +4,11 @@ import {
   ExerciseEntry,
   Intensity,
   WorkoutLog,
-  WorkoutPreset,
 } from '../types/workout';
 import { logWorkout as saveLog, getRecentLogs } from '../services/workoutService';
 import { updateStreakAfterLog, updateWeeklyMinutes } from '../services/userService';
 import { todayString, yesterdayString } from '../lib/date';
+import { aggregateExercises } from '../lib/dayTimeline';
 
 interface WorkoutStore {
   draft: DraftWorkout;
@@ -154,7 +154,9 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
     const yesterday = yesterdayString();
 
     const todayLogs = logs.filter((l) => l.date === today);
-    const todayLog = todayLogs[0] || null;
+    const todayLog = todayLogs.length
+      ? { ...todayLogs[0], exercises: aggregateExercises(todayLogs) }
+      : null;
 
     const yesterdayLogs = logs.filter((l) => l.date === yesterday);
     let yesterdayLog: WorkoutLog | null = null;

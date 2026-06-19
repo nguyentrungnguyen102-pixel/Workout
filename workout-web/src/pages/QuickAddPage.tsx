@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Plus, Minus, Play, Pause, ChevronRight, Flame, Target, ChevronDown, ChevronUp } from 'lucide-react';
+import { X, Play, Pause, ChevronRight, Flame, Target, ChevronDown, ChevronUp } from 'lucide-react';
 import { useUserStore } from '../stores/userStore';
 import { useWorkoutStore } from '../stores/workoutStore';
 import { useProgramStore } from '../stores/programStore';
@@ -8,6 +8,10 @@ import { SYSTEM_PRESETS, CATEGORY_LABELS } from '../constants/exercises';
 import { getTemplates, saveTemplate } from '../services/templateService';
 import { WorkoutTemplate, ExerciseEntry, WorkoutLog } from '../types/workout';
 import { ExerciseGoal } from '../types/user';
+import { formatAmount } from '../lib/format';
+import { pickCheer } from '../lib/cheers';
+import { buildSuggestions } from '../lib/suggestions';
+import { todayString } from '../lib/date';
 
 type Category = 'all' | 'strength' | 'dumbbell' | 'cardio' | 'mobility' | 'recovery';
 
@@ -27,16 +31,6 @@ const CATEGORY_COLORS: Record<string, { text: string; bg: string }> = {
   recovery: { text: '#7C3AED', bg: '#F5F3FF' },
   dumbbell: { text: '#B45309', bg: '#FEF3C7' },
 };
-
-function formatValue(e: ExerciseEntry): string {
-  if (e.unit === 'reps') return `${e.sets}×${e.reps ?? '-'} reps`;
-  if (e.unit === 'seconds') return `${e.sets}×${e.durationSeconds ?? '-'}s`;
-  if (e.unit === 'minutes') {
-    const mins = e.durationSeconds ? Math.round(e.durationSeconds / 60) : '-';
-    return `${mins} phút`;
-  }
-  return `${e.sets} hiệp`;
-}
 
 function RestTimer() {
   const [seconds, setSeconds] = useState(0);
@@ -166,43 +160,32 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
                 </div>
 
                 <div className="flex items-center gap-3 flex-wrap">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-text-secondary">Hiệp:</span>
-                    <button onClick={() => updateExercise(ex.presetId, { sets: Math.max(1, ex.sets - 1) })}
-                      className="w-7 h-7 rounded-full border border-border flex items-center justify-center hover:border-primary hover:text-primary transition-colors">
-                      <Minus size={12} />
-                    </button>
-                    <span className="w-6 text-center font-bold text-text-main text-sm">{ex.sets}</span>
-                    <button onClick={() => updateExercise(ex.presetId, { sets: ex.sets + 1 })}
-                      className="w-7 h-7 rounded-full border border-border flex items-center justify-center hover:border-primary hover:text-primary transition-colors">
-                      <Plus size={12} />
-                    </button>
-                  </div>
-
                   {ex.unit === 'reps' && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-text-secondary">Reps:</span>
-                      <button onClick={() => updateExercise(ex.presetId, { reps: Math.max(1, (ex.reps || 1) - 1) })}
-                        className="w-7 h-7 rounded-full border border-border flex items-center justify-center hover:border-primary hover:text-primary transition-colors">
-                        <Minus size={12} />
-                      </button>
-                      <span className="w-6 text-center font-bold text-text-main text-sm">{ex.reps ?? '-'}</span>
-                      <button onClick={() => updateExercise(ex.presetId, { reps: (ex.reps || 0) + 1 })}
-                        className="w-7 h-7 rounded-full border border-border flex items-center justify-center hover:border-primary hover:text-primary transition-colors">
-                        <Plus size={12} />
-                      </button>
+                    <div className="flex items-center gap-2 flex-1">
+                      <label className="text-xs text-text-secondary">Số lượng:</label>
+                      <input
+                        type="number"
+                        min={1}
+                        className="w-20 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
+                        value={ex.reps ?? 0}
+                        onChange={(e) => {
+                          const v = parseInt(e.target.value) || 0;
+                          updateExercise(ex.presetId, { reps: Math.max(1, v) });
+                        }}
+                      />
+                      <span className="text-xs text-text-secondary">cái</span>
                     </div>
                   )}
 
                   {(ex.unit === 'seconds' || ex.unit === 'minutes') && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-text-secondary">
-                        {ex.unit === 'minutes' ? 'Phút:' : 'Giây:'}
-                      </span>
+                    <div className="flex items-center gap-2 flex-1">
+                      <label className="text-xs text-text-secondary">
+                        {ex.unit === 'minutes' ? 'Số phút:' : 'Số giây:'}
+                      </label>
                       <input
                         type="number"
                         min={1}
-                        className="w-16 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
+                        className="w-20 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
                         value={ex.unit === 'minutes'
                           ? Math.round((ex.durationSeconds || 0) / 60)
                           : (ex.durationSeconds || 0)}
@@ -213,6 +196,9 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
                           });
                         }}
                       />
+                      <span className="text-xs text-text-secondary">
+                        {ex.unit === 'minutes' ? 'phút' : 'giây'}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -275,27 +261,38 @@ function isGoalMet(goal: ExerciseGoal, todayLog: WorkoutLog | null): boolean {
   if (!todayLog) return false;
   const ex = todayLog.exercises.find(e => e.presetId === goal.presetId);
   if (!ex) return false;
-  const setsOk = ex.sets >= goal.targetSets;
-  const repsOk = !goal.targetReps || (ex.reps || 0) >= goal.targetReps;
-  const durOk = !goal.targetDurationSeconds || (ex.durationSeconds || 0) >= goal.targetDurationSeconds;
-  return setsOk && repsOk && durOk;
+  if (goal.targetReps) return (ex.reps || 0) >= goal.targetReps;
+  if (goal.targetDurationSeconds) return (ex.durationSeconds || 0) >= goal.targetDurationSeconds;
+  return false;
 }
 
-function formatGoalTarget(g: ExerciseGoal): string {
-  if (g.targetReps) return `${g.targetSets}×${g.targetReps} reps`;
-  if (g.targetDurationSeconds) {
-    const s = g.targetDurationSeconds;
-    return s >= 60 ? `${g.targetSets}×${Math.round(s / 60)} phút` : `${g.targetSets}×${s}s`;
+function getGoalCurrent(goal: ExerciseGoal, todayLog: WorkoutLog | null): number {
+  if (!todayLog) return 0;
+  const ex = todayLog.exercises.find(e => e.presetId === goal.presetId);
+  if (!ex) return 0;
+  if (goal.targetReps) return ex.reps ?? 0;
+  if (goal.targetDurationSeconds) return ex.durationSeconds ?? 0;
+  return 0;
+}
+
+function formatGoalLabel(current: number, target: number, goal: ExerciseGoal): string {
+  if (goal.targetReps) return `${current}/${target} cái`;
+  if (goal.targetDurationSeconds) {
+    if (target >= 60) {
+      return `${Math.round(current / 60)}/${Math.round(target / 60)} phút`;
+    }
+    return `${current}/${target}s`;
   }
-  return `${g.targetSets} hiệp`;
+  return `${current}/${target}`;
 }
 
 interface GoalsStripProps {
   goals: ExerciseGoal[];
   todayLog: WorkoutLog | null;
+  todayDateStr: string;
 }
 
-function GoalsStrip({ goals, todayLog }: GoalsStripProps) {
+function GoalsStrip({ goals, todayLog, todayDateStr }: GoalsStripProps) {
   const [collapsed, setCollapsed] = useState(false);
   const activeGoals = goals.filter(g => g.enabled);
   if (activeGoals.length === 0) return null;
@@ -325,16 +322,92 @@ function GoalsStrip({ goals, todayLog }: GoalsStripProps) {
           {collapsed ? <ChevronDown size={14} className="text-text-secondary" /> : <ChevronUp size={14} className="text-text-secondary" />}
         </div>
       </button>
+
       {!collapsed && (
-        <div className="px-3 pb-3 space-y-1.5">
+        <div className="px-3 pb-3 space-y-2.5">
+          {allMet && (
+            <div className="bg-success/10 border border-success/20 rounded-xl px-3 py-2 text-center mb-1">
+              <p className="text-sm font-bold text-success">{pickCheer(todayDateStr)}</p>
+            </div>
+          )}
           {activeGoals.map(g => {
             const met = isGoalMet(g, todayLog);
+            const target = g.targetReps ?? g.targetDurationSeconds ?? 1;
+            const current = getGoalCurrent(g, todayLog);
+            const pct = Math.min(1, current / target);
+            const label = formatGoalLabel(current, target, g);
             return (
-              <div key={g.presetId} className="flex items-center justify-between">
-                <span className={`text-xs font-semibold ${met ? 'text-success' : 'text-text-secondary'}`}>
-                  {met ? '✅' : '❌'} {g.name}
-                </span>
-                <span className="text-xs text-text-muted">{formatGoalTarget(g)}</span>
+              <div key={g.presetId} className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className={`text-xs font-semibold ${met ? 'text-success' : 'text-text-secondary'}`}>
+                    {met ? '✓ ' : ''}{g.name}
+                  </span>
+                  <span className="text-xs text-text-muted">{label}</span>
+                </div>
+                <div className="w-full bg-border rounded-full h-1.5">
+                  <div
+                    className={`h-1.5 rounded-full transition-all ${met ? 'bg-success' : 'bg-primary'}`}
+                    style={{ width: `${pct * 100}%` }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface SuggestionsCardProps {
+  recentLogs: WorkoutLog[];
+  onAddWithValue: (preset: typeof SYSTEM_PRESETS[0], value: number) => void;
+}
+
+function SuggestionsCard({ recentLogs, onAddWithValue }: SuggestionsCardProps) {
+  const [collapsed, setCollapsed] = useState(false);
+  const suggestions = buildSuggestions(recentLogs, 4);
+  if (suggestions.length === 0) return null;
+
+  function formatSuggestionValue(value: number, unit: string): string {
+    if (unit === 'reps') return `${value} cái`;
+    if (unit === 'seconds') return `${value}s`;
+    if (unit === 'minutes') return `${Math.round(value / 60)} phút`;
+    return `${value}`;
+  }
+
+  return (
+    <div className="rounded-2xl border border-border bg-card mb-3 overflow-hidden">
+      <button
+        onClick={() => setCollapsed(c => !c)}
+        className="w-full flex items-center justify-between px-3 py-2.5">
+        <span className="text-xs font-bold text-text-secondary">💡 Gợi ý hôm nay</span>
+        {collapsed ? <ChevronDown size={14} className="text-text-secondary" /> : <ChevronUp size={14} className="text-text-secondary" />}
+      </button>
+      {!collapsed && (
+        <div className="px-3 pb-3 space-y-2">
+          {suggestions.map((s) => {
+            const preset = SYSTEM_PRESETS.find(p => p.id === s.presetId);
+            return (
+              <div key={s.presetId} className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-semibold text-text-main flex-shrink-0 min-w-[80px]">{s.name}</span>
+                <div className="flex gap-1.5 flex-wrap">
+                  <button
+                    onClick={() => preset && onAddWithValue(preset, s.light)}
+                    className="text-xs px-2 py-1 rounded-lg border border-border bg-card-2 text-text-secondary hover:border-primary hover:text-primary transition-colors">
+                    Nhẹ {formatSuggestionValue(s.light, s.unit)}
+                  </button>
+                  <button
+                    onClick={() => preset && onAddWithValue(preset, s.moderate)}
+                    className="text-xs px-2 py-1 rounded-lg border border-primary bg-primary-light text-primary font-semibold hover:bg-primary hover:text-white transition-colors">
+                    Vừa {formatSuggestionValue(s.moderate, s.unit)}
+                  </button>
+                  <button
+                    onClick={() => preset && onAddWithValue(preset, s.high)}
+                    className="text-xs px-2 py-1 rounded-lg border border-border bg-card-2 text-text-secondary hover:border-primary hover:text-primary transition-colors">
+                    Cao {formatSuggestionValue(s.high, s.unit)}
+                  </button>
+                </div>
               </div>
             );
           })}
@@ -347,7 +420,7 @@ function GoalsStrip({ goals, todayLog }: GoalsStripProps) {
 export default function QuickAddPage() {
   const navigate = useNavigate();
   const { profile, firebaseUser } = useUserStore();
-  const { draft, todayLog, yesterdayLog, addExercise, setDraftFromLog, loadRecentLogs } = useWorkoutStore();
+  const { draft, todayLog, yesterdayLog, recentLogs, addExercise, updateExercise, setDraftFromLog, loadRecentLogs } = useWorkoutStore();
   const { loadActiveProgram, getTodayDay } = useProgramStore();
   const [activeCategory, setActiveCategory] = useState<Category>('all');
   const [showModal, setShowModal] = useState(false);
@@ -365,9 +438,6 @@ export default function QuickAddPage() {
   const todayDay = getTodayDay();
   const firstName = profile?.displayName?.split(' ').pop() || 'bạn';
   const streak = profile?.streak?.current || 0;
-  const weeklyGoal = profile?.weeklyGoalMinutes || 150;
-  const weeklyDone = profile?.weeklyStats?.totalMinutes || 0;
-  const weeklyPct = Math.min(100, Math.round((weeklyDone / weeklyGoal) * 100));
 
   const filteredPresets = activeCategory === 'all'
     ? SYSTEM_PRESETS
@@ -383,7 +453,7 @@ export default function QuickAddPage() {
       name: preset.nameVi,
       category: preset.category,
       unit: preset.unit,
-      sets: yesterday?.sets ?? preset.defaultSets ?? 3,
+      sets: 1,
       reps: preset.unit === 'reps' ? (yesterday?.reps ?? preset.defaultValue) : undefined,
       durationSeconds: (preset.unit === 'seconds' || preset.unit === 'minutes')
         ? (yesterday?.durationSeconds ?? (preset.unit === 'seconds' ? preset.defaultValue : preset.defaultValue * 60))
@@ -392,16 +462,47 @@ export default function QuickAddPage() {
     addExercise(entry);
   };
 
+  const handleAddWithValue = (preset: typeof SYSTEM_PRESETS[0], value: number) => {
+    // Remove existing entry for this preset if it exists so we can re-add with new value
+    const entry: ExerciseEntry = {
+      presetId: preset.id,
+      name: preset.nameVi,
+      category: preset.category,
+      unit: preset.unit,
+      sets: 1,
+      reps: preset.unit === 'reps' ? value : undefined,
+      durationSeconds: (preset.unit === 'seconds' || preset.unit === 'minutes') ? value : undefined,
+    };
+    if (draftIds.has(preset.id)) {
+      // Update existing
+      updateExercise(preset.id, {
+        reps: preset.unit === 'reps' ? value : undefined,
+        durationSeconds: (preset.unit === 'seconds' || preset.unit === 'minutes') ? value : undefined,
+      });
+    } else {
+      addExercise(entry);
+    }
+    setShowModal(true);
+  };
+
   const getSuggestedValue = (preset: typeof SYSTEM_PRESETS[0]) => {
     const y = yesterdayLog?.exercises.find((e) => e.presetId === preset.id);
-    if (preset.unit === 'reps') return `${y?.sets ?? preset.defaultSets ?? 3}×${y?.reps ?? preset.defaultValue} reps`;
-    if (preset.unit === 'seconds') return `${y?.durationSeconds ?? preset.defaultValue}s`;
+    if (preset.unit === 'reps') {
+      const reps = y?.reps ?? preset.defaultValue;
+      return formatAmount({ unit: 'reps', reps });
+    }
+    if (preset.unit === 'seconds') {
+      const secs = y?.durationSeconds ?? preset.defaultValue;
+      return formatAmount({ unit: 'seconds', durationSeconds: secs });
+    }
     if (preset.unit === 'minutes') {
       const secs = y?.durationSeconds ?? preset.defaultValue * 60;
-      return `${Math.round(secs / 60)} phút`;
+      return formatAmount({ unit: 'minutes', durationSeconds: secs });
     }
     return `${preset.defaultValue}`;
   };
+
+  const todayDateStr = todayString();
 
   return (
     <div className="px-4 md:px-8 pt-4 md:pt-6 pb-24">
@@ -451,10 +552,13 @@ export default function QuickAddPage() {
         </div>
       )}
 
-      {/* Templates — horizontal scroll chips, only if exist */}
       {/* Goals strip */}
-      <GoalsStrip goals={profile?.exerciseGoals || []} todayLog={todayLog} />
+      <GoalsStrip goals={profile?.exerciseGoals || []} todayLog={todayLog} todayDateStr={todayDateStr} />
 
+      {/* Suggestions card */}
+      <SuggestionsCard recentLogs={recentLogs} onAddWithValue={handleAddWithValue} />
+
+      {/* Templates — horizontal scroll chips, only if exist */}
       {templates.length > 0 && (
         <div className="flex gap-2 overflow-x-auto pb-1 mb-3 scrollbar-hide">
           <span className="flex-shrink-0 text-xs font-semibold text-text-secondary self-center">📋</span>

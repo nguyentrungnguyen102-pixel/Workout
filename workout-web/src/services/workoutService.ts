@@ -139,3 +139,12 @@ export async function getLogsForExercise(uid: string, presetId: string): Promise
     .filter((log) => log.exercises.some((e) => e.presetId === presetId))
     .sort((a, b) => b.date.localeCompare(a.date));
 }
+
+export async function getLogsForDate(uid: string, date: string): Promise<WorkoutLog[]> {
+  const q = query(collection(db, 'logs'), where('userId', '==', uid), limit(200));
+  const snap = await getDocs(q);
+  return snap.docs
+    .map((d) => d.data() as WorkoutLog)
+    .filter((log) => log.date === date)
+    .sort((a, b) => (b.createdAt?.toMillis() ?? Date.now()) - (a.createdAt?.toMillis() ?? Date.now()));
+}

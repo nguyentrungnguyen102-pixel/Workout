@@ -5,36 +5,11 @@ import { useWorkoutStore } from '../stores/workoutStore';
 import { getLogById } from '../services/workoutService';
 import { WorkoutLog } from '../types/workout';
 import { formatTimeOfDay } from '../lib/date';
-
-const INTENSITY_LABELS: Record<string, string> = {
-  light: 'Nhẹ',
-  moderate: 'Vừa',
-  heavy: 'Nặng',
-};
-
-const INTENSITY_COLORS: Record<string, string> = {
-  light: '#059669',
-  moderate: '#D97706',
-  heavy: '#DC2626',
-};
+import { formatAmount } from '../lib/format';
 
 function formatDateVi(dateStr: string): string {
   const d = new Date(dateStr + 'T00:00:00');
   return d.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
-}
-
-function formatExerciseValue(ex: WorkoutLog['exercises'][0]): string {
-  if (ex.unit === 'reps') {
-    let val = `${ex.sets}×${ex.reps ?? '-'} reps`;
-    if (ex.weight) val += ` · ${ex.weight}kg`;
-    return val;
-  }
-  if (ex.unit === 'seconds') return `${ex.sets}×${ex.durationSeconds ?? '-'}s`;
-  if (ex.unit === 'minutes') {
-    const mins = ex.durationSeconds ? Math.round(ex.durationSeconds / 60) : '-';
-    return `${mins} phút`;
-  }
-  return `${ex.sets} hiệp`;
 }
 
 export default function LogDetailPage() {
@@ -103,7 +78,7 @@ export default function LogDetailPage() {
         )}
       </div>
 
-      <div className="grid grid-cols-3 gap-3 mb-5">
+      <div className="grid grid-cols-2 gap-3 mb-5">
         <div className="bg-card border border-border rounded-2xl p-3 text-center">
           <p className="text-xl font-black text-primary">{log.totalDurationMinutes}</p>
           <p className="text-xs text-text-secondary mt-0.5">phút</p>
@@ -111,12 +86,6 @@ export default function LogDetailPage() {
         <div className="bg-card border border-border rounded-2xl p-3 text-center">
           <p className="text-xl font-black text-text-main">{log.caloriesEstimate}</p>
           <p className="text-xs text-text-secondary mt-0.5">kcal</p>
-        </div>
-        <div className="bg-card border border-border rounded-2xl p-3 text-center">
-          <p className="text-xs font-bold mt-1" style={{ color: INTENSITY_COLORS[log.intensity] }}>
-            {INTENSITY_LABELS[log.intensity]}
-          </p>
-          <p className="text-xs text-text-secondary mt-0.5">cường độ</p>
         </div>
       </div>
 
@@ -128,7 +97,7 @@ export default function LogDetailPage() {
           {log.exercises.map((ex, i) => (
             <div key={i} className="flex items-center justify-between px-4 py-3">
               <p className="font-semibold text-text-main text-sm">{ex.name}</p>
-              <p className="text-sm text-text-secondary">{formatExerciseValue(ex)}</p>
+              <p className="text-sm text-text-secondary">{formatAmount(ex)}</p>
             </div>
           ))}
         </div>
