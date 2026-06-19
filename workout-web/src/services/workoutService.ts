@@ -99,7 +99,7 @@ export async function getRecentLogs(uid: string, count = 10): Promise<WorkoutLog
     .map((d) => d.data() as WorkoutLog)
     .sort((a, b) => {
       const d = b.date.localeCompare(a.date);
-      return d !== 0 ? d : (b.createdAt?.toMillis() ?? 0) - (a.createdAt?.toMillis() ?? 0);
+      return d !== 0 ? d : (b.createdAt?.toMillis() ?? Date.now()) - (a.createdAt?.toMillis() ?? Date.now());
     })
     .slice(0, count);
 }

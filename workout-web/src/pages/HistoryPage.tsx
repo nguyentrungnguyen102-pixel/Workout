@@ -44,15 +44,14 @@ const CATEGORY_COLORS: Record<string, { text: string; bg: string }> = {
   dumbbell: { text: '#D97706', bg: '#FEF3C7' },
 };
 
-const DOW_LABELS = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+const DOW_VI = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
 
-function getStartDate90(): string {
-  const d = new Date();
-  d.setDate(d.getDate() - 89);
+function toDateStr(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-function buildHeatmapGrid(logs: WorkoutLog[], startDate: string): Array<{ date: string; intensity: string | null }> {
+// 4-week grid: 4 rows (newest on top) × 7 cols (T2→CN)
+function build4WeekGrid(logs: WorkoutLog[]): Array<Array<{ date: string; intensity: string | null; future: boolean }>> {
   const map = new Map<string, string>();
   for (const log of logs) {
     const existing = map.get(log.date);
@@ -60,33 +59,23 @@ function buildHeatmapGrid(logs: WorkoutLog[], startDate: string): Array<{ date: 
       map.set(log.date, log.intensity);
     }
   }
-  const cells: Array<{ date: string; intensity: string | null }> = [];
-  const start = new Date(startDate + 'T00:00:00');
-  for (let i = 0; i < 91; i++) {
-    const d = new Date(start);
-    d.setDate(start.getDate() + i);
-    const s = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    cells.push({ date: s, intensity: map.get(s) ?? null });
-  }
-  return cells;
-}
+  const today = new Date();
+  today.setHours(23, 59, 59, 999);
+  const thisMon = new Date(today);
+  thisMon.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+  thisMon.setHours(0, 0, 0, 0);
 
-function buildMonthLabels(startDate: string, startDow: number, columns: number): Array<{ col: number; label: string }> {
-  const result: Array<{ col: number; label: string }> = [];
-  const start = new Date(startDate + 'T00:00:00');
-  let lastMonth = -1;
-  for (let col = 0; col < columns; col++) {
-    // First col may be padded — compute the actual date of row 0 in this column
-    const dayOffset = col * 7 - startDow;
-    if (dayOffset < 0) continue;
-    const d = new Date(start);
-    d.setDate(start.getDate() + dayOffset);
-    if (d.getMonth() !== lastMonth) {
-      lastMonth = d.getMonth();
-      result.push({ col, label: d.toLocaleString('vi-VN', { month: 'short' }) });
-    }
-  }
-  return result;
+  return Array.from({ length: 4 }, (_, weekIdx) => {
+    const monOfWeek = new Date(thisMon);
+    monOfWeek.setDate(thisMon.getDate() - weekIdx * 7);
+    return Array.from({ length: 7 }, (__, dow) => {
+      const d = new Date(monOfWeek);
+      d.setDate(monOfWeek.getDate() + dow);
+      const s = toDateStr(d);
+      const future = d > today;
+      return { date: s, intensity: future ? null : (map.get(s) ?? null), future };
+    });
+  });
 }
 
 function groupByWeek(logs: WorkoutLog[]): Array<{ label: string; logs: WorkoutLog[] }> {
@@ -105,7 +94,8 @@ interface SessionCardProps {
 }
 
 function SessionCard({ log, onClick }: SessionCardProps) {
-  const timeStr = formatTimeOfDay(log.startedAt);
+  const timeStr = formatTimeOfDay(log.startedAt ?? log.createdAt);
+  const isStarted = !!log.startedAt;
   const barColor = INTENSITY_BAR[log.intensity] || '#E8E7E2';
 
   return (
@@ -121,8 +111,8 @@ function SessionCard({ log, onClick }: SessionCardProps) {
             <span className="text-sm text-text-secondary">{formatDateVi(log.date)}</span>
           </div>
           {timeStr && (
-            <span className="text-xs font-semibold text-text-secondary bg-card-2 px-2 py-0.5 rounded-full flex-shrink-0 ml-2">
-              {timeStr}
+            <span className="text-xs font-semibold text-text-secondary bg-card-2 px-2 py-0.5 rounded-full flex-shrink-0 ml-2 whitespace-nowrap">
+              {isStarted ? '' : 'Lưu '}{timeStr}
             </span>
           )}
         </div>
@@ -174,13 +164,12 @@ export default function HistoryPage() {
   const [loading, setLoading] = useState(true);
 
   const uid = firebaseUser?.uid;
-  const startDate = getStartDate90();
 
   useEffect(() => {
     if (!uid) return;
     setLoading(true);
     Promise.all([
-      getLogsForHeatmap(uid, startDate),
+      getLogsForHeatmap(uid, '2000-01-01'),
       getRecentLogs(uid, 50),
     ]).then(([hm, recent]) => {
       setHeatmapLogs(hm);
@@ -188,13 +177,8 @@ export default function HistoryPage() {
     }).catch(() => {}).finally(() => setLoading(false));
   }, [uid]);
 
-  const cells = buildHeatmapGrid(heatmapLogs, startDate);
+  const weekGrid = build4WeekGrid(heatmapLogs);
   const totalSessions = heatmapLogs.length;
-  const startDow = new Date(startDate + 'T00:00:00').getDay();
-  // Pad from Sunday=0 perspective: need startDow empty slots before first date
-  const paddedCells = [...Array(startDow).fill(null), ...cells];
-  const columns = Math.ceil(paddedCells.length / 7);
-  const monthLabels = buildMonthLabels(startDate, startDow, columns);
   const weekGroups = groupByWeek(recentLogs);
 
   const thisWeekLogs = weekGroups[0]?.label === 'Tuần này' ? weekGroups[0].logs : [];
@@ -209,7 +193,7 @@ export default function HistoryPage() {
         <div className="grid grid-cols-3 gap-2 mb-5">
           <div className="bg-card border border-border rounded-2xl p-3 text-center">
             <p className="text-2xl font-black text-primary">{totalSessions}</p>
-            <p className="text-xs text-text-secondary mt-0.5">buổi / 90 ngày</p>
+            <p className="text-xs text-text-secondary mt-0.5">tổng buổi</p>
           </div>
           <div className="bg-card border border-border rounded-2xl p-3 text-center">
             <p className="text-2xl font-black text-text-main">{thisWeekLogs.length}</p>
@@ -222,69 +206,45 @@ export default function HistoryPage() {
         </div>
       )}
 
-      {/* Heatmap card */}
+      {/* 4-week activity grid */}
       <div className="bg-card rounded-2xl p-4 border border-border mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-sm font-semibold text-text-main">90 ngày qua</p>
-          <p className="text-sm font-bold text-primary">{totalSessions} buổi</p>
+        <p className="text-sm font-semibold text-text-main mb-3">4 tuần gần đây</p>
+
+        {/* Day-of-week header: Mon–Sun */}
+        <div className="grid grid-cols-7 gap-1.5 mb-1.5">
+          {['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].map((d) => (
+            <div key={d} className="text-center">
+              <span className="text-[10px] font-semibold text-text-muted">{d}</span>
+            </div>
+          ))}
         </div>
 
-        <div className="overflow-x-auto">
-          <div className="flex gap-1 min-w-max">
-            {/* Day-of-week labels column */}
-            <div className="flex flex-col gap-[3px] mr-1">
-              {/* spacer for month row */}
-              <div className="h-4" />
-              {[0, 1, 2, 3, 4, 5, 6].map((dow) => (
-                <div key={dow} className="w-5 h-3.5 flex items-center justify-end">
-                  {/* Show T2, T4, T6 only to avoid clutter */}
-                  {(dow === 1 || dow === 3 || dow === 5) && (
-                    <span className="text-[9px] text-text-muted font-medium">{DOW_LABELS[dow]}</span>
-                  )}
-                </div>
-              ))}
+        {/* 4 rows = 4 weeks, row 0 = this week */}
+        <div className="space-y-1.5">
+          {weekGrid.map((week, wi) => (
+            <div key={wi} className="grid grid-cols-7 gap-1.5">
+              {week.map(({ date, intensity, future }) => {
+                const bg = future ? 'transparent'
+                  : intensity ? HEATMAP_COLORS[intensity]
+                  : '#E8E7E2';
+                const d = new Date(date + 'T00:00:00');
+                const label = `${DOW_VI[d.getDay()]}, ${d.getDate()}/${d.getMonth() + 1}`;
+                return (
+                  <div key={date}
+                    className={`aspect-square rounded-md ${!future ? 'cursor-pointer hover:opacity-70 transition-opacity' : ''}`}
+                    style={{ backgroundColor: bg }}
+                    title={future ? '' : `${label}${intensity ? ` · ${INTENSITY_LABELS[intensity]}` : ''}`}
+                  />
+                );
+              })}
             </div>
-
-            {/* Heatmap + month labels */}
-            <div>
-              {/* Month label row */}
-              <div className="relative h-4 mb-[3px]"
-                style={{ width: `${columns * (14 + 3)}px` }}>
-                {monthLabels.map(({ col, label }) => (
-                  <span key={col}
-                    className="absolute text-[9px] text-text-muted font-semibold uppercase"
-                    style={{ left: `${col * (14 + 3)}px`, top: 0 }}>
-                    {label}
-                  </span>
-                ))}
-              </div>
-
-              {/* Heatmap grid — gridAutoFlow: column so cells fill top→bottom within each week column */}
-              <div className="grid gap-[3px]"
-                style={{
-                  gridTemplateColumns: `repeat(${columns}, 14px)`,
-                  gridTemplateRows: 'repeat(7, 14px)',
-                  gridAutoFlow: 'column',
-                }}>
-                {paddedCells.map((cell, idx) => {
-                  if (!cell) return <div key={`p-${idx}`} className="w-3.5 h-3.5 rounded-sm" />;
-                  const bg = cell.intensity ? HEATMAP_COLORS[cell.intensity] : '#E8E7E2';
-                  return (
-                    <div key={cell.date}
-                      className="w-3.5 h-3.5 rounded-sm cursor-pointer hover:opacity-80 transition-opacity"
-                      style={{ backgroundColor: bg }}
-                      title={`${cell.date}${cell.intensity ? ` · ${INTENSITY_LABELS[cell.intensity]}` : ''}`} />
-                  );
-                })}
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
 
         {/* Legend */}
         <div className="flex items-center gap-3 mt-3">
           <span className="text-xs text-text-secondary">Cường độ:</span>
-          {(['#E8E7E2', '#FFD8C8', '#FF9970', '#FF5400'] as const).map((c, i) => (
+          {['#E8E7E2', '#FFD8C8', '#FF9970', '#FF5400'].map((c, i) => (
             <div key={i} className="flex items-center gap-1">
               <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: c }} />
               <span className="text-xs text-text-secondary">{['Nghỉ', 'Nhẹ', 'Vừa', 'Nặng'][i]}</span>
