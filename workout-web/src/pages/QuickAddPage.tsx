@@ -159,49 +159,87 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
                   </button>
                 </div>
 
-                <div className="flex items-center gap-3 flex-wrap">
-                  {ex.unit === 'reps' && (
-                    <div className="flex items-center gap-2 flex-1">
-                      <label className="text-xs text-text-secondary">Số lượng:</label>
-                      <input
-                        type="number"
-                        min={1}
-                        className="w-20 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
-                        value={ex.reps ?? 0}
-                        onChange={(e) => {
-                          const v = parseInt(e.target.value) || 0;
-                          updateExercise(ex.presetId, { reps: Math.max(1, v) });
-                        }}
-                      />
-                      <span className="text-xs text-text-secondary">cái</span>
-                    </div>
-                  )}
-
-                  {(ex.unit === 'seconds' || ex.unit === 'minutes') && (
-                    <div className="flex items-center gap-2 flex-1">
-                      <label className="text-xs text-text-secondary">
-                        {ex.unit === 'minutes' ? 'Số phút:' : 'Số giây:'}
-                      </label>
-                      <input
-                        type="number"
-                        min={1}
-                        className="w-20 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
-                        value={ex.unit === 'minutes'
-                          ? Math.round((ex.durationSeconds || 0) / 60)
-                          : (ex.durationSeconds || 0)}
-                        onChange={(e) => {
-                          const v = parseInt(e.target.value) || 0;
-                          updateExercise(ex.presetId, {
-                            durationSeconds: ex.unit === 'minutes' ? v * 60 : v,
-                          });
-                        }}
-                      />
-                      <span className="text-xs text-text-secondary">
-                        {ex.unit === 'minutes' ? 'phút' : 'giây'}
-                      </span>
-                    </div>
-                  )}
+                {/* Sets stepper */}
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="text-xs text-text-secondary w-20 flex-shrink-0">Số hiệp:</label>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => updateExercise(ex.presetId, { sets: Math.max(1, (ex.sets || 1) - 1) })}
+                      className="w-7 h-7 rounded-full bg-card-2 border border-border text-text-main font-bold text-sm flex items-center justify-center hover:border-primary hover:text-primary transition-colors">
+                      −
+                    </button>
+                    <span className="font-black text-text-main text-sm w-6 text-center tabular-nums">{ex.sets || 1}</span>
+                    <button
+                      onClick={() => updateExercise(ex.presetId, { sets: (ex.sets || 1) + 1 })}
+                      className="w-7 h-7 rounded-full bg-card-2 border border-border text-text-main font-bold text-sm flex items-center justify-center hover:border-primary hover:text-primary transition-colors">
+                      +
+                    </button>
+                  </div>
+                  <span className="text-xs text-text-secondary">hiệp</span>
                 </div>
+
+                {/* Reps / Duration */}
+                {ex.unit === 'reps' && (
+                  <div className="flex items-center gap-2 mb-2">
+                    <label className="text-xs text-text-secondary w-20 flex-shrink-0">Số lượng:</label>
+                    <input
+                      type="number"
+                      min={1}
+                      className="w-20 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
+                      value={ex.reps ?? 0}
+                      onChange={(e) => {
+                        const v = parseInt(e.target.value) || 0;
+                        updateExercise(ex.presetId, { reps: Math.max(1, v) });
+                      }}
+                    />
+                    <span className="text-xs text-text-secondary">cái/hiệp</span>
+                  </div>
+                )}
+
+                {(ex.unit === 'seconds' || ex.unit === 'minutes') && (
+                  <div className="flex items-center gap-2 mb-2">
+                    <label className="text-xs text-text-secondary w-20 flex-shrink-0">
+                      {ex.unit === 'minutes' ? 'Số phút:' : 'Số giây:'}
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      className="w-20 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
+                      value={ex.unit === 'minutes'
+                        ? Math.round((ex.durationSeconds || 0) / 60)
+                        : (ex.durationSeconds || 0)}
+                      onChange={(e) => {
+                        const v = parseInt(e.target.value) || 0;
+                        updateExercise(ex.presetId, {
+                          durationSeconds: ex.unit === 'minutes' ? v * 60 : v,
+                        });
+                      }}
+                    />
+                    <span className="text-xs text-text-secondary">
+                      {ex.unit === 'minutes' ? 'phút' : 'giây'}
+                    </span>
+                  </div>
+                )}
+
+                {/* Weight input — dumbbell & strength reps exercises */}
+                {(ex.category === 'dumbbell' || (ex.category === 'strength' && ex.unit === 'reps')) && (
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs text-text-secondary w-20 flex-shrink-0">Tạ (kg):</label>
+                    <input
+                      type="number"
+                      min={0.5}
+                      step={0.5}
+                      placeholder="0"
+                      className="w-20 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
+                      value={ex.weight ?? ''}
+                      onChange={(e) => {
+                        const v = parseFloat(e.target.value);
+                        updateExercise(ex.presetId, { weight: isNaN(v) || v <= 0 ? undefined : v });
+                      }}
+                    />
+                    <span className="text-xs text-text-secondary">kg/hiệp</span>
+                  </div>
+                )}
               </div>
             );
           })
@@ -453,11 +491,12 @@ export default function QuickAddPage() {
       name: preset.nameVi,
       category: preset.category,
       unit: preset.unit,
-      sets: 1,
+      sets: yesterday?.sets ?? preset.defaultSets ?? 1,
       reps: preset.unit === 'reps' ? (yesterday?.reps ?? preset.defaultValue) : undefined,
       durationSeconds: (preset.unit === 'seconds' || preset.unit === 'minutes')
         ? (yesterday?.durationSeconds ?? (preset.unit === 'seconds' ? preset.defaultValue : preset.defaultValue * 60))
         : undefined,
+      weight: yesterday?.weight,
     };
     addExercise(entry);
   };
@@ -487,19 +526,22 @@ export default function QuickAddPage() {
 
   const getSuggestedValue = (preset: typeof SYSTEM_PRESETS[0]) => {
     const y = yesterdayLog?.exercises.find((e) => e.presetId === preset.id);
+    let base = '';
     if (preset.unit === 'reps') {
       const reps = y?.reps ?? preset.defaultValue;
-      return formatAmount({ unit: 'reps', reps });
-    }
-    if (preset.unit === 'seconds') {
+      const sets = y?.sets ?? preset.defaultSets ?? 1;
+      base = sets > 1 ? `${sets}×${reps} cái` : `${reps} cái`;
+    } else if (preset.unit === 'seconds') {
       const secs = y?.durationSeconds ?? preset.defaultValue;
-      return formatAmount({ unit: 'seconds', durationSeconds: secs });
-    }
-    if (preset.unit === 'minutes') {
+      base = formatAmount({ unit: 'seconds', durationSeconds: secs });
+    } else if (preset.unit === 'minutes') {
       const secs = y?.durationSeconds ?? preset.defaultValue * 60;
-      return formatAmount({ unit: 'minutes', durationSeconds: secs });
+      base = formatAmount({ unit: 'minutes', durationSeconds: secs });
+    } else {
+      base = `${preset.defaultValue}`;
     }
-    return `${preset.defaultValue}`;
+    if (y?.weight && y.weight > 0) base += ` · ${y.weight}kg`;
+    return base;
   };
 
   const todayDateStr = todayString();

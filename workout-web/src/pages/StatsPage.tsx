@@ -1,12 +1,41 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Flame, Trophy } from 'lucide-react';
+import { Flame, Trophy, Star } from 'lucide-react';
 import { useUserStore } from '../stores/userStore';
 import { useWorkoutStore } from '../stores/workoutStore';
 import { getRecentLogs } from '../services/workoutService';
 import { computePRs, getPRLabel } from '../services/prService';
 import { WorkoutLog } from '../types/workout';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
+
+interface Achievement {
+  id: string;
+  icon: string;
+  label: string;
+  desc: string;
+  unlocked: boolean;
+}
+
+function computeAchievements(logs: WorkoutLog[], streak: number, longestStreak: number, prsCount: number): Achievement[] {
+  const total = logs.length;
+  const dumbbellDays = new Set(
+    logs.filter((l) => l.exercises.some((e) => e.category === 'dumbbell')).map((l) => l.date)
+  ).size;
+  const withWeight = logs.filter((l) => l.exercises.some((e) => e.weight && e.weight > 0)).length;
+
+  return [
+    { id: 'first',       icon: '🏁', label: 'Khởi đầu hành trình', desc: '1 buổi tập đầu tiên',           unlocked: total >= 1 },
+    { id: 'streak7',     icon: '🔥', label: 'Lửa 7 ngày',          desc: '7 ngày tập liên tiếp',           unlocked: longestStreak >= 7 || streak >= 7 },
+    { id: 'streak30',    icon: '⚡', label: 'Chiến binh tháng',     desc: '30 ngày tập liên tiếp',          unlocked: longestStreak >= 30 || streak >= 30 },
+    { id: 'total10',     icon: '💪', label: 'Đà tốc độ',            desc: '10 buổi tập',                    unlocked: total >= 10 },
+    { id: 'total30',     icon: '🏋️', label: 'Người tập thường xuyên','desc': '30 buổi tập',                 unlocked: total >= 30 },
+    { id: 'total100',    icon: '🌟', label: 'Huyền thoại',           desc: '100 buổi tập',                  unlocked: total >= 100 },
+    { id: 'dumbbell10',  icon: '🏠', label: 'Vua tập nhà',          desc: '10 buổi tạ đơn tại nhà',         unlocked: dumbbellDays >= 10 },
+    { id: 'weight5',     icon: '⚖️', label: 'Theo dõi tạ',          desc: '5 buổi có ghi cân nặng',         unlocked: withWeight >= 5 },
+    { id: 'pr',          icon: '🏆', label: 'Phá kỷ lục',            desc: 'Đạt kỷ lục cá nhân đầu tiên',   unlocked: prsCount > 0 },
+    { id: 'pr5',         icon: '👑', label: 'Vua kỷ lục',            desc: 'Đạt 5 kỷ lục cá nhân',          unlocked: prsCount >= 5 },
+  ];
+}
 
 const DAY_LABELS = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
 
@@ -110,6 +139,8 @@ export default function StatsPage() {
   const topExercise = getTopExercise(logs);
   const prs = computePRs(logs).slice(0, 6);
   const volumeProgress = getVolumeProgress(logs);
+  const longestStreak = profile?.streak?.longest || 0;
+  const achievements = computeAchievements(logs, streak, longestStreak, prs.length);
 
   if (loading) {
     return (
@@ -253,6 +284,34 @@ export default function StatsPage() {
           </div>
         </div>
       )}
+
+      <div className="bg-card rounded-2xl border border-border p-4 mb-4">
+        <div className="flex items-center gap-2 mb-3">
+          <Star size={16} className="text-primary" />
+          <p className="text-sm font-bold text-text-main">Thành tích</p>
+          <span className="ml-auto text-xs font-semibold text-primary">
+            {achievements.filter((a) => a.unlocked).length}/{achievements.length}
+          </span>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+          {achievements.map((a) => (
+            <div
+              key={a.id}
+              className={`rounded-xl p-3 flex flex-col gap-1 transition-all ${
+                a.unlocked
+                  ? 'bg-primary-light border border-primary/20'
+                  : 'bg-card-2 border border-border opacity-50 grayscale'
+              }`}
+            >
+              <span className="text-xl">{a.icon}</span>
+              <p className={`text-xs font-bold leading-tight ${a.unlocked ? 'text-text-main' : 'text-text-secondary'}`}>
+                {a.label}
+              </p>
+              <p className="text-xs text-text-secondary leading-tight">{a.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
 
       <button onClick={() => navigate('/programs')}
         className="w-full py-4 border border-border rounded-2xl text-sm font-semibold text-text-secondary hover:border-primary hover:text-primary transition-colors">
