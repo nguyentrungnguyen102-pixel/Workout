@@ -257,6 +257,71 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
   );
 }
 
+function toDateStr(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+interface WeeklyForecastCardProps {
+  recentLogs: WorkoutLog[];
+  weeklyTargetDays?: number;
+}
+
+function WeeklyForecastCard({ recentLogs, weeklyTargetDays = 5 }: WeeklyForecastCardProps) {
+  const now = new Date();
+  const today = todayString();
+  const dow = (now.getDay() + 6) % 7; // 0=Mon
+  const monDate = new Date(now);
+  monDate.setDate(now.getDate() - dow);
+  const weekStart = toDateStr(monDate);
+
+  const weekDates = new Set(recentLogs.filter(l => l.date >= weekStart && l.date <= today).map(l => l.date));
+  const thisWeekDays = weekDates.size;
+  const daysRemaining = 6 - dow;
+  const onTrack = dow === 0 ? true : thisWeekDays / (dow + 1) >= weeklyTargetDays / 7;
+
+  const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+  const monthDays = new Set(recentLogs.filter(l => l.date >= monthStart && l.date <= today).map(l => l.date)).size;
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const monthForecast = Math.min(daysInMonth, now.getDate() > 0 ? Math.round((monthDays / now.getDate()) * daysInMonth) : 0);
+
+  return (
+    <div className="rounded-2xl border border-border bg-card mb-3 p-3">
+      <p className="text-xs font-bold text-text-secondary mb-2">📅 Tiến độ tập luyện</p>
+      <div className="mb-2.5">
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-xs text-text-secondary">Tuần này</span>
+          <span className={`text-xs font-bold ${onTrack ? 'text-success' : 'text-primary'}`}>
+            {thisWeekDays}/{weeklyTargetDays} ngày{onTrack && thisWeekDays > 0 ? ' · đúng tiến độ ✓' : ''}
+          </span>
+        </div>
+        <div className="flex gap-0.5">
+          {Array.from({ length: 7 }, (_, i) => {
+            const d = new Date(monDate);
+            d.setDate(monDate.getDate() + i);
+            const ds = toDateStr(d);
+            const trained = weekDates.has(ds);
+            return (
+              <div key={i} className={`flex-1 h-2 rounded-sm transition-all ${
+                trained ? 'bg-primary' : ds > today ? 'bg-border' : 'bg-border/60'
+              }`} />
+            );
+          })}
+        </div>
+        <p className="text-[10px] text-text-muted mt-0.5">
+          Dự báo cuối tuần: ~{Math.min(weeklyTargetDays, thisWeekDays + daysRemaining)} ngày
+        </p>
+      </div>
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-text-secondary">Tháng này</span>
+        <div className="text-right">
+          <span className="text-xs font-bold text-text-main">{monthDays} ngày đã tập</span>
+          <p className="text-[10px] text-text-muted">Dự báo: ~{monthForecast} ngày</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function isGoalMet(goal: ExerciseGoal, todayLog: WorkoutLog | null): boolean {
   if (!todayLog) return false;
   const ex = todayLog.exercises.find(e => e.presetId === goal.presetId);
@@ -551,6 +616,9 @@ export default function QuickAddPage() {
           </div>
         </div>
       )}
+
+      {/* Weekly forecast */}
+      <WeeklyForecastCard recentLogs={recentLogs} weeklyTargetDays={5} />
 
       {/* Goals strip */}
       <GoalsStrip goals={profile?.exerciseGoals || []} todayLog={todayLog} todayDateStr={todayDateStr} />

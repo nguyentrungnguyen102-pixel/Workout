@@ -152,7 +152,10 @@ function MonthCalendar({ viewMonth, logsByDate, today, onDayClick }: MonthCalend
 
       {/* Calendar grid */}
       <div className="space-y-1">
-        {weeks.map((week, wi) => (
+        {weeks.map((week, wi) => {
+          const isCurrentWeek = week.some(c => c.dateStr === today);
+          const maxItems = isCurrentWeek ? 6 : 3;
+          return (
           <div key={wi} className="grid grid-cols-7 gap-1">
             {week.map(({ dateStr, dayNum, isCurrentMonth }) => {
               if (!dateStr) return <div key={`empty-${wi}`} />;
@@ -161,13 +164,13 @@ function MonthCalendar({ viewMonth, logsByDate, today, onDayClick }: MonthCalend
               const isToday = dateStr === today;
               const isFuture = dateStr > today;
               const timeline = hasLogs ? buildDayTimeline(logs) : [];
-              const extraCount = timeline.length > 3 ? timeline.length - 3 : 0;
+              const extraCount = timeline.length > maxItems ? timeline.length - maxItems : 0;
 
               return (
                 <div
                   key={dateStr}
                   onClick={() => hasLogs && onDayClick(dateStr)}
-                  className={`min-h-[72px] rounded-xl p-1 text-left transition-all ${
+                  className={`${isCurrentWeek ? 'min-h-[144px]' : 'min-h-[72px]'} rounded-xl p-1 text-left transition-all ${
                     hasLogs ? 'cursor-pointer hover:opacity-80' : ''
                   } ${
                     hasLogs ? 'bg-primary-light' : 'bg-card-2'
@@ -181,7 +184,7 @@ function MonthCalendar({ viewMonth, logsByDate, today, onDayClick }: MonthCalend
                   <div className={`text-[10px] font-bold mb-0.5 ${isToday ? 'text-primary' : 'text-text-secondary'}`}>
                     {dayNum}
                   </div>
-                  {timeline.slice(0, 3).map((item, idx) => (
+                  {timeline.slice(0, maxItems).map((item, idx) => (
                     <div key={idx} className="text-[9px] text-text-main leading-tight truncate">
                       {item.time ? `${item.time} ` : ''}{item.name} {formatAmount(item.ex)}
                     </div>
@@ -193,7 +196,8 @@ function MonthCalendar({ viewMonth, logsByDate, today, onDayClick }: MonthCalend
               );
             })}
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

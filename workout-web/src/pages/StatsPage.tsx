@@ -10,6 +10,30 @@ import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recha
 
 const DAY_LABELS = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
 
+function toDateStr(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function getPeriodRange(p: 'day' | 'week' | 'month'): { start: string; end: string } {
+  const now = new Date();
+  const today = toDateStr(now);
+  if (p === 'day') return { start: today, end: today };
+  if (p === 'week') {
+    const dow = (now.getDay() + 6) % 7;
+    const mon = new Date(now);
+    mon.setDate(now.getDate() - dow);
+    return { start: toDateStr(mon), end: today };
+  }
+  return { start: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`, end: today };
+}
+
+const CATEGORY_LABELS: Record<string, string> = {
+  strength: 'Sức mạnh', cardio: 'Cardio', mobility: 'Linh hoạt', recovery: 'Phục hồi', dumbbell: 'Tạ đơn',
+};
+const CATEGORY_COLORS_STATS: Record<string, string> = {
+  strength: '#FF5400', cardio: '#2563EB', mobility: '#059669', recovery: '#7C3AED', dumbbell: '#D97706',
+};
+
 function get7DayData(logs: WorkoutLog[]): Array<{ day: string; count: number }> {
   const now = new Date();
   return Array.from({ length: 7 }, (_, i) => {
@@ -76,6 +100,7 @@ export default function StatsPage() {
   const { profile, firebaseUser } = useUserStore();
   const [logs, setLogs] = useState<WorkoutLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState<'day' | 'week' | 'month'>('week');
 
   const uid = firebaseUser?.uid;
 
@@ -111,6 +136,22 @@ export default function StatsPage() {
   const prs = computePRs(logs).slice(0, 6);
   const volumeProgress = getVolumeProgress(logs);
 
+  const { start: periodStart, end: periodEnd } = getPeriodRange(period);
+  const periodLogs = logs.filter(l => l.date >= periodStart && l.date <= periodEnd);
+  const periodMinutes = periodLogs.reduce((s, l) => s + l.totalDurationMinutes, 0);
+  const periodKcal = periodLogs.reduce((s, l) => s + l.caloriesEstimate, 0);
+  const periodSessions = periodLogs.length;
+
+  const categoryStats = new Map<string, { minutes: number; count: number }>();
+  for (const log of periodLogs) {
+    for (const ex of log.exercises) {
+      const mins = (ex.unit === 'minutes' || ex.unit === 'seconds') ? (ex.durationSeconds || 0) / 60 : 3;
+      const e = categoryStats.get(ex.category) || { minutes: 0, count: 0 };
+      categoryStats.set(ex.category, { minutes: e.minutes + mins, count: e.count + 1 });
+    }
+  }
+  const maxCatMinutes = Math.max(...Array.from(categoryStats.values()).map(v => v.minutes), 1);
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -121,7 +162,59 @@ export default function StatsPage() {
 
   return (
     <div className="px-4 md:px-8 pt-6 md:pt-8 pb-8">
-      <h1 className="text-2xl font-black text-text-main mb-5">Thống kê</h1>
+      <h1 className="text-2xl font-black text-text-main mb-4">Thống kê</h1>
+
+      {/* Period selector */}
+      <div className="flex gap-1 p-1 bg-card-2 rounded-xl mb-4">
+        {(['day', 'week', 'month'] as const).map(p => (
+          <button key={p} onClick={() => setPeriod(p)}
+            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              period === p ? 'bg-white shadow-sm text-primary' : 'text-text-secondary'}`}>
+            {p === 'day' ? 'Hôm nay' : p === 'week' ? 'Tuần này' : 'Tháng này'}
+          </button>
+        ))}
+      </div>
+
+      {/* Period summary */}
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        <div className="bg-card border border-border rounded-2xl p-3 text-center">
+          <p className="text-xl font-black text-primary">{periodSessions}</p>
+          <p className="text-xs text-text-secondary mt-0.5">buổi tập</p>
+        </div>
+        <div className="bg-card border border-border rounded-2xl p-3 text-center">
+          <p className="text-xl font-black text-text-main">{periodMinutes}</p>
+          <p className="text-xs text-text-secondary mt-0.5">phút</p>
+        </div>
+        <div className="bg-card border border-border rounded-2xl p-3 text-center">
+          <p className="text-xl font-black text-text-main">{periodKcal.toLocaleString()}</p>
+          <p className="text-xs text-text-secondary mt-0.5">kcal</p>
+        </div>
+      </div>
+
+      {/* Category breakdown */}
+      {categoryStats.size > 0 && (
+        <div className="bg-card rounded-2xl border border-border p-4 mb-4">
+          <p className="text-sm font-bold text-text-main mb-3">Theo loại bài tập</p>
+          <div className="space-y-2.5">
+            {Array.from(categoryStats.entries())
+              .sort((a, b) => b[1].minutes - a[1].minutes)
+              .map(([cat, { minutes, count }]) => (
+              <div key={cat}>
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="font-semibold" style={{ color: CATEGORY_COLORS_STATS[cat] || '#8A8A8A' }}>
+                    {CATEGORY_LABELS[cat] || cat}
+                  </span>
+                  <span className="text-text-muted">{Math.round(minutes)} phút · {count} bài</span>
+                </div>
+                <div className="h-1.5 bg-border rounded-full overflow-hidden">
+                  <div className="h-full rounded-full transition-all"
+                    style={{ width: `${(minutes / maxCatMinutes) * 100}%`, backgroundColor: CATEGORY_COLORS_STATS[cat] || '#8A8A8A' }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="bg-primary rounded-2xl p-5 mb-4 text-white">
         <div className="flex items-center gap-2 mb-3">
