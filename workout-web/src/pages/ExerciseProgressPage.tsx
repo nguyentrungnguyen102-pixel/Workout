@@ -57,13 +57,24 @@ export default function ExerciseProgressPage() {
     .map((log) => {
       const ex = log.exercises.find((e) => e.presetId === presetId);
       if (!ex) return null;
+      let maxWeight: number | undefined;
+      if (ex.setDetails && ex.setDetails.length > 0) {
+        const wVals = ex.setDetails.map((s) => s.weight ?? 0).filter((w) => w > 0);
+        if (wVals.length > 0) maxWeight = Math.max(...wVals);
+      } else if (ex.weight) {
+        maxWeight = ex.weight;
+      }
       return {
         date: formatDateShort(log.date),
         value: ex.unit === 'reps' ? (ex.reps || 0) : Math.round((ex.durationSeconds || 0) / 60),
         sets: ex.sets,
+        weight: maxWeight,
       };
     })
-    .filter(Boolean) as Array<{ date: string; value: number; sets: number }>;
+    .filter(Boolean) as Array<{ date: string; value: number; sets: number; weight?: number }>;
+
+  const showWeightChart = (preset?.category === 'strength' || preset?.category === 'dumbbell')
+    && chartData.some((d) => d.weight !== undefined);
 
   return (
     <div className="px-4 md:px-8 pt-6 md:pt-8 pb-8">
@@ -104,7 +115,7 @@ export default function ExerciseProgressPage() {
           {chartData.length > 1 && (
             <div className="bg-card rounded-2xl border border-border p-4 mb-4">
               <p className="text-sm font-bold text-text-main mb-3">
-                {preset?.unit === 'reps' ? 'Số reps' : 'Thời gian (phút)'}
+                {preset?.unit === 'reps' ? 'Số reps theo thời gian' : 'Thời gian (phút)'}
               </p>
               <ResponsiveContainer width="100%" height={140}>
                 <LineChart data={chartData} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
@@ -115,6 +126,24 @@ export default function ExerciseProgressPage() {
                     formatter={(v: number) => [v, preset?.unit === 'reps' ? 'reps' : 'phút']}
                   />
                   <Line type="monotone" dataKey="value" stroke="#FF5400" strokeWidth={2.5} dot={{ r: 3, fill: '#FF5400' }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          {showWeightChart && chartData.length > 1 && (
+            <div className="bg-card rounded-2xl border border-border p-4 mb-4">
+              <p className="text-sm font-bold text-text-main mb-3">Tạ sử dụng (kg)</p>
+              <ResponsiveContainer width="100%" height={130}>
+                <LineChart data={chartData} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
+                  <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#8A8A8A' }} />
+                  <YAxis tick={{ fontSize: 10, fill: '#8A8A8A' }} domain={['auto', 'auto']} />
+                  <Tooltip
+                    contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #E8E7E2' }}
+                    formatter={(v: number) => [`${v} kg`, 'Tạ']}
+                  />
+                  <Line type="monotone" dataKey="weight" stroke="#D97706" strokeWidth={2.5}
+                    dot={{ r: 3, fill: '#D97706' }} connectNulls />
                 </LineChart>
               </ResponsiveContainer>
             </div>

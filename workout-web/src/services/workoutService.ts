@@ -40,17 +40,34 @@ export async function logWorkout(uid: string, draft: DraftWorkout): Promise<stri
   const caloriesEstimate = Math.round(totalDurationMinutes * 7);
 
   const cleanExercises = draft.exercises.map((e) => {
+    // Derive summary fields from setDetails when available
+    let sets = e.sets ?? 1;
+    let reps = e.reps;
+    let weight = e.weight;
+    let durationSeconds = e.durationSeconds;
+
+    if (e.setDetails && e.setDetails.length > 0) {
+      sets = e.setDetails.length;
+      const repVals = e.setDetails.map((s) => s.reps ?? 0).filter((r) => r > 0);
+      if (repVals.length > 0) reps = Math.max(...repVals);
+      const wVals = e.setDetails.map((s) => s.weight ?? 0).filter((w) => w > 0);
+      if (wVals.length > 0) weight = Math.max(...wVals);
+      const dVals = e.setDetails.map((s) => s.durationSeconds ?? 0).filter((d) => d > 0);
+      if (dVals.length > 0) durationSeconds = Math.max(...dVals);
+    }
+
     const c: Record<string, any> = {
       presetId: e.presetId,
       name: e.name,
       category: e.category,
       unit: e.unit,
-      sets: e.sets ?? 1,
+      sets,
     };
-    if (e.reps !== undefined) c.reps = e.reps;
-    if (e.durationSeconds !== undefined) c.durationSeconds = e.durationSeconds;
-    if (e.weight !== undefined) c.weight = e.weight;
+    if (reps !== undefined) c.reps = reps;
+    if (durationSeconds !== undefined) c.durationSeconds = durationSeconds;
+    if (weight !== undefined) c.weight = weight;
     if (e.distance !== undefined) c.distance = e.distance;
+    if (e.setDetails && e.setDetails.length > 0) c.setDetails = e.setDetails;
     return c;
   });
 
