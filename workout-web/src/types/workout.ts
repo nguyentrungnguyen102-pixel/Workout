@@ -20,16 +20,24 @@ export interface WorkoutPreset {
   lastUsedAt?: string;
 }
 
+// Per-set detail for strength/dumbbell tracking (Phase 6)
+export interface SetDetail {
+  reps?: number;
+  weight?: number;       // kg
+  durationSeconds?: number;
+}
+
 export interface ExerciseEntry {
   presetId: string;
   name: string;
   category: ExerciseCategory;
   unit: ExerciseUnit;
   sets: number;
-  reps?: number;
+  reps?: number;          // summary: max reps across sets
   durationSeconds?: number;
-  weight?: number;
+  weight?: number;        // summary: max weight across sets
   distance?: number;
+  setDetails?: SetDetail[]; // per-set tracking (Phase 6)
 }
 
 export interface WorkoutLog {

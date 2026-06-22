@@ -95,9 +95,25 @@ export default function LogDetailPage() {
         </div>
         <div className="divide-y divide-border">
           {log.exercises.map((ex, i) => (
-            <div key={i} className="flex items-center justify-between px-4 py-3">
-              <p className="font-semibold text-text-main text-sm">{ex.name}</p>
-              <p className="text-sm text-text-secondary">{formatAmount(ex)}</p>
+            <div key={i} className="px-4 py-3">
+              <div className="flex items-center justify-between">
+                <p className="font-semibold text-text-main text-sm">{ex.name}</p>
+                <p className="text-sm text-text-secondary">{formatAmount(ex)}</p>
+              </div>
+              {ex.setDetails && ex.setDetails.length > 0 && (
+                <div className="mt-2 space-y-0.5">
+                  {ex.setDetails.map((s, si) => (
+                    <div key={si} className="flex gap-2 text-xs text-text-muted">
+                      <span className="font-semibold w-12">Hiệp {si + 1}:</span>
+                      {s.reps !== undefined && <span>{s.reps} cái</span>}
+                      {s.weight !== undefined && s.weight > 0 && <span>× {s.weight} kg</span>}
+                      {s.durationSeconds !== undefined && s.durationSeconds > 0 && (
+                        <span>{ex.unit === 'minutes' ? `${Math.round(s.durationSeconds / 60)} phút` : `${s.durationSeconds}s`}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </div>
