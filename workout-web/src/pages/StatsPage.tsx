@@ -28,10 +28,10 @@ function getPeriodRange(p: 'day' | 'week' | 'month'): { start: string; end: stri
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
-  strength: 'Sức mạnh', cardio: 'Cardio', mobility: 'Linh hoạt', recovery: 'Phục hồi', dumbbell: 'Tạ đơn',
+  strength: 'Sức mạnh', core: 'Bụng & Core', cardio: 'Cardio', mobility: 'Linh hoạt', recovery: 'Phục hồi', dumbbell: 'Tạ đơn',
 };
 const CATEGORY_COLORS_STATS: Record<string, string> = {
-  strength: '#FF5400', cardio: '#2563EB', mobility: '#059669', recovery: '#7C3AED', dumbbell: '#D97706',
+  strength: '#FF5400', core: '#BE185D', cardio: '#2563EB', mobility: '#059669', recovery: '#7C3AED', dumbbell: '#D97706',
 };
 
 function get7DayData(logs: WorkoutLog[]): Array<{ day: string; count: number }> {

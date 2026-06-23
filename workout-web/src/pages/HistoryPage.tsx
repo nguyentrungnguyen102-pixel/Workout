@@ -10,6 +10,7 @@ import { formatAmount } from '../lib/format';
 
 const CATEGORY_COLORS: Record<string, { text: string; bg: string }> = {
   strength: { text: '#FF5400', bg: '#FFF0EC' },
+  core:     { text: '#BE185D', bg: '#FCE7F3' },
   cardio:   { text: '#2563EB', bg: '#EFF6FF' },
   mobility: { text: '#059669', bg: '#ECFDF5' },
   recovery: { text: '#7C3AED', bg: '#F5F3FF' },

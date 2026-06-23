@@ -13,11 +13,12 @@ import { pickCheer } from '../lib/cheers';
 import { buildSuggestions } from '../lib/suggestions';
 import { todayString } from '../lib/date';
 
-type Category = 'all' | 'strength' | 'dumbbell' | 'cardio' | 'mobility' | 'recovery';
+type Category = 'all' | 'strength' | 'core' | 'dumbbell' | 'cardio' | 'mobility' | 'recovery';
 
 const CATEGORY_TABS: { key: Category; label: string }[] = [
   { key: 'all', label: 'Tất cả ⚡' },
   { key: 'strength', label: 'Sức mạnh 💪' },
+  { key: 'core', label: 'Bụng 🔥' },
   { key: 'dumbbell', label: 'Tạ đơn 🏋️' },
   { key: 'cardio', label: 'Cardio 🏃' },
   { key: 'mobility', label: 'Linh hoạt 🧘' },
@@ -26,6 +27,7 @@ const CATEGORY_TABS: { key: Category; label: string }[] = [
 
 const CATEGORY_COLORS: Record<string, { text: string; bg: string }> = {
   strength: { text: '#FF5400', bg: '#FFF0EC' },
+  core: { text: '#BE185D', bg: '#FCE7F3' },
   cardio: { text: '#2563EB', bg: '#EFF6FF' },
   mobility: { text: '#059669', bg: '#ECFDF5' },
   recovery: { text: '#7C3AED', bg: '#F5F3FF' },
@@ -355,9 +357,10 @@ interface GoalsStripProps {
   goals: ExerciseGoal[];
   todayLog: WorkoutLog | null;
   todayDateStr: string;
+  onAddExercise?: (presetId: string) => void;
 }
 
-function GoalsStrip({ goals, todayLog, todayDateStr }: GoalsStripProps) {
+function GoalsStrip({ goals, todayLog, todayDateStr, onAddExercise }: GoalsStripProps) {
   const [collapsed, setCollapsed] = useState(false);
   const activeGoals = goals.filter(g => g.enabled);
   if (activeGoals.length === 0) return null;
@@ -407,7 +410,16 @@ function GoalsStrip({ goals, todayLog, todayDateStr }: GoalsStripProps) {
                   <span className={`text-xs font-semibold ${met ? 'text-success' : 'text-text-secondary'}`}>
                     {met ? '✓ ' : ''}{g.name}
                   </span>
-                  <span className="text-xs text-text-muted">{label}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-text-muted">{label}</span>
+                    {!met && onAddExercise && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onAddExercise(g.presetId); }}
+                        className="text-[10px] font-bold text-primary px-2 py-0.5 rounded-md bg-primary-light border border-primary/20 hover:bg-primary hover:text-white transition-colors flex-shrink-0">
+                        ➕ Tập
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="w-full bg-border rounded-full h-1.5">
                   <div
@@ -621,7 +633,20 @@ export default function QuickAddPage() {
       <WeeklyForecastCard recentLogs={recentLogs} weeklyTargetDays={5} />
 
       {/* Goals strip */}
-      <GoalsStrip goals={profile?.exerciseGoals || []} todayLog={todayLog} todayDateStr={todayDateStr} />
+      <GoalsStrip
+        goals={profile?.exerciseGoals || []}
+        todayLog={todayLog}
+        todayDateStr={todayDateStr}
+        onAddExercise={(presetId) => {
+          const preset = SYSTEM_PRESETS.find(p => p.id === presetId);
+          if (!preset) return;
+          const yesterday = yesterdayLog?.exercises.find(e => e.presetId === presetId);
+          const value = preset.unit === 'reps'
+            ? (yesterday?.reps ?? preset.defaultValue)
+            : (yesterday?.durationSeconds ?? (preset.unit === 'seconds' ? preset.defaultValue : preset.defaultValue * 60));
+          handleAddWithValue(preset, value);
+        }}
+      />
 
       {/* Suggestions card */}
       <SuggestionsCard recentLogs={recentLogs} onAddWithValue={handleAddWithValue} />

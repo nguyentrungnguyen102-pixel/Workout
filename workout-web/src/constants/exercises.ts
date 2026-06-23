@@ -5,10 +5,22 @@ export const SYSTEM_PRESETS: WorkoutPreset[] = [
   { id: 'pushup', name: 'Push Up', nameVi: 'Hít đất', category: 'strength', unit: 'reps', defaultValue: 30, defaultSets: 3, icon: '💪', isCustom: false, usageCount: 0 },
   { id: 'pullup', name: 'Pull Up', nameVi: 'Kéo xà', category: 'strength', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '🤸', isCustom: false, usageCount: 0 },
   { id: 'squat', name: 'Squat', nameVi: 'Squat', category: 'strength', unit: 'reps', defaultValue: 20, defaultSets: 3, icon: '🏋️', isCustom: false, usageCount: 0 },
-  { id: 'plank', name: 'Plank', nameVi: 'Plank', category: 'strength', unit: 'seconds', defaultValue: 60, defaultSets: 3, icon: '🧘', isCustom: false, usageCount: 0 },
   { id: 'lunge', name: 'Lunge', nameVi: 'Lunge', category: 'strength', unit: 'reps', defaultValue: 20, defaultSets: 3, icon: '🦵', isCustom: false, usageCount: 0 },
   { id: 'burpee', name: 'Burpee', nameVi: 'Burpee', category: 'strength', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '🔥', isCustom: false, usageCount: 0 },
   { id: 'dip', name: 'Dip', nameVi: 'Chống đẩy ghế', category: 'strength', unit: 'reps', defaultValue: 15, defaultSets: 3, icon: '💺', isCustom: false, usageCount: 0 },
+
+  // Core / Bụng
+  { id: 'plank', name: 'Plank', nameVi: 'Plank', category: 'core', unit: 'seconds', defaultValue: 60, defaultSets: 3, icon: '🧘', isCustom: false, usageCount: 0 },
+  { id: 'crunch', name: 'Crunch', nameVi: 'Gập bụng', category: 'core', unit: 'reps', defaultValue: 20, defaultSets: 3, icon: '🔥', isCustom: false, usageCount: 0 },
+  { id: 'situp', name: 'Sit Up', nameVi: 'Ngồi dậy', category: 'core', unit: 'reps', defaultValue: 15, defaultSets: 3, icon: '⬆️', isCustom: false, usageCount: 0 },
+  { id: 'leg_raise', name: 'Leg Raise', nameVi: 'Nâng chân thẳng', category: 'core', unit: 'reps', defaultValue: 15, defaultSets: 3, icon: '🦵', isCustom: false, usageCount: 0 },
+  { id: 'bicycle_crunch', name: 'Bicycle Crunch', nameVi: 'Đạp xe bụng', category: 'core', unit: 'reps', defaultValue: 20, defaultSets: 3, icon: '🚴', isCustom: false, usageCount: 0 },
+  { id: 'mountain_climber', name: 'Mountain Climber', nameVi: 'Leo núi', category: 'core', unit: 'reps', defaultValue: 30, defaultSets: 3, icon: '⛰️', isCustom: false, usageCount: 0 },
+  { id: 'russian_twist', name: 'Russian Twist', nameVi: 'Xoay hông', category: 'core', unit: 'reps', defaultValue: 20, defaultSets: 3, icon: '🔄', isCustom: false, usageCount: 0 },
+  { id: 'side_plank', name: 'Side Plank', nameVi: 'Plank nghiêng', category: 'core', unit: 'seconds', defaultValue: 30, defaultSets: 2, icon: '↔️', isCustom: false, usageCount: 0 },
+  { id: 'reverse_crunch', name: 'Reverse Crunch', nameVi: 'Gập bụng ngược', category: 'core', unit: 'reps', defaultValue: 15, defaultSets: 3, icon: '⬇️', isCustom: false, usageCount: 0 },
+  { id: 'v_up', name: 'V-Up', nameVi: 'Gập bụng chữ V', category: 'core', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '✌️', isCustom: false, usageCount: 0 },
+  { id: 'flutter_kick', name: 'Flutter Kick', nameVi: 'Đá chân bơi', category: 'core', unit: 'reps', defaultValue: 30, defaultSets: 3, icon: '🏊', isCustom: false, usageCount: 0 },
 
   // Cardio
   { id: 'running', name: 'Running', nameVi: 'Chạy bộ', category: 'cardio', unit: 'minutes', defaultValue: 30, defaultSets: 1, icon: '🏃', isCustom: false, usageCount: 0 },
@@ -49,6 +61,7 @@ export const SYSTEM_PRESETS: WorkoutPreset[] = [
 
 export const CATEGORY_LABELS: Record<string, string> = {
   strength: 'Sức mạnh',
+  core: 'Bụng & Core',
   cardio: 'Cardio',
   mobility: 'Linh hoạt',
   recovery: 'Phục hồi',
