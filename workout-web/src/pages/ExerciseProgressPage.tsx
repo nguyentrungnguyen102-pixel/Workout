@@ -65,6 +65,16 @@ export default function ExerciseProgressPage() {
     })
     .filter(Boolean) as Array<{ date: string; value: number; sets: number }>;
 
+  const weightChartData = [...logs]
+    .reverse()
+    .slice(-20)
+    .map((log) => {
+      const ex = log.exercises.find((e) => e.presetId === presetId);
+      if (!ex || !ex.weight) return null;
+      return { date: formatDateShort(log.date), weight: ex.weight };
+    })
+    .filter(Boolean) as Array<{ date: string; weight: number }>;
+
   return (
     <div className="px-4 md:px-8 pt-6 md:pt-8 pb-8">
       <div className="flex items-center gap-3 mb-5">
@@ -104,7 +114,7 @@ export default function ExerciseProgressPage() {
           {chartData.length > 1 && (
             <div className="bg-card rounded-2xl border border-border p-4 mb-4">
               <p className="text-sm font-bold text-text-main mb-3">
-                {preset?.unit === 'reps' ? 'Số reps' : 'Thời gian (phút)'}
+                {preset?.unit === 'reps' ? 'Số reps theo thời gian' : 'Thời gian (phút)'}
               </p>
               <ResponsiveContainer width="100%" height={140}>
                 <LineChart data={chartData} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
@@ -115,6 +125,24 @@ export default function ExerciseProgressPage() {
                     formatter={(v: number) => [v, preset?.unit === 'reps' ? 'reps' : 'phút']}
                   />
                   <Line type="monotone" dataKey="value" stroke="#FF5400" strokeWidth={2.5} dot={{ r: 3, fill: '#FF5400' }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          {weightChartData.length > 1 && (
+            <div className="bg-card rounded-2xl border border-border p-4 mb-4">
+              <p className="text-sm font-bold text-text-main mb-1">Tiến độ trọng lượng (kg)</p>
+              <p className="text-xs text-text-secondary mb-3">Tăng dần = đang tiến bộ 💪</p>
+              <ResponsiveContainer width="100%" height={140}>
+                <LineChart data={weightChartData} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
+                  <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#8A8A8A' }} />
+                  <YAxis tick={{ fontSize: 10, fill: '#8A8A8A' }} domain={['auto', 'auto']} />
+                  <Tooltip
+                    contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #E8E7E2' }}
+                    formatter={(v: number) => [`${v} kg`, 'Trọng lượng']}
+                  />
+                  <Line type="monotone" dataKey="weight" stroke="#D97706" strokeWidth={2.5} dot={{ r: 3, fill: '#D97706' }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>

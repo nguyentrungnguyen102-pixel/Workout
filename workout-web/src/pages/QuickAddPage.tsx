@@ -161,28 +161,64 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
                   </button>
                 </div>
 
-                <div className="flex items-center gap-3 flex-wrap">
-                  {ex.unit === 'reps' && (
-                    <div className="flex items-center gap-2 flex-1">
-                      <label className="text-xs text-text-secondary">Số lượng:</label>
-                      <input
-                        type="number"
-                        min={1}
-                        className="w-20 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
-                        value={ex.reps ?? 0}
-                        onChange={(e) => {
-                          const v = parseInt(e.target.value) || 0;
-                          updateExercise(ex.presetId, { reps: Math.max(1, v) });
-                        }}
-                      />
-                      <span className="text-xs text-text-secondary">cái</span>
+                <div className="space-y-2 mt-1">
+                  {/* Sets counter */}
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs text-text-secondary w-14 flex-shrink-0">Hiệp:</label>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => updateExercise(ex.presetId, { sets: Math.max(1, (ex.sets || 1) - 1) })}
+                        className="w-7 h-7 rounded-full bg-card-2 border border-border flex items-center justify-center text-text-main font-bold hover:border-primary hover:text-primary transition-colors text-base leading-none">
+                        −
+                      </button>
+                      <span className="w-8 text-center font-black text-text-main text-sm tabular-nums">{ex.sets || 1}</span>
+                      <button
+                        onClick={() => updateExercise(ex.presetId, { sets: (ex.sets || 1) + 1 })}
+                        className="w-7 h-7 rounded-full bg-card-2 border border-border flex items-center justify-center text-text-main font-bold hover:border-primary hover:text-primary transition-colors text-base leading-none">
+                        +
+                      </button>
                     </div>
+                  </div>
+
+                  {ex.unit === 'reps' && (
+                    <>
+                      <div className="flex items-center gap-2">
+                        <label className="text-xs text-text-secondary w-14 flex-shrink-0">Reps:</label>
+                        <input
+                          type="number"
+                          min={1}
+                          className="w-20 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
+                          value={ex.reps ?? 0}
+                          onChange={(e) => {
+                            const v = parseInt(e.target.value) || 0;
+                            updateExercise(ex.presetId, { reps: Math.max(1, v) });
+                          }}
+                        />
+                        <span className="text-xs text-text-secondary">cái</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <label className="text-xs text-text-secondary w-14 flex-shrink-0">Tạ:</label>
+                        <input
+                          type="number"
+                          min={0}
+                          step={0.5}
+                          className="w-20 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
+                          placeholder="0"
+                          value={ex.weight ?? ''}
+                          onChange={(e) => {
+                            const v = parseFloat(e.target.value);
+                            updateExercise(ex.presetId, { weight: isNaN(v) || v <= 0 ? undefined : v });
+                          }}
+                        />
+                        <span className="text-xs text-text-secondary">kg</span>
+                      </div>
+                    </>
                   )}
 
                   {(ex.unit === 'seconds' || ex.unit === 'minutes') && (
-                    <div className="flex items-center gap-2 flex-1">
-                      <label className="text-xs text-text-secondary">
-                        {ex.unit === 'minutes' ? 'Số phút:' : 'Số giây:'}
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-text-secondary w-14 flex-shrink-0">
+                        {ex.unit === 'minutes' ? 'Phút:' : 'Giây:'}
                       </label>
                       <input
                         type="number"
@@ -530,11 +566,12 @@ export default function QuickAddPage() {
       name: preset.nameVi,
       category: preset.category,
       unit: preset.unit,
-      sets: 1,
+      sets: yesterday?.sets ?? 1,
       reps: preset.unit === 'reps' ? (yesterday?.reps ?? preset.defaultValue) : undefined,
       durationSeconds: (preset.unit === 'seconds' || preset.unit === 'minutes')
         ? (yesterday?.durationSeconds ?? (preset.unit === 'seconds' ? preset.defaultValue : preset.defaultValue * 60))
         : undefined,
+      weight: preset.unit === 'reps' ? (yesterday?.weight ?? undefined) : undefined,
     };
     addExercise(entry);
   };
@@ -566,7 +603,8 @@ export default function QuickAddPage() {
     const y = yesterdayLog?.exercises.find((e) => e.presetId === preset.id);
     if (preset.unit === 'reps') {
       const reps = y?.reps ?? preset.defaultValue;
-      return formatAmount({ unit: 'reps', reps });
+      const base = formatAmount({ unit: 'reps', reps });
+      return y?.weight ? `${base} · ${y.weight}kg` : base;
     }
     if (preset.unit === 'seconds') {
       const secs = y?.durationSeconds ?? preset.defaultValue;
