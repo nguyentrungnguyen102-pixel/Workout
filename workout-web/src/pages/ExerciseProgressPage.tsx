@@ -61,9 +61,12 @@ export default function ExerciseProgressPage() {
         date: formatDateShort(log.date),
         value: ex.unit === 'reps' ? (ex.reps || 0) : Math.round((ex.durationSeconds || 0) / 60),
         sets: ex.sets,
+        weight: ex.weight ?? null,
       };
     })
-    .filter(Boolean) as Array<{ date: string; value: number; sets: number }>;
+    .filter(Boolean) as Array<{ date: string; value: number; sets: number; weight: number | null }>;
+
+  const weightChartData = chartData.filter((d) => d.weight !== null && d.weight > 0);
 
   return (
     <div className="px-4 md:px-8 pt-6 md:pt-8 pb-8">
@@ -115,6 +118,24 @@ export default function ExerciseProgressPage() {
                     formatter={(v: number) => [v, preset?.unit === 'reps' ? 'reps' : 'phút']}
                   />
                   <Line type="monotone" dataKey="value" stroke="#FF5400" strokeWidth={2.5} dot={{ r: 3, fill: '#FF5400' }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          {weightChartData.length > 1 && (
+            <div className="bg-card rounded-2xl border border-border p-4 mb-4">
+              <p className="text-sm font-bold text-text-main mb-1">Tiến trình tạ (kg)</p>
+              <p className="text-xs text-text-secondary mb-3">Cân nặng tạ theo buổi tập</p>
+              <ResponsiveContainer width="100%" height={120}>
+                <LineChart data={weightChartData} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
+                  <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#8A8A8A' }} />
+                  <YAxis tick={{ fontSize: 10, fill: '#8A8A8A' }} domain={['auto', 'auto']} />
+                  <Tooltip
+                    contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #E8E7E2' }}
+                    formatter={(v: number) => [`${v}kg`, 'Tạ']}
+                  />
+                  <Line type="monotone" dataKey="weight" stroke="#D97706" strokeWidth={2.5} dot={{ r: 3, fill: '#D97706' }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
