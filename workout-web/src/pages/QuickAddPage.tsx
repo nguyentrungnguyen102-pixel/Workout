@@ -81,6 +81,21 @@ function RestTimer() {
   );
 }
 
+function ElapsedTimer({ startedAt }: { startedAt: Date | null }) {
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() => {
+    if (!startedAt) return;
+    const update = () => setElapsed(Math.floor((Date.now() - startedAt.getTime()) / 1000));
+    update();
+    const id = setInterval(update, 1000);
+    return () => clearInterval(id);
+  }, [startedAt]);
+  if (!startedAt || elapsed === 0) return null;
+  const mm = String(Math.floor(elapsed / 60)).padStart(2, '0');
+  const ss = String(elapsed % 60).padStart(2, '0');
+  return <span className="text-xs font-mono font-bold text-primary">⏱ {mm}:{ss}</span>;
+}
+
 interface WorkoutSummaryModalProps {
   onClose: () => void;
   uid: string;
@@ -133,7 +148,10 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
         </div>
       )}
       <div className="flex items-center justify-between px-4 py-4 border-b border-border bg-card">
-        <h2 className="text-lg font-black text-text-main">Buổi tập hôm nay</h2>
+        <div>
+          <h2 className="text-lg font-black text-text-main">Buổi tập hôm nay</h2>
+          <ElapsedTimer startedAt={draft.startedAt} />
+        </div>
         <button onClick={onClose} className="p-2 rounded-full hover:bg-card-2 transition-colors">
           <X size={20} className="text-text-secondary" />
         </button>
@@ -161,12 +179,33 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
                   </button>
                 </div>
 
-                <div className="flex items-center gap-3 flex-wrap">
+                {/* Sets stepper + reps/duration */}
+                <div className="flex items-center gap-3 flex-wrap mb-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs text-text-secondary">Hiệp:</span>
+                    <div className="flex items-center border border-border rounded-lg overflow-hidden">
+                      <button
+                        onClick={() => updateExercise(ex.presetId, { sets: Math.max(1, (ex.sets || 1) - 1) })}
+                        className="w-7 h-7 flex items-center justify-center bg-card-2 text-text-secondary hover:text-primary font-bold text-base transition-colors">
+                        −
+                      </button>
+                      <span className="w-8 h-7 flex items-center justify-center font-black text-text-main text-sm bg-card border-x border-border">
+                        {ex.sets || 1}
+                      </span>
+                      <button
+                        onClick={() => updateExercise(ex.presetId, { sets: Math.min(20, (ex.sets || 1) + 1) })}
+                        className="w-7 h-7 flex items-center justify-center bg-card-2 text-text-secondary hover:text-primary font-bold text-base transition-colors">
+                        +
+                      </button>
+                    </div>
+                  </div>
+
                   {ex.unit === 'reps' && (
-                    <div className="flex items-center gap-2 flex-1">
-                      <label className="text-xs text-text-secondary">Số lượng:</label>
+                    <div className="flex items-center gap-1.5 flex-1">
+                      <span className="text-xs text-text-secondary">× cái:</span>
                       <input
                         type="number"
+                        inputMode="numeric"
                         min={1}
                         className="w-20 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
                         value={ex.reps ?? 0}
@@ -175,17 +214,17 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
                           updateExercise(ex.presetId, { reps: Math.max(1, v) });
                         }}
                       />
-                      <span className="text-xs text-text-secondary">cái</span>
                     </div>
                   )}
 
                   {(ex.unit === 'seconds' || ex.unit === 'minutes') && (
-                    <div className="flex items-center gap-2 flex-1">
-                      <label className="text-xs text-text-secondary">
-                        {ex.unit === 'minutes' ? 'Số phút:' : 'Số giây:'}
-                      </label>
+                    <div className="flex items-center gap-1.5 flex-1">
+                      <span className="text-xs text-text-secondary">
+                        {ex.unit === 'minutes' ? 'Phút:' : 'Giây:'}
+                      </span>
                       <input
                         type="number"
+                        inputMode="numeric"
                         min={1}
                         className="w-20 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
                         value={ex.unit === 'minutes'
@@ -198,12 +237,35 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
                           });
                         }}
                       />
-                      <span className="text-xs text-text-secondary">
-                        {ex.unit === 'minutes' ? 'phút' : 'giây'}
-                      </span>
                     </div>
                   )}
                 </div>
+
+                {/* Weight input for dumbbell/strength */}
+                {(ex.category === 'dumbbell' || ex.category === 'strength') && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-text-secondary">Tạ:</span>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      min={0}
+                      step={0.5}
+                      className="w-20 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
+                      value={ex.weight ?? ''}
+                      placeholder="0"
+                      onChange={(e) => {
+                        const v = parseFloat(e.target.value);
+                        updateExercise(ex.presetId, { weight: isNaN(v) ? undefined : Math.max(0, v) });
+                      }}
+                    />
+                    <span className="text-xs text-text-secondary">kg</span>
+                    {ex.weight && ex.weight > 0 && ex.unit === 'reps' && (ex.reps || 0) > 0 && (
+                      <span className="text-xs font-semibold text-primary ml-auto">
+                        Vol: {((ex.sets || 1) * (ex.reps || 0) * ex.weight).toFixed(0)}kg
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             );
           })
@@ -249,6 +311,18 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
       </div>
 
       <div className="px-4 py-4 border-t border-border bg-card">
+        {draft.exercises.length > 0 && (
+          <p className="text-center text-xs text-text-secondary mb-2">
+            {draft.exercises.reduce((s, e) => s + (e.sets || 1), 0)} hiệp tổng · ~{Math.round(
+              draft.exercises.reduce((sum, e) => {
+                const mins = e.unit === 'minutes' ? (e.durationSeconds || 0) / 60
+                  : e.unit === 'seconds' ? (e.durationSeconds || 0) / 60
+                  : (e.sets || 1) * 2;
+                return sum + mins * 7;
+              }, 0)
+            )} kcal
+          </p>
+        )}
         <button onClick={handleLog} disabled={isLogging || draft.exercises.length === 0}
           className="w-full py-4 bg-primary text-white font-black text-base rounded-2xl disabled:opacity-50 shadow-lg shadow-primary/30 transition-opacity">
           {isLogging ? 'Đang lưu...' : `Lưu buổi tập (${draft.exercises.length} bài) ✅`}
@@ -497,7 +571,7 @@ function SuggestionsCard({ recentLogs, onAddWithValue }: SuggestionsCardProps) {
 export default function QuickAddPage() {
   const navigate = useNavigate();
   const { profile, firebaseUser } = useUserStore();
-  const { draft, todayLog, yesterdayLog, recentLogs, addExercise, updateExercise, setDraftFromLog, loadRecentLogs } = useWorkoutStore();
+  const { draft, todayLog, yesterdayLog, recentLogs, addExercise, updateExercise, setDraftFromLog, loadRecentLogs, startDraft } = useWorkoutStore();
   const { loadActiveProgram, getTodayDay } = useProgramStore();
   const [activeCategory, setActiveCategory] = useState<Category>('all');
   const [showModal, setShowModal] = useState(false);
@@ -524,6 +598,7 @@ export default function QuickAddPage() {
 
   const handleAddExercise = (preset: typeof SYSTEM_PRESETS[0]) => {
     if (draftIds.has(preset.id)) return;
+    if (!draft.startedAt) startDraft();
     const yesterday = yesterdayLog?.exercises.find((e) => e.presetId === preset.id);
     const entry: ExerciseEntry = {
       presetId: preset.id,
@@ -540,7 +615,7 @@ export default function QuickAddPage() {
   };
 
   const handleAddWithValue = (preset: typeof SYSTEM_PRESETS[0], value: number) => {
-    // Remove existing entry for this preset if it exists so we can re-add with new value
+    if (!draftIds.has(preset.id) && !draft.startedAt) startDraft();
     const entry: ExerciseEntry = {
       presetId: preset.id,
       name: preset.nameVi,
