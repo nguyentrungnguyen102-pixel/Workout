@@ -6,6 +6,7 @@ import { useWorkoutStore } from '../stores/workoutStore';
 import { useProgramStore } from '../stores/programStore';
 import { SYSTEM_PRESETS, CATEGORY_LABELS } from '../constants/exercises';
 import { getTemplates, saveTemplate } from '../services/templateService';
+import { computePRs } from '../services/prService';
 import { WorkoutTemplate, ExerciseEntry, WorkoutLog } from '../types/workout';
 import { ExerciseGoal } from '../types/user';
 import { formatAmount } from '../lib/format';
@@ -33,6 +34,14 @@ const CATEGORY_COLORS: Record<string, { text: string; bg: string }> = {
   recovery: { text: '#7C3AED', bg: '#F5F3FF' },
   dumbbell: { text: '#B45309', bg: '#FEF3C7' },
 };
+
+interface WorkoutCompleteSummary {
+  exerciseCount: number;
+  totalSets: number;
+  totalVolume: number;
+  durationMinutes: number;
+  newPRs: Array<{ name: string; value: string }>;
+}
 
 function RestTimer() {
   const [seconds, setSeconds] = useState(0);
@@ -84,10 +93,11 @@ function RestTimer() {
 interface WorkoutSummaryModalProps {
   onClose: () => void;
   uid: string;
+  onComplete: (summary: WorkoutCompleteSummary) => void;
 }
 
-function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
-  const { draft, removeExercise, updateExercise, setNotes, logWorkout, isLogging } = useWorkoutStore();
+function WorkoutSummaryModal({ onClose, uid, onComplete }: WorkoutSummaryModalProps) {
+  const { draft, recentLogs, removeExercise, updateExercise, setNotes, logWorkout, isLogging } = useWorkoutStore();
   const [toast, setToast] = useState('');
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [templateName, setTemplateName] = useState('');
@@ -100,10 +110,54 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
 
   const handleLog = async () => {
     if (draft.exercises.length === 0) return;
+
+    const savedExercises = [...draft.exercises];
+    const existingPRs = computePRs(recentLogs);
+    const prMap = new Map(existingPRs.map((pr) => [pr.presetId, pr]));
+    const totalSets = savedExercises.reduce((s, e) => s + e.sets, 0);
+    const totalVolume = savedExercises.reduce((s, e) => {
+      if (e.weight && e.reps) return s + e.weight * e.reps * e.sets;
+      return s;
+    }, 0);
+    const durationMinutes = savedExercises.reduce((s, e) => {
+      if (e.unit === 'minutes') return s + (e.durationSeconds || 0) / 60;
+      if (e.unit === 'seconds') return s + (e.durationSeconds || 0) / 60;
+      return s + 3;
+    }, 0);
+
     try {
       await logWorkout(uid);
-      showToast('Đã lưu buổi tập! 🎉');
-      setTimeout(onClose, 800);
+
+      const newPRs: Array<{ name: string; value: string }> = [];
+      for (const ex of savedExercises) {
+        const existing = prMap.get(ex.presetId);
+        if (ex.unit === 'reps') {
+          const isNewReps = ex.reps != null && (!existing?.bestReps || ex.reps > (existing.bestReps ?? 0));
+          const isNewWeight = ex.weight != null && (!existing?.bestWeight || ex.weight > (existing.bestWeight ?? 0));
+          if (isNewReps || isNewWeight) {
+            const parts: string[] = [];
+            if (isNewReps && ex.reps) parts.push(`${ex.reps} reps`);
+            if (isNewWeight && ex.weight) parts.push(`${ex.weight}kg`);
+            if (parts.length > 0) newPRs.push({ name: ex.name, value: parts.join(' · ') });
+          }
+        } else if (ex.durationSeconds) {
+          const isNewDur = !existing?.bestDurationSeconds || ex.durationSeconds > (existing.bestDurationSeconds ?? 0);
+          if (isNewDur) {
+            const val = ex.unit === 'minutes'
+              ? `${Math.round(ex.durationSeconds / 60)} phút`
+              : `${ex.durationSeconds}s`;
+            newPRs.push({ name: ex.name, value: val });
+          }
+        }
+      }
+
+      onComplete({
+        exerciseCount: savedExercises.length,
+        totalSets,
+        totalVolume: Math.round(totalVolume),
+        durationMinutes: Math.max(1, Math.round(durationMinutes)),
+        newPRs,
+      });
     } catch {
       showToast('Lỗi lưu buổi tập');
     }
@@ -161,10 +215,26 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
                   </button>
                 </div>
 
-                <div className="flex items-center gap-3 flex-wrap">
+                <div className="space-y-2.5">
+                  {/* Sets stepper */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-text-secondary w-14 flex-shrink-0">Hiệp:</span>
+                    <button
+                      onClick={() => updateExercise(ex.presetId, { sets: Math.max(1, ex.sets - 1) })}
+                      className="w-7 h-7 rounded-full bg-card-2 border border-border font-bold text-base flex items-center justify-center hover:border-primary hover:text-primary transition-colors text-text-secondary">
+                      −
+                    </button>
+                    <span className="w-6 text-center font-black text-text-main text-sm">{ex.sets}</span>
+                    <button
+                      onClick={() => updateExercise(ex.presetId, { sets: ex.sets + 1 })}
+                      className="w-7 h-7 rounded-full bg-card-2 border border-border font-bold text-base flex items-center justify-center hover:border-primary hover:text-primary transition-colors text-text-secondary">
+                      +
+                    </button>
+                  </div>
+
                   {ex.unit === 'reps' && (
-                    <div className="flex items-center gap-2 flex-1">
-                      <label className="text-xs text-text-secondary">Số lượng:</label>
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-text-secondary w-14 flex-shrink-0">Số cái:</label>
                       <input
                         type="number"
                         min={1}
@@ -180,9 +250,9 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
                   )}
 
                   {(ex.unit === 'seconds' || ex.unit === 'minutes') && (
-                    <div className="flex items-center gap-2 flex-1">
-                      <label className="text-xs text-text-secondary">
-                        {ex.unit === 'minutes' ? 'Số phút:' : 'Số giây:'}
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-text-secondary w-14 flex-shrink-0">
+                        {ex.unit === 'minutes' ? 'Phút:' : 'Giây:'}
                       </label>
                       <input
                         type="number"
@@ -201,6 +271,25 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
                       <span className="text-xs text-text-secondary">
                         {ex.unit === 'minutes' ? 'phút' : 'giây'}
                       </span>
+                    </div>
+                  )}
+
+                  {(ex.category === 'strength' || ex.category === 'dumbbell') && ex.unit === 'reps' && (
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-text-secondary w-14 flex-shrink-0">Nặng:</label>
+                      <input
+                        type="number"
+                        min={0}
+                        step={0.5}
+                        className="w-20 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
+                        placeholder="0"
+                        value={ex.weight ?? ''}
+                        onChange={(e) => {
+                          const v = parseFloat(e.target.value);
+                          updateExercise(ex.presetId, { weight: isNaN(v) || v <= 0 ? undefined : v });
+                        }}
+                      />
+                      <span className="text-xs text-text-secondary">kg</span>
                     </div>
                   )}
                 </div>
@@ -254,6 +343,62 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
           {isLogging ? 'Đang lưu...' : `Lưu buổi tập (${draft.exercises.length} bài) ✅`}
         </button>
       </div>
+      </div>
+    </div>
+  );
+}
+
+function WorkoutCompleteModal({ summary, onClose }: { summary: WorkoutCompleteSummary; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6">
+      <div className="bg-card w-full max-w-sm rounded-3xl p-6 shadow-2xl">
+        <div className="text-center mb-5">
+          <div className="text-5xl mb-2">🎉</div>
+          <h2 className="text-xl font-black text-text-main">Hoàn thành!</h2>
+          <p className="text-sm text-text-secondary mt-0.5">Buổi tập đã được lưu</p>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2 mb-4">
+          <div className="bg-card-2 rounded-xl p-3 text-center border border-border">
+            <p className="text-xl font-black text-primary">{summary.exerciseCount}</p>
+            <p className="text-[10px] text-text-secondary font-semibold mt-0.5">BÀI TẬP</p>
+          </div>
+          <div className="bg-card-2 rounded-xl p-3 text-center border border-border">
+            <p className="text-xl font-black text-primary">{summary.totalSets}</p>
+            <p className="text-[10px] text-text-secondary font-semibold mt-0.5">HIỆP</p>
+          </div>
+          <div className="bg-card-2 rounded-xl p-3 text-center border border-border">
+            <p className="text-xl font-black text-primary">
+              {summary.totalVolume > 0
+                ? summary.totalVolume >= 1000
+                  ? `${(summary.totalVolume / 1000).toFixed(1)}T`
+                  : `${summary.totalVolume}`
+                : summary.durationMinutes}
+            </p>
+            <p className="text-[10px] text-text-secondary font-semibold mt-0.5">
+              {summary.totalVolume > 0 ? 'KG TỔNG' : 'PHÚT'}
+            </p>
+          </div>
+        </div>
+
+        {summary.newPRs.length > 0 && (
+          <div className="bg-primary-light border border-primary/20 rounded-2xl p-3 mb-4">
+            <p className="text-xs font-black text-primary mb-2">🏆 KỶ LỤC MỚI!</p>
+            <div className="space-y-1.5">
+              {summary.newPRs.map((pr, i) => (
+                <div key={i} className="flex items-center justify-between">
+                  <span className="text-sm font-semibold text-text-main">{pr.name}</span>
+                  <span className="text-xs font-black text-primary bg-primary-light px-2 py-0.5 rounded-full border border-primary/20">{pr.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <button onClick={onClose}
+          className="w-full py-4 bg-primary text-white font-black text-base rounded-2xl shadow-lg shadow-primary/30 active:opacity-90">
+          Tuyệt vời! 💪
+        </button>
       </div>
     </div>
   );
@@ -501,6 +646,7 @@ export default function QuickAddPage() {
   const { loadActiveProgram, getTodayDay } = useProgramStore();
   const [activeCategory, setActiveCategory] = useState<Category>('all');
   const [showModal, setShowModal] = useState(false);
+  const [completeSummary, setCompleteSummary] = useState<WorkoutCompleteSummary | null>(null);
   const [templates, setTemplates] = useState<WorkoutTemplate[]>([]);
 
   const uid = firebaseUser?.uid;
@@ -584,7 +730,20 @@ export default function QuickAddPage() {
   return (
     <div className="px-4 md:px-8 pt-4 md:pt-6 pb-24">
       {showModal && uid && (
-        <WorkoutSummaryModal onClose={() => setShowModal(false)} uid={uid} />
+        <WorkoutSummaryModal
+          onClose={() => setShowModal(false)}
+          uid={uid}
+          onComplete={(summary) => {
+            setShowModal(false);
+            setCompleteSummary(summary);
+          }}
+        />
+      )}
+      {completeSummary && (
+        <WorkoutCompleteModal
+          summary={completeSummary}
+          onClose={() => setCompleteSummary(null)}
+        />
       )}
 
       {/* Compact header */}
