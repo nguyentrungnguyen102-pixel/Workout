@@ -57,6 +57,18 @@ export const SYSTEM_PRESETS: WorkoutPreset[] = [
   { id: 'db_arnold_press',     name: 'Arnold Press',       nameVi: 'Arnold press (vai)',    category: 'dumbbell', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '🌀', isCustom: false, usageCount: 0 },
   { id: 'db_upright_row',      name: 'Upright Row',        nameVi: 'Kéo tạ đứng (vai/thang)', category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🔝', isCustom: false, usageCount: 0 },
   { id: 'db_reverse_fly',      name: 'Reverse Fly',        nameVi: 'Bay tạ ngược (vai sau)', category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🔄', isCustom: false, usageCount: 0 },
+
+  // Dumbbell Phase 7 — thêm bài tập tạ đơn tại nhà cho người mới
+  { id: 'db_shrug',              name: 'Dumbbell Shrug',          nameVi: 'Nhún vai tạ (cơ thang)',         category: 'dumbbell', unit: 'reps', defaultValue: 15, defaultSets: 3, icon: '🤷', isCustom: false, usageCount: 0 },
+  { id: 'db_wrist_curl',         name: 'Wrist Curl',              nameVi: 'Cuộn cổ tay (cẳng tay)',        category: 'dumbbell', unit: 'reps', defaultValue: 15, defaultSets: 3, icon: '🤚', isCustom: false, usageCount: 0 },
+  { id: 'db_concentration_curl', name: 'Concentration Curl',      nameVi: 'Curl tập trung (bắp tay đỉnh)', category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🎯', isCustom: false, usageCount: 0 },
+  { id: 'db_pullover',           name: 'Dumbbell Pullover',       nameVi: 'Kéo tạ sau đầu nằm (ngực/lưng)', category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🌊', isCustom: false, usageCount: 0 },
+  { id: 'db_side_bend',          name: 'Dumbbell Side Bend',      nameVi: 'Nghiêng người tạ (hông/oblique)', category: 'dumbbell', unit: 'reps', defaultValue: 15, defaultSets: 3, icon: '↗️', isCustom: false, usageCount: 0 },
+  { id: 'db_incline_curl',       name: 'Incline Curl',            nameVi: 'Curl tạ ngồi nghiêng (đỉnh bắp)', category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '📐', isCustom: false, usageCount: 0 },
+  { id: 'db_calf_raise_db',      name: 'Calf Raise (DB)',         nameVi: 'Kiễng gót tạ (bắp chân)',       category: 'dumbbell', unit: 'reps', defaultValue: 20, defaultSets: 3, icon: '🦵', isCustom: false, usageCount: 0 },
+  { id: 'db_press_close',        name: 'Close Grip Chest Press',  nameVi: 'Đẩy tạ sát (ngực giữa)',        category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🤲', isCustom: false, usageCount: 0 },
+  { id: 'db_zottman_curl',       name: 'Zottman Curl',            nameVi: 'Curl Zottman (bắp + cẳng tay)', category: 'dumbbell', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '🔁', isCustom: false, usageCount: 0 },
+  { id: 'db_one_arm_press',      name: 'One Arm Shoulder Press',  nameVi: 'Đẩy tạ một tay (vai + core)',   category: 'dumbbell', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '☝️', isCustom: false, usageCount: 0 },
 ];
 
 export const CATEGORY_LABELS: Record<string, string> = {

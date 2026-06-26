@@ -296,6 +296,14 @@ export default function SettingsPage() {
               {profile?.createdAt ? new Date((profile.createdAt as any).seconds * 1000).toLocaleDateString('vi-VN') : '--'}
             </span>
           </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-text-secondary">Phiên bản</span>
+            <span className="text-text-main font-medium font-mono">v7.0.0</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-text-secondary">Phase</span>
+            <span className="text-text-main font-medium">Phase 7 — Tạ đơn nâng cao + Theo dõi tạ</span>
+          </div>
         </div>
       </div>
 
