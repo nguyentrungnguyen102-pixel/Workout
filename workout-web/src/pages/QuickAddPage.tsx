@@ -87,7 +87,7 @@ interface WorkoutSummaryModalProps {
 }
 
 function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
-  const { draft, removeExercise, updateExercise, setNotes, logWorkout, isLogging } = useWorkoutStore();
+  const { draft, yesterdayLog, removeExercise, updateExercise, setNotes, logWorkout, isLogging } = useWorkoutStore();
   const [toast, setToast] = useState('');
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [templateName, setTemplateName] = useState('');
@@ -145,8 +145,11 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
         ) : (
           draft.exercises.map((ex) => {
             const cc = CATEGORY_COLORS[ex.category] || CATEGORY_COLORS.strength;
+            const yEx = yesterdayLog?.exercises.find(e => e.presetId === ex.presetId);
+            const yWeight = yEx?.weight;
             return (
               <div key={ex.presetId} className="bg-card rounded-2xl p-4 border border-border">
+                {/* Header */}
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <p className="font-bold text-text-main">{ex.name}</p>
@@ -161,10 +164,32 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
                   </button>
                 </div>
 
-                <div className="flex items-center gap-3 flex-wrap">
+                {/* Sets stepper */}
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-xs text-text-secondary flex-shrink-0">Số hiệp:</span>
+                  <div className="flex items-center bg-card-2 rounded-xl border border-border overflow-hidden">
+                    <button
+                      onClick={() => updateExercise(ex.presetId, { sets: Math.max(1, ex.sets - 1) })}
+                      className="w-8 h-8 flex items-center justify-center text-text-secondary hover:bg-border transition-colors text-lg font-bold">
+                      −
+                    </button>
+                    <span className="w-8 text-center font-black text-text-main text-sm">{ex.sets}</span>
+                    <button
+                      onClick={() => updateExercise(ex.presetId, { sets: Math.min(10, ex.sets + 1) })}
+                      className="w-8 h-8 flex items-center justify-center text-primary hover:bg-primary-light transition-colors text-lg font-bold">
+                      +
+                    </button>
+                  </div>
+                  {ex.unit === 'reps' && (
+                    <span className="text-xs text-text-muted">= {ex.sets * (ex.reps ?? 0)} cái tổng</span>
+                  )}
+                </div>
+
+                {/* Reps / Duration input */}
+                <div className="flex items-center gap-3 flex-wrap mb-2">
                   {ex.unit === 'reps' && (
                     <div className="flex items-center gap-2 flex-1">
-                      <label className="text-xs text-text-secondary">Số lượng:</label>
+                      <label className="text-xs text-text-secondary flex-shrink-0">Số cái/hiệp:</label>
                       <input
                         type="number"
                         min={1}
@@ -175,14 +200,12 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
                           updateExercise(ex.presetId, { reps: Math.max(1, v) });
                         }}
                       />
-                      <span className="text-xs text-text-secondary">cái</span>
                     </div>
                   )}
-
                   {(ex.unit === 'seconds' || ex.unit === 'minutes') && (
                     <div className="flex items-center gap-2 flex-1">
-                      <label className="text-xs text-text-secondary">
-                        {ex.unit === 'minutes' ? 'Số phút:' : 'Số giây:'}
+                      <label className="text-xs text-text-secondary flex-shrink-0">
+                        {ex.unit === 'minutes' ? 'Phút:' : 'Giây:'}
                       </label>
                       <input
                         type="number"
@@ -204,6 +227,33 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
                     </div>
                   )}
                 </div>
+
+                {/* Weight input for dumbbell exercises */}
+                {ex.category === 'dumbbell' && (
+                  <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mt-2">
+                    <span className="text-xs font-semibold text-amber-700 flex-shrink-0">🏋️ Tạ:</span>
+                    <input
+                      type="number"
+                      min={0.5}
+                      step={0.5}
+                      className="w-16 text-center font-bold text-amber-800 text-sm bg-white border border-amber-300 rounded-lg px-2 py-1 focus:border-amber-500 outline-none"
+                      value={ex.weight ?? ''}
+                      placeholder={yWeight ? String(yWeight) : '0'}
+                      onChange={(e) => {
+                        const v = parseFloat(e.target.value);
+                        updateExercise(ex.presetId, { weight: v > 0 ? v : undefined });
+                      }}
+                    />
+                    <span className="text-xs text-amber-700">kg/tay</span>
+                    {yWeight && !ex.weight && (
+                      <button
+                        onClick={() => updateExercise(ex.presetId, { weight: yWeight })}
+                        className="ml-auto text-xs font-semibold text-amber-600 hover:text-amber-800 bg-amber-100 px-2 py-1 rounded-lg transition-colors flex-shrink-0">
+                        ← {yWeight}kg hôm qua
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             );
           })
@@ -367,22 +417,18 @@ function GoalsStrip({ goals, todayLog, todayDateStr, onAddExercise }: GoalsStrip
 
   const metCount = activeGoals.filter(g => isGoalMet(g, todayLog)).length;
   const allMet = metCount === activeGoals.length;
-  const isEvening = new Date().getHours() >= 17;
-  const showReminder = isEvening && !allMet;
 
   return (
     <div className={`rounded-2xl border mb-3 overflow-hidden ${
-      showReminder ? 'bg-primary-light border-primary/30' : allMet ? 'bg-success-light border-success/30' : 'bg-card border-border'
+      allMet ? 'bg-success-light border-success/30' : 'bg-card border-border'
     }`}>
       <button
         onClick={() => setCollapsed(c => !c)}
         className="w-full flex items-center justify-between px-3 py-2.5">
         <div className="flex items-center gap-2">
-          <Target size={14} className={allMet ? 'text-success' : showReminder ? 'text-primary' : 'text-text-secondary'} />
-          <span className={`text-xs font-bold ${allMet ? 'text-success' : showReminder ? 'text-primary' : 'text-text-secondary'}`}>
-            {showReminder ? `🔔 Còn ${activeGoals.length - metCount} mục tiêu chưa đạt` :
-             allMet ? '✅ Đã đạt tất cả mục tiêu hôm nay!' :
-             `Mục tiêu hôm nay`}
+          <Target size={14} className={allMet ? 'text-success' : 'text-text-secondary'} />
+          <span className={`text-xs font-bold ${allMet ? 'text-success' : 'text-text-secondary'}`}>
+            {allMet ? '✅ Đã đạt tất cả mục tiêu hôm nay!' : `Mục tiêu hôm nay · còn ${activeGoals.length - metCount} chưa đạt`}
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -530,11 +576,12 @@ export default function QuickAddPage() {
       name: preset.nameVi,
       category: preset.category,
       unit: preset.unit,
-      sets: 1,
+      sets: yesterday?.sets ?? 1,
       reps: preset.unit === 'reps' ? (yesterday?.reps ?? preset.defaultValue) : undefined,
       durationSeconds: (preset.unit === 'seconds' || preset.unit === 'minutes')
         ? (yesterday?.durationSeconds ?? (preset.unit === 'seconds' ? preset.defaultValue : preset.defaultValue * 60))
         : undefined,
+      weight: yesterday?.weight,
     };
     addExercise(entry);
   };
