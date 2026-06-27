@@ -9,19 +9,29 @@ export interface PersonalRecord {
   bestWeight?: number;
   bestDurationSeconds?: number;
   bestSets?: number;
+  bestVolume?: number;       // weight * reps * sets
+  best1RM?: number;          // Epley estimate (kg)
   achievedDate: string;
   previousBest?: number;
+}
+
+/** Epley 1RM estimate: weight × (1 + reps/30) */
+export function estimate1RM(reps: number, weight: number): number {
+  if (reps <= 0 || weight <= 0) return 0;
+  if (reps === 1) return weight;
+  return Math.round(weight * (1 + reps / 30));
 }
 
 export function computePRs(logs: WorkoutLog[]): PersonalRecord[] {
   const map = new Map<string, PersonalRecord>();
 
-  // Process logs sorted oldest → newest so last write = best from most recent improvement
   const sorted = [...logs].sort((a, b) => a.date.localeCompare(b.date));
 
   for (const log of sorted) {
     for (const ex of log.exercises) {
       const existing = map.get(ex.presetId);
+      const volume = ex.weight && ex.reps ? ex.weight * ex.reps * (ex.sets || 1) : 0;
+      const oneRM = ex.weight && ex.reps ? estimate1RM(ex.reps, ex.weight) : 0;
 
       if (!existing) {
         map.set(ex.presetId, {
@@ -33,6 +43,8 @@ export function computePRs(logs: WorkoutLog[]): PersonalRecord[] {
           bestWeight: ex.weight,
           bestDurationSeconds: ex.durationSeconds,
           bestSets: ex.sets,
+          bestVolume: volume || undefined,
+          best1RM: oneRM || undefined,
           achievedDate: log.date,
         });
       } else {
@@ -51,6 +63,14 @@ export function computePRs(logs: WorkoutLog[]): PersonalRecord[] {
           if (ex.weight && (!existing.bestWeight || ex.weight > existing.bestWeight)) {
             next.bestWeight = ex.weight;
             next.achievedDate = log.date;
+            updated = true;
+          }
+          if (volume && (!existing.bestVolume || volume > existing.bestVolume)) {
+            next.bestVolume = volume;
+            updated = true;
+          }
+          if (oneRM && (!existing.best1RM || oneRM > existing.best1RM)) {
+            next.best1RM = oneRM;
             updated = true;
           }
         } else {

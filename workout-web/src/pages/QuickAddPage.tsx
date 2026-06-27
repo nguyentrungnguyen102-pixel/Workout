@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Play, Pause, ChevronRight, Flame, Target, ChevronDown, ChevronUp } from 'lucide-react';
+import { X, Play, Pause, ChevronRight, Flame, Target, ChevronDown, ChevronUp, Minus, Plus } from 'lucide-react';
 import { useUserStore } from '../stores/userStore';
 import { useWorkoutStore } from '../stores/workoutStore';
 import { useProgramStore } from '../stores/programStore';
@@ -161,10 +161,28 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
                   </button>
                 </div>
 
-                <div className="flex items-center gap-3 flex-wrap">
+                <div className="space-y-2.5">
+                  {/* Sets stepper */}
+                  <div className="flex items-center gap-3">
+                    <label className="text-xs text-text-secondary w-16 flex-shrink-0">Số hiệp:</label>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => updateExercise(ex.presetId, { sets: Math.max(1, (ex.sets || 1) - 1) })}
+                        className="w-7 h-7 rounded-full border border-border flex items-center justify-center hover:border-primary hover:text-primary transition-colors text-text-secondary">
+                        <Minus size={12} />
+                      </button>
+                      <span className="w-8 text-center font-black text-text-main text-sm">{ex.sets || 1}</span>
+                      <button
+                        onClick={() => updateExercise(ex.presetId, { sets: Math.min(10, (ex.sets || 1) + 1) })}
+                        className="w-7 h-7 rounded-full border border-border flex items-center justify-center hover:border-primary hover:text-primary transition-colors text-text-secondary">
+                        <Plus size={12} />
+                      </button>
+                    </div>
+                  </div>
+
                   {ex.unit === 'reps' && (
-                    <div className="flex items-center gap-2 flex-1">
-                      <label className="text-xs text-text-secondary">Số lượng:</label>
+                    <div className="flex items-center gap-3">
+                      <label className="text-xs text-text-secondary w-16 flex-shrink-0">Số reps:</label>
                       <input
                         type="number"
                         min={1}
@@ -180,8 +198,8 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
                   )}
 
                   {(ex.unit === 'seconds' || ex.unit === 'minutes') && (
-                    <div className="flex items-center gap-2 flex-1">
-                      <label className="text-xs text-text-secondary">
+                    <div className="flex items-center gap-3">
+                      <label className="text-xs text-text-secondary w-16 flex-shrink-0">
                         {ex.unit === 'minutes' ? 'Số phút:' : 'Số giây:'}
                       </label>
                       <input
@@ -201,6 +219,31 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
                       <span className="text-xs text-text-secondary">
                         {ex.unit === 'minutes' ? 'phút' : 'giây'}
                       </span>
+                    </div>
+                  )}
+
+                  {/* Weight input for dumbbell + strength */}
+                  {(ex.category === 'dumbbell' || ex.category === 'strength') && ex.unit === 'reps' && (
+                    <div className="flex items-center gap-3">
+                      <label className="text-xs text-text-secondary w-16 flex-shrink-0">Tạ (kg):</label>
+                      <input
+                        type="number"
+                        min={0}
+                        step={0.5}
+                        className="w-20 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
+                        value={ex.weight ?? ''}
+                        placeholder="0"
+                        onChange={(e) => {
+                          const v = parseFloat(e.target.value);
+                          updateExercise(ex.presetId, { weight: isNaN(v) || v <= 0 ? undefined : v });
+                        }}
+                      />
+                      <span className="text-xs text-text-secondary">kg</span>
+                      {ex.weight && ex.reps && ex.reps > 1 && (
+                        <span className="text-xs font-semibold text-primary ml-auto">
+                          1RM ~{Math.round(ex.weight * (1 + ex.reps / 30))}kg
+                        </span>
+                      )}
                     </div>
                   )}
                 </div>
@@ -525,16 +568,18 @@ export default function QuickAddPage() {
   const handleAddExercise = (preset: typeof SYSTEM_PRESETS[0]) => {
     if (draftIds.has(preset.id)) return;
     const yesterday = yesterdayLog?.exercises.find((e) => e.presetId === preset.id);
+    const hasWeight = preset.category === 'dumbbell' || preset.category === 'strength';
     const entry: ExerciseEntry = {
       presetId: preset.id,
       name: preset.nameVi,
       category: preset.category,
       unit: preset.unit,
-      sets: 1,
+      sets: yesterday?.sets ?? preset.defaultSets ?? 1,
       reps: preset.unit === 'reps' ? (yesterday?.reps ?? preset.defaultValue) : undefined,
       durationSeconds: (preset.unit === 'seconds' || preset.unit === 'minutes')
         ? (yesterday?.durationSeconds ?? (preset.unit === 'seconds' ? preset.defaultValue : preset.defaultValue * 60))
         : undefined,
+      weight: hasWeight && preset.unit === 'reps' ? (yesterday?.weight ?? undefined) : undefined,
     };
     addExercise(entry);
   };
@@ -566,7 +611,10 @@ export default function QuickAddPage() {
     const y = yesterdayLog?.exercises.find((e) => e.presetId === preset.id);
     if (preset.unit === 'reps') {
       const reps = y?.reps ?? preset.defaultValue;
-      return formatAmount({ unit: 'reps', reps });
+      const sets = y?.sets ?? preset.defaultSets ?? 1;
+      let label = `${sets}×${reps}`;
+      if (y?.weight) label += ` · ${y.weight}kg`;
+      return label;
     }
     if (preset.unit === 'seconds') {
       const secs = y?.durationSeconds ?? preset.defaultValue;
