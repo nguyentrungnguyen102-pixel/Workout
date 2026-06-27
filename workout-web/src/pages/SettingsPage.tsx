@@ -6,6 +6,7 @@ import { auth } from '../services/firebase';
 import { useUserStore } from '../stores/userStore';
 import { ExerciseGoal } from '../types/user';
 import { SYSTEM_PRESETS } from '../constants/exercises';
+import { WEB_VERSION, PHASE_HISTORY } from '../constants/version';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -300,10 +301,25 @@ export default function SettingsPage() {
       </div>
 
       <button onClick={handleSignOut}
-        className="w-full flex items-center justify-center gap-2 py-4 border border-danger-light text-danger bg-danger-light rounded-2xl font-bold text-sm hover:bg-danger hover:text-white transition-colors">
+        className="w-full flex items-center justify-center gap-2 py-4 border border-danger-light text-danger bg-danger-light rounded-2xl font-bold text-sm hover:bg-danger hover:text-white transition-colors mb-4">
         <LogOut size={16} />
         Đăng xuất
       </button>
+
+      {/* Version history */}
+      <div className="bg-card rounded-2xl border border-border p-4">
+        <p className="text-xs font-semibold text-text-secondary mb-3">PHIÊN BẢN · v{WEB_VERSION}</p>
+        <div className="space-y-2">
+          {[...PHASE_HISTORY].reverse().map((p) => (
+            <div key={p.version} className="flex gap-3">
+              <span className={`text-xs font-black flex-shrink-0 w-14 ${p.version === WEB_VERSION ? 'text-primary' : 'text-text-muted'}`}>
+                v{p.version.split(' ')[0]}
+              </span>
+              <p className="text-xs text-text-secondary leading-relaxed">{p.summary}</p>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
