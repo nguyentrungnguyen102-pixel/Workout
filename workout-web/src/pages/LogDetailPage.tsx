@@ -95,9 +95,33 @@ export default function LogDetailPage() {
         </div>
         <div className="divide-y divide-border">
           {log.exercises.map((ex, i) => (
-            <div key={i} className="flex items-center justify-between px-4 py-3">
-              <p className="font-semibold text-text-main text-sm">{ex.name}</p>
-              <p className="text-sm text-text-secondary">{formatAmount(ex)}</p>
+            <div key={i} className="px-4 py-3">
+              <div className="flex items-center justify-between">
+                <p className="font-semibold text-text-main text-sm">{ex.name}</p>
+                <div className="text-right">
+                  {ex.weight ? (
+                    <p className="text-xs font-bold text-primary">{ex.weight} kg</p>
+                  ) : null}
+                  <p className="text-sm text-text-secondary">{formatAmount(ex)}</p>
+                </div>
+              </div>
+              {ex.setLog && ex.setLog.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {ex.setLog.map((s, si) => {
+                    const val = ex.unit === 'reps' ? `${s.reps ?? ex.reps ?? 0} cái`
+                      : ex.unit === 'minutes' ? `${Math.round((s.durationSeconds ?? ex.durationSeconds ?? 0) / 60)} phút`
+                      : `${s.durationSeconds ?? ex.durationSeconds ?? 0}s`;
+                    return (
+                      <span key={si}
+                        className={`text-xs px-2 py-0.5 rounded-md font-semibold ${
+                          s.done ? 'bg-success/15 text-success' : 'bg-card-2 text-text-muted'
+                        }`}>
+                        {si + 1}: {val}
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           ))}
         </div>

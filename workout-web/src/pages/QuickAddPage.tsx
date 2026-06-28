@@ -1,12 +1,12 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Play, Pause, ChevronRight, Flame, Target, ChevronDown, ChevronUp } from 'lucide-react';
+import { X, Play, Pause, ChevronRight, Flame, Target, ChevronDown, ChevronUp, Check } from 'lucide-react';
 import { useUserStore } from '../stores/userStore';
 import { useWorkoutStore } from '../stores/workoutStore';
 import { useProgramStore } from '../stores/programStore';
 import { SYSTEM_PRESETS, CATEGORY_LABELS } from '../constants/exercises';
 import { getTemplates, saveTemplate } from '../services/templateService';
-import { WorkoutTemplate, ExerciseEntry, WorkoutLog } from '../types/workout';
+import { WorkoutTemplate, ExerciseEntry, SetEntry, WorkoutLog } from '../types/workout';
 import { ExerciseGoal } from '../types/user';
 import { formatAmount } from '../lib/format';
 import { pickCheer } from '../lib/cheers';
@@ -33,6 +33,31 @@ const CATEGORY_COLORS: Record<string, { text: string; bg: string }> = {
   recovery: { text: '#7C3AED', bg: '#F5F3FF' },
   dumbbell: { text: '#B45309', bg: '#FEF3C7' },
 };
+
+function buildInitialSetLog(preset: typeof SYSTEM_PRESETS[0], targetValue: number): SetEntry[] {
+  const count = preset.defaultSets ?? 3;
+  return Array.from({ length: count }, () => ({
+    reps: preset.unit === 'reps' ? targetValue : undefined,
+    durationSeconds: (preset.unit === 'seconds' || preset.unit === 'minutes') ? targetValue : undefined,
+    done: false,
+  }));
+}
+
+function ElapsedTimer({ startedAt }: { startedAt: Date | null }) {
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() => {
+    if (!startedAt) return;
+    const update = () => setElapsed(Math.floor((Date.now() - startedAt.getTime()) / 1000));
+    update();
+    const id = setInterval(update, 1000);
+    return () => clearInterval(id);
+  }, [startedAt]);
+  if (!startedAt || elapsed < 5) return null;
+  const m = Math.floor(elapsed / 60);
+  const s = elapsed % 60;
+  const display = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  return <span className="text-xs font-mono font-bold text-primary tabular-nums">{display}</span>;
+}
 
 function RestTimer() {
   const [seconds, setSeconds] = useState(0);
@@ -87,7 +112,9 @@ interface WorkoutSummaryModalProps {
 }
 
 function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
-  const { draft, removeExercise, updateExercise, setNotes, logWorkout, isLogging } = useWorkoutStore();
+  const { draft, removeExercise, updateExercise, setNotes, logWorkout, isLogging, startDraft } = useWorkoutStore();
+
+  useEffect(() => { startDraft(); }, []);
   const [toast, setToast] = useState('');
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [templateName, setTemplateName] = useState('');
@@ -133,7 +160,10 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
         </div>
       )}
       <div className="flex items-center justify-between px-4 py-4 border-b border-border bg-card">
-        <h2 className="text-lg font-black text-text-main">Buổi tập hôm nay</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-black text-text-main">Buổi tập</h2>
+          <ElapsedTimer startedAt={draft.startedAt} />
+        </div>
         <button onClick={onClose} className="p-2 rounded-full hover:bg-card-2 transition-colors">
           <X size={20} className="text-text-secondary" />
         </button>
@@ -145,15 +175,59 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
         ) : (
           draft.exercises.map((ex) => {
             const cc = CATEGORY_COLORS[ex.category] || CATEGORY_COLORS.strength;
+            const setLog = ex.setLog && ex.setLog.length > 0 ? ex.setLog : null;
+            const doneCount = setLog ? setLog.filter(s => s.done).length : 0;
+
+            const toggleSetDone = (si: number) => {
+              const newLog = [...(ex.setLog ?? [])];
+              newLog[si] = { ...newLog[si], done: !newLog[si].done };
+              updateExercise(ex.presetId, { setLog: newLog });
+            };
+
+            const updateSetValue = (si: number, val: number) => {
+              const newLog = [...(ex.setLog ?? [])];
+              if (ex.unit === 'reps') {
+                newLog[si] = { ...newLog[si], reps: Math.max(1, val) };
+                updateExercise(ex.presetId, { setLog: newLog, reps: newLog[si].reps });
+              } else {
+                const secs = ex.unit === 'minutes' ? val * 60 : val;
+                newLog[si] = { ...newLog[si], durationSeconds: secs };
+                updateExercise(ex.presetId, { setLog: newLog, durationSeconds: secs });
+              }
+            };
+
+            const addSet = () => {
+              const last = ex.setLog?.[ex.setLog.length - 1];
+              const newSet: SetEntry = {
+                reps: last?.reps ?? ex.reps ?? 12,
+                durationSeconds: last?.durationSeconds ?? ex.durationSeconds,
+                done: false,
+              };
+              const newLog = [...(ex.setLog ?? []), newSet];
+              updateExercise(ex.presetId, { setLog: newLog, sets: newLog.length });
+            };
+
+            const removeSet = (si: number) => {
+              const newLog = (ex.setLog ?? []).filter((_, i) => i !== si);
+              if (newLog.length === 0) return;
+              updateExercise(ex.presetId, { setLog: newLog, sets: newLog.length });
+            };
+
             return (
               <div key={ex.presetId} className="bg-card rounded-2xl p-4 border border-border">
+                {/* Header */}
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <p className="font-bold text-text-main">{ex.name}</p>
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full mt-1 inline-block"
-                      style={{ color: cc.text, backgroundColor: cc.bg }}>
-                      {CATEGORY_LABELS[ex.category] || ex.category}
-                    </span>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                        style={{ color: cc.text, backgroundColor: cc.bg }}>
+                        {CATEGORY_LABELS[ex.category] || ex.category}
+                      </span>
+                      {setLog && (
+                        <span className="text-xs text-text-muted">{doneCount}/{setLog.length} hiệp</span>
+                      )}
+                    </div>
                   </div>
                   <button onClick={() => removeExercise(ex.presetId)}
                     className="p-1.5 rounded-full hover:bg-danger-light text-text-secondary hover:text-danger transition-colors">
@@ -161,49 +235,103 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
                   </button>
                 </div>
 
-                <div className="flex items-center gap-3 flex-wrap">
-                  {ex.unit === 'reps' && (
-                    <div className="flex items-center gap-2 flex-1">
-                      <label className="text-xs text-text-secondary">Số lượng:</label>
-                      <input
-                        type="number"
-                        min={1}
-                        className="w-20 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
-                        value={ex.reps ?? 0}
-                        onChange={(e) => {
-                          const v = parseInt(e.target.value) || 0;
-                          updateExercise(ex.presetId, { reps: Math.max(1, v) });
-                        }}
-                      />
-                      <span className="text-xs text-text-secondary">cái</span>
-                    </div>
-                  )}
+                {/* Weight input for dumbbell/strength */}
+                {(ex.category === 'dumbbell' || ex.category === 'strength') && (
+                  <div className="flex items-center gap-2 mb-3 bg-card-2 rounded-xl px-3 py-2">
+                    <span className="text-xs font-semibold text-text-secondary">⚖️ Tạ</span>
+                    <input
+                      type="number"
+                      min={0}
+                      step={0.5}
+                      className="w-16 text-center font-bold text-text-main text-sm bg-transparent border-b border-border focus:border-primary outline-none"
+                      value={ex.weight ?? 0}
+                      onChange={(e) => updateExercise(ex.presetId, { weight: parseFloat(e.target.value) || 0 })}
+                    />
+                    <span className="text-xs text-text-secondary">kg</span>
+                  </div>
+                )}
 
-                  {(ex.unit === 'seconds' || ex.unit === 'minutes') && (
-                    <div className="flex items-center gap-2 flex-1">
-                      <label className="text-xs text-text-secondary">
-                        {ex.unit === 'minutes' ? 'Số phút:' : 'Số giây:'}
-                      </label>
-                      <input
-                        type="number"
-                        min={1}
-                        className="w-20 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
-                        value={ex.unit === 'minutes'
-                          ? Math.round((ex.durationSeconds || 0) / 60)
-                          : (ex.durationSeconds || 0)}
-                        onChange={(e) => {
-                          const v = parseInt(e.target.value) || 0;
-                          updateExercise(ex.presetId, {
-                            durationSeconds: ex.unit === 'minutes' ? v * 60 : v,
-                          });
-                        }}
-                      />
-                      <span className="text-xs text-text-secondary">
-                        {ex.unit === 'minutes' ? 'phút' : 'giây'}
-                      </span>
-                    </div>
-                  )}
-                </div>
+                {/* Per-set rows (new UI) */}
+                {setLog ? (
+                  <div className="space-y-1.5">
+                    {setLog.map((set, si) => {
+                      const displayVal = ex.unit === 'reps'
+                        ? (set.reps ?? ex.reps ?? 0)
+                        : ex.unit === 'minutes'
+                          ? Math.round((set.durationSeconds ?? ex.durationSeconds ?? 0) / 60)
+                          : (set.durationSeconds ?? ex.durationSeconds ?? 0);
+                      const unit = ex.unit === 'reps' ? 'cái' : ex.unit === 'minutes' ? 'phút' : 'giây';
+                      return (
+                        <div key={si} className={`flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors ${
+                          set.done ? 'bg-success/10' : 'bg-card-2'
+                        }`}>
+                          <span className={`text-xs font-bold w-12 flex-shrink-0 ${set.done ? 'text-success' : 'text-text-muted'}`}>
+                            Hiệp {si + 1}
+                          </span>
+                          <input
+                            type="number"
+                            min={1}
+                            disabled={set.done}
+                            value={displayVal}
+                            onChange={(e) => updateSetValue(si, parseInt(e.target.value) || 0)}
+                            className={`w-14 text-center font-bold text-sm rounded-lg px-1 py-0.5 outline-none border transition-colors ${
+                              set.done
+                                ? 'bg-transparent border-transparent text-success'
+                                : 'bg-card border-border focus:border-primary text-text-main'
+                            }`}
+                          />
+                          <span className={`text-xs flex-1 ${set.done ? 'text-success' : 'text-text-secondary'}`}>{unit}</span>
+                          <button
+                            onClick={() => toggleSetDone(si)}
+                            className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
+                              set.done
+                                ? 'bg-success text-white'
+                                : 'border border-border bg-card text-text-muted hover:border-success hover:text-success'
+                            }`}>
+                            <Check size={13} />
+                          </button>
+                          {setLog.length > 1 && !set.done && (
+                            <button onClick={() => removeSet(si)}
+                              className="w-6 h-6 rounded-full flex items-center justify-center text-text-muted hover:text-danger transition-colors flex-shrink-0">
+                              <X size={11} />
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                    <button onClick={addSet}
+                      className="w-full py-1.5 border border-dashed border-border rounded-lg text-xs font-semibold text-text-secondary hover:border-primary hover:text-primary transition-colors mt-1">
+                      + Thêm hiệp
+                    </button>
+                  </div>
+                ) : (
+                  /* Fallback: simple input (exercises loaded without setLog) */
+                  <div className="flex items-center gap-3 flex-wrap">
+                    {ex.unit === 'reps' && (
+                      <div className="flex items-center gap-2 flex-1">
+                        <label className="text-xs text-text-secondary">Số lượng:</label>
+                        <input type="number" min={1}
+                          className="w-20 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
+                          value={ex.reps ?? 0}
+                          onChange={(e) => updateExercise(ex.presetId, { reps: Math.max(1, parseInt(e.target.value) || 0) })} />
+                        <span className="text-xs text-text-secondary">cái</span>
+                      </div>
+                    )}
+                    {(ex.unit === 'seconds' || ex.unit === 'minutes') && (
+                      <div className="flex items-center gap-2 flex-1">
+                        <label className="text-xs text-text-secondary">{ex.unit === 'minutes' ? 'Số phút:' : 'Số giây:'}</label>
+                        <input type="number" min={1}
+                          className="w-20 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
+                          value={ex.unit === 'minutes' ? Math.round((ex.durationSeconds || 0) / 60) : (ex.durationSeconds || 0)}
+                          onChange={(e) => {
+                            const v = parseInt(e.target.value) || 0;
+                            updateExercise(ex.presetId, { durationSeconds: ex.unit === 'minutes' ? v * 60 : v });
+                          }} />
+                        <span className="text-xs text-text-secondary">{ex.unit === 'minutes' ? 'phút' : 'giây'}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             );
           })
@@ -367,22 +495,18 @@ function GoalsStrip({ goals, todayLog, todayDateStr, onAddExercise }: GoalsStrip
 
   const metCount = activeGoals.filter(g => isGoalMet(g, todayLog)).length;
   const allMet = metCount === activeGoals.length;
-  const isEvening = new Date().getHours() >= 17;
-  const showReminder = isEvening && !allMet;
 
   return (
     <div className={`rounded-2xl border mb-3 overflow-hidden ${
-      showReminder ? 'bg-primary-light border-primary/30' : allMet ? 'bg-success-light border-success/30' : 'bg-card border-border'
+      allMet ? 'bg-success-light border-success/30' : 'bg-card border-border'
     }`}>
       <button
         onClick={() => setCollapsed(c => !c)}
         className="w-full flex items-center justify-between px-3 py-2.5">
         <div className="flex items-center gap-2">
-          <Target size={14} className={allMet ? 'text-success' : showReminder ? 'text-primary' : 'text-text-secondary'} />
-          <span className={`text-xs font-bold ${allMet ? 'text-success' : showReminder ? 'text-primary' : 'text-text-secondary'}`}>
-            {showReminder ? `🔔 Còn ${activeGoals.length - metCount} mục tiêu chưa đạt` :
-             allMet ? '✅ Đã đạt tất cả mục tiêu hôm nay!' :
-             `Mục tiêu hôm nay`}
+          <Target size={14} className={allMet ? 'text-success' : 'text-text-secondary'} />
+          <span className={`text-xs font-bold ${allMet ? 'text-success' : 'text-text-secondary'}`}>
+            {allMet ? '✅ Đã đạt tất cả mục tiêu hôm nay!' : 'Mục tiêu hôm nay'}
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -525,38 +649,43 @@ export default function QuickAddPage() {
   const handleAddExercise = (preset: typeof SYSTEM_PRESETS[0]) => {
     if (draftIds.has(preset.id)) return;
     const yesterday = yesterdayLog?.exercises.find((e) => e.presetId === preset.id);
+    const targetReps = preset.unit === 'reps' ? (yesterday?.reps ?? preset.defaultValue) : undefined;
+    const targetSecs = (preset.unit === 'seconds' || preset.unit === 'minutes')
+      ? (yesterday?.durationSeconds ?? (preset.unit === 'seconds' ? preset.defaultValue : preset.defaultValue * 60))
+      : undefined;
     const entry: ExerciseEntry = {
       presetId: preset.id,
       name: preset.nameVi,
       category: preset.category,
       unit: preset.unit,
-      sets: 1,
-      reps: preset.unit === 'reps' ? (yesterday?.reps ?? preset.defaultValue) : undefined,
-      durationSeconds: (preset.unit === 'seconds' || preset.unit === 'minutes')
-        ? (yesterday?.durationSeconds ?? (preset.unit === 'seconds' ? preset.defaultValue : preset.defaultValue * 60))
-        : undefined,
+      sets: preset.defaultSets ?? 3,
+      reps: targetReps,
+      durationSeconds: targetSecs,
+      weight: yesterday?.weight,
+      setLog: buildInitialSetLog(preset, targetReps ?? targetSecs ?? preset.defaultValue),
     };
     addExercise(entry);
   };
 
   const handleAddWithValue = (preset: typeof SYSTEM_PRESETS[0], value: number) => {
-    // Remove existing entry for this preset if it exists so we can re-add with new value
-    const entry: ExerciseEntry = {
-      presetId: preset.id,
-      name: preset.nameVi,
-      category: preset.category,
-      unit: preset.unit,
-      sets: 1,
-      reps: preset.unit === 'reps' ? value : undefined,
-      durationSeconds: (preset.unit === 'seconds' || preset.unit === 'minutes') ? value : undefined,
-    };
+    const setLog = buildInitialSetLog(preset, value);
     if (draftIds.has(preset.id)) {
-      // Update existing
       updateExercise(preset.id, {
         reps: preset.unit === 'reps' ? value : undefined,
         durationSeconds: (preset.unit === 'seconds' || preset.unit === 'minutes') ? value : undefined,
+        setLog,
       });
     } else {
+      const entry: ExerciseEntry = {
+        presetId: preset.id,
+        name: preset.nameVi,
+        category: preset.category,
+        unit: preset.unit,
+        sets: preset.defaultSets ?? 3,
+        reps: preset.unit === 'reps' ? value : undefined,
+        durationSeconds: (preset.unit === 'seconds' || preset.unit === 'minutes') ? value : undefined,
+        setLog,
+      };
       addExercise(entry);
     }
     setShowModal(true);

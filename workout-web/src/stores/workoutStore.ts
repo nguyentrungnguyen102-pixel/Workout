@@ -100,7 +100,20 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
   setDraftFromLog: (log) =>
     set({
       draft: {
-        exercises: log.exercises.map((e) => ({ ...e })),
+        exercises: log.exercises.map((e) => {
+          if (!e.setLog || e.setLog.length === 0) {
+            const n = e.sets || 3;
+            return {
+              ...e,
+              setLog: Array.from({ length: n }, () => ({
+                reps: e.reps,
+                durationSeconds: e.durationSeconds,
+                done: false,
+              })),
+            };
+          }
+          return { ...e };
+        }),
         startedAt: new Date(),
         intensity: log.intensity,
         notes: '',
