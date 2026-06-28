@@ -20,6 +20,12 @@ export interface WorkoutPreset {
   lastUsedAt?: string;
 }
 
+export interface SetEntry {
+  reps?: number;
+  durationSeconds?: number;
+  done: boolean;
+}
+
 export interface ExerciseEntry {
   presetId: string;
   name: string;
@@ -30,6 +36,7 @@ export interface ExerciseEntry {
   durationSeconds?: number;
   weight?: number;
   distance?: number;
+  setLog?: SetEntry[];
 }
 
 export interface WorkoutLog {
