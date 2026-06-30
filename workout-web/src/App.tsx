@@ -3,6 +3,9 @@ import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './services/firebase';
 import { useUserStore } from './stores/userStore';
+import { useWorkoutStore } from './stores/workoutStore';
+import { useBodyStore } from './stores/bodyStore';
+import { useProgramStore } from './stores/programStore';
 
 import LoginPage from './pages/LoginPage';
 import OnboardingPage from './pages/OnboardingPage';
@@ -50,7 +53,13 @@ export default function App() {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
       setFirebaseUser(user);
-      if (user) loadProfile(user.uid);
+      if (user) {
+        loadProfile(user.uid);
+      } else {
+        useWorkoutStore.getState().resetAll();
+        useBodyStore.getState().resetAll();
+        useProgramStore.getState().resetAll();
+      }
     });
     return unsub;
   }, [setFirebaseUser, loadProfile]);

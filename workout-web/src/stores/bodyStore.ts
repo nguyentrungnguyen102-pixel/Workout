@@ -9,12 +9,15 @@ interface BodyStore {
 
   loadMetrics: (uid: string) => Promise<void>;
   addMetric: (uid: string, data: Omit<BodyMetric, 'id' | 'userId' | 'date' | 'createdAt'>) => Promise<void>;
+  resetAll: () => void;
 }
 
 export const useBodyStore = create<BodyStore>((set, get) => ({
   metrics: [],
   latestMetric: null,
   loading: false,
+
+  resetAll: () => set({ metrics: [], latestMetric: null, loading: false }),
 
   loadMetrics: async (uid) => {
     set({ loading: true });

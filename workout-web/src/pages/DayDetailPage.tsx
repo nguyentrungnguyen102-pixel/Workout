@@ -29,11 +29,13 @@ export default function DayDetailPage() {
 
   useEffect(() => {
     if (!uid || !date) return;
+    let cancelled = false;
     setLoading(true);
     getLogsForDate(uid, date)
-      .then(setLogs)
-      .catch(() => setLogs([]))
-      .finally(() => setLoading(false));
+      .then((result) => { if (!cancelled) setLogs(result); })
+      .catch(() => { if (!cancelled) setLogs([]); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, [uid, date]);
 
   const timeline = buildDayTimeline(logs);
