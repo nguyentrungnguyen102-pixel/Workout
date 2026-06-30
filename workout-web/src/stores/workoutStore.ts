@@ -27,6 +27,7 @@ interface WorkoutStore {
   setNotes: (notes: string) => void;
   setStartedAt: (date: Date) => void;
   resetDraft: () => void;
+  resetAll: () => void;
 
   logWorkout: (uid: string) => Promise<void>;
   repeatYesterday: (uid: string) => Promise<void>;
@@ -41,21 +42,6 @@ const emptyDraft = (): DraftWorkout => ({
   intensity: 'moderate',
   notes: '',
 });
-
-// Merge exercises from multiple logs (deduplicated by presetId, keep most recent)
-function mergeExercises(logs: WorkoutLog[]): WorkoutLog['exercises'] {
-  const merged: WorkoutLog['exercises'] = [];
-  const seen = new Set<string>();
-  logs.forEach((log) => {
-    log.exercises.forEach((e) => {
-      if (!seen.has(e.presetId)) {
-        seen.add(e.presetId);
-        merged.push(e);
-      }
-    });
-  });
-  return merged;
-}
 
 export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
   draft: emptyDraft(),
@@ -118,6 +104,7 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
     set((s) => ({ draft: { ...s.draft, startedAt: date } })),
 
   resetDraft: () => set({ draft: emptyDraft() }),
+  resetAll: () => set({ draft: emptyDraft(), isLogging: false, yesterdayLog: null, todayLog: null, recentLogs: [] }),
 
   logWorkout: async (uid) => {
     const { draft } = get();
@@ -167,7 +154,7 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
     if (yesterdayLogs.length === 1) {
       yesterdayLog = yesterdayLogs[0];
     } else if (yesterdayLogs.length > 1) {
-      yesterdayLog = { ...yesterdayLogs[0], exercises: mergeExercises(yesterdayLogs) };
+      yesterdayLog = { ...yesterdayLogs[0], exercises: aggregateExercises(yesterdayLogs) };
     }
 
     set({ recentLogs: logs, todayLog, yesterdayLog });

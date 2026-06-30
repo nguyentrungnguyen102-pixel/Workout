@@ -216,7 +216,7 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
                           ? Math.round((ex.durationSeconds || 0) / 60)
                           : (ex.durationSeconds || 0)}
                         onChange={(e) => {
-                          const v = parseInt(e.target.value) || 0;
+                          const v = Math.max(1, parseInt(e.target.value) || 0);
                           updateExercise(ex.presetId, {
                             durationSeconds: ex.unit === 'minutes' ? v * 60 : v,
                           });

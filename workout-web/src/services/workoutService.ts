@@ -129,9 +129,11 @@ export function buildDraftFromLog(log: WorkoutLog): DraftWorkout {
   };
 }
 
-export async function getLogById(logId: string): Promise<WorkoutLog | null> {
+export async function getLogById(uid: string, logId: string): Promise<WorkoutLog | null> {
   const snap = await getDoc(doc(db, 'logs', logId));
-  return snap.exists() ? (snap.data() as WorkoutLog) : null;
+  if (!snap.exists()) return null;
+  const log = snap.data() as WorkoutLog;
+  return log.userId === uid ? log : null;
 }
 
 export async function getLogsForExercise(uid: string, presetId: string): Promise<WorkoutLog[]> {

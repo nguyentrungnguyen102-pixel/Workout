@@ -32,6 +32,9 @@ export default function ProgramDetailPage() {
   const program = PROGRAM_TEMPLATES.find((p) => p.id === id);
   const isActive = activeState?.programId === id;
   const currentDayIndex = activeState?.currentDayIndex || 0;
+  // completedDates grows for the program's lifetime, but day markers/progress
+  // should reflect position within the current cycle (currentDayIndex wraps modulo days.length).
+  const completedInCycle = program ? (activeState?.completedDates?.length || 0) % program.days.length : 0;
 
   useEffect(() => {
     if (uid) loadActiveProgram(uid);
@@ -145,7 +148,7 @@ export default function ProgramDetailPage() {
           </div>
           <div className="h-2 bg-white rounded-full overflow-hidden">
             <div className="h-full bg-primary rounded-full transition-all"
-              style={{ width: `${Math.round(((activeState?.completedDates?.length || 0) / program.days.length) * 100)}%` }} />
+              style={{ width: `${Math.round((completedInCycle / program.days.length) * 100)}%` }} />
           </div>
         </div>
       )}
@@ -155,7 +158,7 @@ export default function ProgramDetailPage() {
         {program.days.map((day, idx) => {
           const isCurrentDay = isActive && idx === currentDayIndex;
           const isExpanded = expandedDay === day.id;
-          const isCompleted = isActive && (activeState?.completedDates?.length || 0) > idx;
+          const isCompleted = isActive && completedInCycle > idx;
 
           return (
             <div key={day.id}

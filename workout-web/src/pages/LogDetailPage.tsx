@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, RotateCcw, Clock } from 'lucide-react';
+import { useUserStore } from '../stores/userStore';
 import { useWorkoutStore } from '../stores/workoutStore';
 import { getLogById } from '../services/workoutService';
 import { WorkoutLog } from '../types/workout';
@@ -15,18 +16,23 @@ function formatDateVi(dateStr: string): string {
 export default function LogDetailPage() {
   const { logId } = useParams<{ logId: string }>();
   const navigate = useNavigate();
+  const { firebaseUser } = useUserStore();
   const { setDraftFromLog } = useWorkoutStore();
   const [log, setLog] = useState<WorkoutLog | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const uid = firebaseUser?.uid;
+
   useEffect(() => {
-    if (!logId) return;
+    if (!uid || !logId) return;
+    let cancelled = false;
     setLoading(true);
-    getLogById(logId)
-      .then(setLog)
-      .catch(() => setLog(null))
-      .finally(() => setLoading(false));
-  }, [logId]);
+    getLogById(uid, logId)
+      .then((result) => { if (!cancelled) setLog(result); })
+      .catch(() => { if (!cancelled) setLog(null); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [uid, logId]);
 
   const handleRepeat = () => {
     if (!log) return;

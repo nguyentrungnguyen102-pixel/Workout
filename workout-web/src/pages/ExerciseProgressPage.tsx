@@ -41,11 +41,13 @@ export default function ExerciseProgressPage() {
 
   useEffect(() => {
     if (!uid || !presetId) return;
+    let cancelled = false;
     setLoading(true);
     getLogsForExercise(uid, presetId)
-      .then(setLogs)
-      .catch(() => {})
-      .finally(() => setLoading(false));
+      .then((result) => { if (!cancelled) setLogs(result); })
+      .catch(() => { if (!cancelled) setLogs([]); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, [uid, presetId]);
 
   const prs = computePRs(logs);

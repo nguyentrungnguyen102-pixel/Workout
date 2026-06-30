@@ -19,11 +19,14 @@ interface ProgramStore {
 
   getActiveProgram: () => WorkoutProgram | null;
   getTodayDay: () => WorkoutProgram['days'][0] | null;
+  resetAll: () => void;
 }
 
 export const useProgramStore = create<ProgramStore>((set, get) => ({
   activeState: null,
   loading: false,
+
+  resetAll: () => set({ activeState: null, loading: false }),
 
   loadActiveProgram: async (uid) => {
     set({ loading: true });

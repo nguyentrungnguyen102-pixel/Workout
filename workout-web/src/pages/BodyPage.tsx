@@ -29,15 +29,28 @@ function AddMetricForm({ onSave, onClose }: AddMetricFormProps) {
   const [error, setError] = useState('');
 
   const handleSave = async () => {
-    const data: Omit<BodyMetric, 'id' | 'userId' | 'date' | 'createdAt'> = {};
-    if (weight) data.weight = parseFloat(weight);
-    if (chest) data.chestCm = parseFloat(chest);
-    if (hip) data.hipCm = parseFloat(hip);
-    if (arm) data.armCm = parseFloat(arm);
-    if (!weight && !chest && !hip && !arm) {
+    const parsePositive = (s: string): number | undefined => {
+      if (!s.trim()) return undefined;
+      const v = parseFloat(s);
+      return Number.isFinite(v) && v > 0 ? v : NaN;
+    };
+    const weightVal = parsePositive(weight);
+    const chestVal = parsePositive(chest);
+    const hipVal = parsePositive(hip);
+    const armVal = parsePositive(arm);
+    if ([weightVal, chestVal, hipVal, armVal].some((v) => Number.isNaN(v))) {
+      setError('Chỉ số không hợp lệ (phải là số dương)');
+      return;
+    }
+    if (weightVal === undefined && chestVal === undefined && hipVal === undefined && armVal === undefined) {
       setError('Nhập ít nhất một chỉ số');
       return;
     }
+    const data: Omit<BodyMetric, 'id' | 'userId' | 'date' | 'createdAt'> = {};
+    if (weightVal !== undefined) data.weight = weightVal;
+    if (chestVal !== undefined) data.chestCm = chestVal;
+    if (hipVal !== undefined) data.hipCm = hipVal;
+    if (armVal !== undefined) data.armCm = armVal;
     setSaving(true);
     try {
       await onSave(data);
