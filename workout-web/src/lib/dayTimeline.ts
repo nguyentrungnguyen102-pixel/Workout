@@ -22,6 +22,32 @@ export function buildDayTimeline(logs: WorkoutLog[]): TimelineItem[] {
   return items;
 }
 
+// Monday (week start) of the current week as YYYY-MM-DD (local).
+export function weekStartStr(): string {
+  const now = new Date();
+  const dow = (now.getDay() + 6) % 7; // 0=Mon
+  const mon = new Date(now);
+  mon.setDate(now.getDate() - dow);
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${mon.getFullYear()}-${p(mon.getMonth() + 1)}-${p(mon.getDate())}`;
+}
+
+// Sum reps & durationSeconds for one preset across the current week's logs.
+export function sumThisWeek(logs: WorkoutLog[], presetId: string): { reps: number; seconds: number } {
+  const ws = weekStartStr();
+  let reps = 0;
+  let seconds = 0;
+  for (const l of logs) {
+    if (l.date < ws) continue;
+    for (const ex of l.exercises) {
+      if (ex.presetId !== presetId) continue;
+      reps += ex.reps ?? 0;
+      seconds += ex.durationSeconds ?? 0;
+    }
+  }
+  return { reps, seconds };
+}
+
 export function aggregateExercises(logs: WorkoutLog[]): ExerciseEntry[] {
   const map = new Map<string, ExerciseEntry>();
   for (const log of logs) {

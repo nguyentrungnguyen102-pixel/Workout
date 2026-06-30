@@ -27,7 +27,7 @@ function roundNice(value: number, unit: string): number {
   return Math.max(1, Math.round(value));
 }
 
-export function buildSuggestions(logs: WorkoutLog[], max = 4): Suggestion[] {
+export function buildSuggestions(logs: WorkoutLog[], max = 4, excludeIds?: Set<string>): Suggestion[] {
   // Filter logs from last 30 days
   const now = new Date();
   const cutoff = new Date(now);
@@ -71,6 +71,9 @@ export function buildSuggestions(logs: WorkoutLog[], max = 4): Suggestion[] {
   const suggestions: Suggestion[] = [];
 
   for (const [presetId, stats] of statsMap.entries()) {
+    // Skip exercises that are already goals or already done today — suggestions
+    // should be complementary "what to do next", not a repeat of the goals.
+    if (excludeIds?.has(presetId)) continue;
     // Fallback baseline from SYSTEM_PRESETS
     const preset = SYSTEM_PRESETS.find((p) => p.id === presetId);
     let baseline = stats.bestValue;

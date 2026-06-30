@@ -26,15 +26,18 @@ function deriveIntensity(exercises: WorkoutLog['exercises']): { intensity: Inten
 export async function logWorkout(uid: string, draft: DraftWorkout): Promise<string> {
   if (draft.exercises.length === 0) throw new Error('No exercises');
 
-  const date = todayString();
+  // Date is derived from the (possibly back-dated) startedAt so the log lands
+  // on the correct calendar day when the user forgot to record in realtime.
+  const when = draft.startedAt ?? new Date();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const date = `${when.getFullYear()}-${pad(when.getMonth() + 1)}-${pad(when.getDate())}`;
 
-  const totalDurationMinutes = draft.startedAt
-    ? Math.max(1, Math.round((Date.now() - draft.startedAt.getTime()) / 60_000))
-    : draft.exercises.reduce((sum, e) => {
-        if (e.unit === 'minutes') return sum + e.durationSeconds! / 60;
-        if (e.unit === 'seconds') return sum + (e.durationSeconds || 0) / 60;
-        return sum + 3;
-      }, 0);
+  // Always sum exercise times — elapsed-since-start is meaningless once the
+  // user can back-date startedAt.
+  const totalDurationMinutes = Math.max(1, Math.round(draft.exercises.reduce((sum, e) => {
+    if (e.unit === 'minutes' || e.unit === 'seconds') return sum + (e.durationSeconds || 0) / 60;
+    return sum + 3; // reps ≈ 3 min
+  }, 0)));
 
   const { intensity, score } = deriveIntensity(draft.exercises);
   const caloriesEstimate = Math.round(totalDurationMinutes * 7);

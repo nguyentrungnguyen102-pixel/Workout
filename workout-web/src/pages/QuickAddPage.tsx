@@ -9,9 +9,15 @@ import { getTemplates, saveTemplate } from '../services/templateService';
 import { WorkoutTemplate, ExerciseEntry, WorkoutLog } from '../types/workout';
 import { ExerciseGoal } from '../types/user';
 import { formatAmount } from '../lib/format';
-import { pickCheer } from '../lib/cheers';
+import { pickCheer, pickWeeklyCheer } from '../lib/cheers';
 import { buildSuggestions } from '../lib/suggestions';
+import { sumThisWeek } from '../lib/dayTimeline';
 import { todayString } from '../lib/date';
+
+function toLocalInput(d: Date): string {
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
 
 type Category = 'all' | 'strength' | 'core' | 'dumbbell' | 'cardio' | 'mobility' | 'recovery';
 
@@ -87,11 +93,17 @@ interface WorkoutSummaryModalProps {
 }
 
 function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
-  const { draft, removeExercise, updateExercise, setNotes, logWorkout, isLogging } = useWorkoutStore();
+  const { draft, removeExercise, updateExercise, setNotes, setStartedAt, logWorkout, isLogging } = useWorkoutStore();
   const [toast, setToast] = useState('');
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [templateName, setTemplateName] = useState('');
   const [showTemplateInput, setShowTemplateInput] = useState(false);
+
+  // Default the workout time to "now" when the modal opens with no time set.
+  useEffect(() => {
+    if (!draft.startedAt) setStartedAt(new Date());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -133,13 +145,25 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
         </div>
       )}
       <div className="flex items-center justify-between px-4 py-4 border-b border-border bg-card">
-        <h2 className="text-lg font-black text-text-main">Buổi tập hôm nay</h2>
+        <h2 className="text-lg font-black text-text-main">Lưu buổi tập</h2>
         <button onClick={onClose} className="p-2 rounded-full hover:bg-card-2 transition-colors">
           <X size={20} className="text-text-secondary" />
         </button>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+        {/* Editable workout time — defaults to now, supports back-dating */}
+        <div className="bg-card rounded-2xl p-3 border border-border">
+          <label className="text-xs font-semibold text-text-secondary block mb-1.5">🕐 Thời gian tập</label>
+          <input
+            type="datetime-local"
+            value={draft.startedAt ? toLocalInput(draft.startedAt) : ''}
+            onChange={(e) => { if (e.target.value) setStartedAt(new Date(e.target.value)); }}
+            className="w-full bg-card-2 border border-border rounded-lg px-3 py-2 text-sm text-text-main focus:border-primary outline-none"
+          />
+          <p className="text-[10px] text-text-muted mt-1">Mặc định là bây giờ. Sửa nếu bạn quên ghi lúc tập.</p>
+        </div>
+
         {draft.exercises.length === 0 ? (
           <p className="text-text-secondary text-center py-8 text-sm">Chưa có bài tập nào. Quay lại để thêm.</p>
         ) : (
@@ -265,10 +289,11 @@ function toDateStr(d: Date): string {
 
 interface WeeklyForecastCardProps {
   recentLogs: WorkoutLog[];
-  weeklyTargetDays?: number;
 }
 
-function WeeklyForecastCard({ recentLogs, weeklyTargetDays = 5 }: WeeklyForecastCardProps) {
+const WEEKDAY_LABELS = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+
+function WeeklyForecastCard({ recentLogs }: WeeklyForecastCardProps) {
   const now = new Date();
   const today = todayString();
   const dow = (now.getDay() + 6) % 7; // 0=Mon
@@ -278,47 +303,41 @@ function WeeklyForecastCard({ recentLogs, weeklyTargetDays = 5 }: WeeklyForecast
 
   const weekDates = new Set(recentLogs.filter(l => l.date >= weekStart && l.date <= today).map(l => l.date));
   const thisWeekDays = weekDates.size;
-  const daysRemaining = 6 - dow;
-  const onTrack = dow === 0 ? true : thisWeekDays / (dow + 1) >= weeklyTargetDays / 7;
 
   const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
   const monthDays = new Set(recentLogs.filter(l => l.date >= monthStart && l.date <= today).map(l => l.date)).size;
-  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-  const monthForecast = Math.min(daysInMonth, now.getDate() > 0 ? Math.round((monthDays / now.getDate()) * daysInMonth) : 0);
 
   return (
     <div className="rounded-2xl border border-border bg-card mb-3 p-3">
-      <p className="text-xs font-bold text-text-secondary mb-2">📅 Tiến độ tập luyện</p>
+      <p className="text-xs font-bold text-text-secondary mb-2">📅 Hoạt động tập luyện</p>
       <div className="mb-2.5">
-        <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center justify-between mb-1.5">
           <span className="text-xs text-text-secondary">Tuần này</span>
-          <span className={`text-xs font-bold ${onTrack ? 'text-success' : 'text-primary'}`}>
-            {thisWeekDays}/{weeklyTargetDays} ngày{onTrack && thisWeekDays > 0 ? ' · đúng tiến độ ✓' : ''}
-          </span>
+          <span className="text-xs font-bold text-primary">{thisWeekDays} ngày đã tập</span>
         </div>
-        <div className="flex gap-0.5">
+        <div className="flex gap-1">
           {Array.from({ length: 7 }, (_, i) => {
             const d = new Date(monDate);
             d.setDate(monDate.getDate() + i);
             const ds = toDateStr(d);
             const trained = weekDates.has(ds);
+            const isToday = ds === today;
             return (
-              <div key={i} className={`flex-1 h-2 rounded-sm transition-all ${
-                trained ? 'bg-primary' : ds > today ? 'bg-border' : 'bg-border/60'
-              }`} />
+              <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
+                <div className={`w-full h-6 rounded-md flex items-center justify-center transition-all ${
+                  trained ? 'bg-primary text-white' : isToday ? 'bg-primary/15 ring-1 ring-primary/40' : ds > today ? 'bg-card-2' : 'bg-border/50'
+                }`}>
+                  {trained && <span className="text-[10px] font-black">✓</span>}
+                </div>
+                <span className={`text-[9px] ${isToday ? 'text-primary font-bold' : 'text-text-muted'}`}>{WEEKDAY_LABELS[i]}</span>
+              </div>
             );
           })}
         </div>
-        <p className="text-[10px] text-text-muted mt-0.5">
-          Dự báo cuối tuần: ~{Math.min(weeklyTargetDays, thisWeekDays + daysRemaining)} ngày
-        </p>
       </div>
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between pt-1 border-t border-border">
         <span className="text-xs text-text-secondary">Tháng này</span>
-        <div className="text-right">
-          <span className="text-xs font-bold text-text-main">{monthDays} ngày đã tập</span>
-          <p className="text-[10px] text-text-muted">Dự báo: ~{monthForecast} ngày</p>
-        </div>
+        <span className="text-xs font-bold text-text-main">{monthDays} ngày đã tập</span>
       </div>
     </div>
   );
@@ -353,20 +372,32 @@ function formatGoalLabel(current: number, target: number, goal: ExerciseGoal): s
   return `${current}/${target}`;
 }
 
+function getWeeklyGoal(goal: ExerciseGoal, recentLogs: WorkoutLog[], sessionsPerWeek: number): { current: number; target: number; met: boolean } {
+  const weekly = sumThisWeek(recentLogs, goal.presetId);
+  const dailyTarget = goal.targetReps ?? goal.targetDurationSeconds ?? 1;
+  const target = dailyTarget * Math.max(1, sessionsPerWeek);
+  const current = goal.targetReps ? weekly.reps : weekly.seconds;
+  return { current, target, met: current >= target };
+}
+
 interface GoalsStripProps {
   goals: ExerciseGoal[];
   todayLog: WorkoutLog | null;
   todayDateStr: string;
+  recentLogs: WorkoutLog[];
+  sessionsPerWeek: number;
   onAddExercise?: (presetId: string) => void;
 }
 
-function GoalsStrip({ goals, todayLog, todayDateStr, onAddExercise }: GoalsStripProps) {
+function GoalsStrip({ goals, todayLog, todayDateStr, recentLogs, sessionsPerWeek, onAddExercise }: GoalsStripProps) {
   const [collapsed, setCollapsed] = useState(false);
   const activeGoals = goals.filter(g => g.enabled);
   if (activeGoals.length === 0) return null;
 
   const metCount = activeGoals.filter(g => isGoalMet(g, todayLog)).length;
   const allMet = metCount === activeGoals.length;
+  const weeklyMetCount = activeGoals.filter(g => getWeeklyGoal(g, recentLogs, sessionsPerWeek).met).length;
+  const allWeeklyMet = weeklyMetCount === activeGoals.length;
   const isEvening = new Date().getHours() >= 17;
   const showReminder = isEvening && !allMet;
 
@@ -393,7 +424,12 @@ function GoalsStrip({ goals, todayLog, todayDateStr, onAddExercise }: GoalsStrip
 
       {!collapsed && (
         <div className="px-3 pb-3 space-y-2.5">
-          {allMet && (
+          {allWeeklyMet && (
+            <div className="bg-success/15 border border-success/30 rounded-xl px-3 py-2 text-center mb-1">
+              <p className="text-sm font-black text-success">🏆 {pickWeeklyCheer(todayDateStr)}</p>
+            </div>
+          )}
+          {allMet && !allWeeklyMet && (
             <div className="bg-success/10 border border-success/20 rounded-xl px-3 py-2 text-center mb-1">
               <p className="text-sm font-bold text-success">{pickCheer(todayDateStr)}</p>
             </div>
@@ -404,6 +440,9 @@ function GoalsStrip({ goals, todayLog, todayDateStr, onAddExercise }: GoalsStrip
             const current = getGoalCurrent(g, todayLog);
             const pct = Math.min(1, current / target);
             const label = formatGoalLabel(current, target, g);
+            const wk = getWeeklyGoal(g, recentLogs, sessionsPerWeek);
+            const wkPct = Math.min(1, wk.current / wk.target);
+            const wkLabel = formatGoalLabel(wk.current, wk.target, g);
             return (
               <div key={g.presetId} className="space-y-1">
                 <div className="flex items-center justify-between">
@@ -421,11 +460,26 @@ function GoalsStrip({ goals, todayLog, todayDateStr, onAddExercise }: GoalsStrip
                     )}
                   </div>
                 </div>
-                <div className="w-full bg-border rounded-full h-1.5">
-                  <div
-                    className={`h-1.5 rounded-full transition-all ${met ? 'bg-success' : 'bg-primary'}`}
-                    style={{ width: `${pct * 100}%` }}
-                  />
+                {/* Daily bar */}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[9px] text-text-muted w-7 flex-shrink-0">Ngày</span>
+                  <div className="flex-1 bg-border rounded-full h-1.5">
+                    <div
+                      className={`h-1.5 rounded-full transition-all ${met ? 'bg-success' : 'bg-primary'}`}
+                      style={{ width: `${pct * 100}%` }}
+                    />
+                  </div>
+                </div>
+                {/* Weekly bar */}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[9px] text-text-muted w-7 flex-shrink-0">Tuần</span>
+                  <div className="flex-1 bg-border rounded-full h-1.5">
+                    <div
+                      className={`h-1.5 rounded-full transition-all ${wk.met ? 'bg-success' : 'bg-primary/60'}`}
+                      style={{ width: `${wkPct * 100}%` }}
+                    />
+                  </div>
+                  <span className="text-[9px] text-text-muted flex-shrink-0">{wkLabel}</span>
                 </div>
               </div>
             );
@@ -438,12 +492,13 @@ function GoalsStrip({ goals, todayLog, todayDateStr, onAddExercise }: GoalsStrip
 
 interface SuggestionsCardProps {
   recentLogs: WorkoutLog[];
+  excludeIds: Set<string>;
   onAddWithValue: (preset: typeof SYSTEM_PRESETS[0], value: number) => void;
 }
 
-function SuggestionsCard({ recentLogs, onAddWithValue }: SuggestionsCardProps) {
+function SuggestionsCard({ recentLogs, excludeIds, onAddWithValue }: SuggestionsCardProps) {
   const [collapsed, setCollapsed] = useState(false);
-  const suggestions = buildSuggestions(recentLogs, 4);
+  const suggestions = buildSuggestions(recentLogs, 4, excludeIds);
   if (suggestions.length === 0) return null;
 
   function formatSuggestionValue(value: number, unit: string): string {
@@ -458,7 +513,7 @@ function SuggestionsCard({ recentLogs, onAddWithValue }: SuggestionsCardProps) {
       <button
         onClick={() => setCollapsed(c => !c)}
         className="w-full flex items-center justify-between px-3 py-2.5">
-        <span className="text-xs font-bold text-text-secondary">💡 Gợi ý hôm nay</span>
+        <span className="text-xs font-bold text-text-secondary">💡 Gợi ý tập tiếp</span>
         {collapsed ? <ChevronDown size={14} className="text-text-secondary" /> : <ChevronUp size={14} className="text-text-secondary" />}
       </button>
       {!collapsed && (
@@ -630,13 +685,15 @@ export default function QuickAddPage() {
       )}
 
       {/* Weekly forecast */}
-      <WeeklyForecastCard recentLogs={recentLogs} weeklyTargetDays={5} />
+      <WeeklyForecastCard recentLogs={recentLogs} />
 
       {/* Goals strip */}
       <GoalsStrip
         goals={profile?.exerciseGoals || []}
         todayLog={todayLog}
         todayDateStr={todayDateStr}
+        recentLogs={recentLogs}
+        sessionsPerWeek={profile?.weeklyGoalSessions || 5}
         onAddExercise={(presetId) => {
           const preset = SYSTEM_PRESETS.find(p => p.id === presetId);
           if (!preset) return;
@@ -648,8 +705,16 @@ export default function QuickAddPage() {
         }}
       />
 
-      {/* Suggestions card */}
-      <SuggestionsCard recentLogs={recentLogs} onAddWithValue={handleAddWithValue} />
+      {/* Suggestions card — complementary past exercises, excluding goals & today's done */}
+      <SuggestionsCard
+        recentLogs={recentLogs}
+        excludeIds={new Set([
+          ...(profile?.exerciseGoals || []).filter(g => g.enabled).map(g => g.presetId),
+          ...(todayLog?.exercises || []).map(e => e.presetId),
+          ...draft.exercises.map(e => e.presetId),
+        ])}
+        onAddWithValue={handleAddWithValue}
+      />
 
       {/* Templates — horizontal scroll chips, only if exist */}
       {templates.length > 0 && (

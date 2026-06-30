@@ -25,6 +25,7 @@ interface WorkoutStore {
   setDraftFromLog: (log: WorkoutLog) => void;
   setIntensity: (intensity: Intensity) => void;
   setNotes: (notes: string) => void;
+  setStartedAt: (date: Date) => void;
   resetDraft: () => void;
 
   logWorkout: (uid: string) => Promise<void>;
@@ -112,6 +113,9 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
 
   setNotes: (notes) =>
     set((s) => ({ draft: { ...s.draft, notes } })),
+
+  setStartedAt: (date) =>
+    set((s) => ({ draft: { ...s.draft, startedAt: date } })),
 
   resetDraft: () => set({ draft: emptyDraft() }),
 
