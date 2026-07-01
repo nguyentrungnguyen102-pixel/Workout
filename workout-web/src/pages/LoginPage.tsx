@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth } from '../services/firebase';
 import { useUserStore } from '../stores/userStore';
+import { createOrUpdateUserProfile } from '../services/userService';
 
 export default function LoginPage() {
   const { firebaseUser } = useUserStore();
@@ -23,7 +24,12 @@ export default function LoginPage() {
     try {
       if (isSignUp) {
         const cred = await createUserWithEmailAndPassword(auth, email, password);
-        if (name) await updateProfile(cred.user, { displayName: name });
+        if (name) {
+          await updateProfile(cred.user, { displayName: name });
+          // Write the name to Firestore explicitly — the auth-state listener may create the
+          // default profile doc before this displayName update lands on the user object.
+          await createOrUpdateUserProfile(cred.user.uid, { displayName: name });
+        }
       } else {
         await signInWithEmailAndPassword(auth, email, password);
       }

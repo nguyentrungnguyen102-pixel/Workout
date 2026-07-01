@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { User } from 'firebase/auth';
+import { serverTimestamp } from 'firebase/firestore';
 import { UserProfile } from '../types/user';
 import { getUserProfile, createOrUpdateUserProfile } from '../services/userService';
 
@@ -30,8 +31,6 @@ export const useUserStore = create<UserStore>((set, get) => ({
       email: firebaseUser?.email || '',
       photoURL: firebaseUser?.photoURL || undefined,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      reminderEnabled: true,
-      reminderTime: '07:30',
       weeklyGoalMinutes: 150,
       weeklyGoalSessions: 4,
       streak: { current: 0, longest: 0, lastWorkoutDate: '', streakStartDate: '' },
@@ -64,7 +63,7 @@ export const useUserStore = create<UserStore>((set, get) => ({
       } else {
         const defaultProfile = buildDefault();
         try {
-          await createOrUpdateUserProfile(uid, defaultProfile);
+          await createOrUpdateUserProfile(uid, { ...defaultProfile, createdAt: serverTimestamp() } as unknown as Partial<UserProfile>);
         } catch {
           // Firestore write failed — continue with in-memory profile
         }

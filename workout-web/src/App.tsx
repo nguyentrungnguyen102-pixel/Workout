@@ -37,10 +37,22 @@ class ErrorBoundary extends Component<{ children: React.ReactNode }, { error: Er
   }
 }
 
+function Spinner() {
+  return <div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+}
+
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const { firebaseUser, loading } = useUserStore();
-  if (loading) return <div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+  if (loading) return <Spinner />;
   if (!firebaseUser) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+}
+
+function RequireOnboarding({ children }: { children: React.ReactNode }) {
+  const { firebaseUser, profile, loading } = useUserStore();
+  if (loading || (firebaseUser && !profile)) return <Spinner />;
+  if (!firebaseUser) return <Navigate to="/login" replace />;
+  if (profile && !profile.onboardingDone) return <Navigate to="/onboarding" replace />;
   return <>{children}</>;
 }
 
@@ -61,7 +73,7 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/onboarding" element={<AuthGuard><OnboardingPage /></AuthGuard>} />
-          <Route element={<AuthGuard><Layout /></AuthGuard>}>
+          <Route element={<RequireOnboarding><Layout /></RequireOnboarding>}>
             <Route index element={<QuickAddPage />} />
             <Route path="history" element={<HistoryPage />} />
             <Route path="history/day/:date" element={<DayDetailPage />} />

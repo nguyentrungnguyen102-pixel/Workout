@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { useUserStore } from '../stores/userStore';
 
 const GOAL_OPTIONS = [
@@ -18,7 +18,7 @@ export default function OnboardingPage() {
   const [goalSessions, setGoalSessions] = useState(3);
   const [saving, setSaving] = useState(false);
 
-  if (profile?.onboardingDone) { navigate('/'); return null; }
+  if (profile?.onboardingDone) return <Navigate to="/" replace />;
 
   const handleFinish = async () => {
     if (!firebaseUser) return;
