@@ -56,7 +56,7 @@ function getTopExercise(logs: WorkoutLog[]): string | null {
   return [...map.entries()].sort((a, b) => b[1] - a[1])[0][0];
 }
 
-function getVolumeProgress(logs: WorkoutLog[]): Array<{ name: string; thisWeek: number; lastWeek: number }> {
+function getVolumeProgress(logs: WorkoutLog[]): Array<{ name: string; thisWeek: number; lastWeek: number; deltaPct: number | null }> {
   const now = new Date();
   const weekAgo = new Date(now);
   weekAgo.setDate(now.getDate() - 7);
@@ -71,26 +71,31 @@ function getVolumeProgress(logs: WorkoutLog[]): Array<{ name: string; thisWeek: 
   const thisWeekLogs = logs.filter((l) => l.date > weekAgoStr && l.date <= todayStr);
   const lastWeekLogs = logs.filter((l) => l.date > twoWeeksAgoStr && l.date <= weekAgoStr);
 
-  const thisWeekMap = new Map<string, number>();
-  for (const log of thisWeekLogs) {
-    for (const ex of log.exercises) {
-      thisWeekMap.set(ex.name, (thisWeekMap.get(ex.name) || 0) + ex.sets * (ex.reps || 1));
+  // Volume = sets × reps × weight (kg), matching native app's progressive-overload
+  // tracking. Only exercises actually logged with a dumbbell weight count —
+  // bodyweight reps have no meaningful "volume" to compare week over week.
+  const sumVolume = (logsForPeriod: WorkoutLog[]) => {
+    const map = new Map<string, number>();
+    for (const log of logsForPeriod) {
+      for (const ex of log.exercises) {
+        if (!ex.weight || !ex.reps) continue;
+        map.set(ex.name, (map.get(ex.name) || 0) + ex.sets * ex.reps * ex.weight);
+      }
     }
-  }
-  const lastWeekMap = new Map<string, number>();
-  for (const log of lastWeekLogs) {
-    for (const ex of log.exercises) {
-      lastWeekMap.set(ex.name, (lastWeekMap.get(ex.name) || 0) + ex.sets * (ex.reps || 1));
-    }
-  }
+    return map;
+  };
+
+  const thisWeekMap = sumVolume(thisWeekLogs);
+  const lastWeekMap = sumVolume(lastWeekLogs);
 
   const allNames = new Set([...thisWeekMap.keys(), ...lastWeekMap.keys()]);
   return [...allNames]
-    .map((name) => ({
-      name,
-      thisWeek: thisWeekMap.get(name) || 0,
-      lastWeek: lastWeekMap.get(name) || 0,
-    }))
+    .map((name) => {
+      const thisWeek = thisWeekMap.get(name) || 0;
+      const lastWeek = lastWeekMap.get(name) || 0;
+      const deltaPct = lastWeek > 0 ? Math.round(((thisWeek - lastWeek) / lastWeek) * 100) : null;
+      return { name, thisWeek, lastWeek, deltaPct };
+    })
     .sort((a, b) => b.thisWeek - a.thisWeek)
     .slice(0, 5);
 }
@@ -322,15 +327,20 @@ export default function StatsPage() {
 
       {volumeProgress.length > 0 && (
         <div className="bg-card rounded-2xl border border-border p-4 mb-4">
-          <p className="text-sm font-bold text-text-main mb-3">Khối lượng tuần này vs tuần trước</p>
+          <p className="text-sm font-bold text-text-main mb-3">🏋️ Khối lượng tạ (kg) tuần này vs tuần trước</p>
           <div className="space-y-2">
             {volumeProgress.map((v) => {
               const max = Math.max(v.thisWeek, v.lastWeek, 1);
+              const deltaColor = v.deltaPct === null ? 'text-text-muted' : v.deltaPct > 0 ? 'text-success' : v.deltaPct < 0 ? 'text-danger' : 'text-text-muted';
+              const deltaLabel = v.deltaPct === null ? 'Mới' : `${v.deltaPct > 0 ? '▲' : v.deltaPct < 0 ? '▼' : '–'} ${Math.abs(v.deltaPct)}%`;
               return (
                 <div key={v.name}>
-                  <div className="flex justify-between text-xs text-text-secondary mb-1">
-                    <span className="truncate max-w-[120px]">{v.name}</span>
-                    <span>{v.thisWeek} vs {v.lastWeek}</span>
+                  <div className="flex justify-between items-center text-xs text-text-secondary mb-1">
+                    <span className="truncate max-w-[110px]">{v.name}</span>
+                    <div className="flex items-center gap-2">
+                      <span>{Math.round(v.thisWeek)}kg vs {Math.round(v.lastWeek)}kg</span>
+                      <span className={`font-bold ${deltaColor}`}>{deltaLabel}</span>
+                    </div>
                   </div>
                   <div className="flex gap-1 h-2">
                     <div className="h-full bg-primary rounded-sm transition-all" style={{ width: `${(v.thisWeek / max) * 50}%` }} />

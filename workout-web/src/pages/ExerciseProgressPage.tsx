@@ -51,6 +51,10 @@ export default function ExerciseProgressPage() {
   const prs = computePRs(logs);
   const pr = prs.find((p) => p.presetId === presetId);
 
+  // Weight (kg) takes priority over reps once the user starts logging it —
+  // progressive overload on load matters more than rep count for dumbbell work.
+  const hasWeight = logs.some((log) => log.exercises.find((e) => e.presetId === presetId)?.weight);
+
   const chartData = [...logs]
     .reverse()
     .slice(-20)
@@ -59,11 +63,16 @@ export default function ExerciseProgressPage() {
       if (!ex) return null;
       return {
         date: formatDateShort(log.date),
-        value: ex.unit === 'reps' ? (ex.reps || 0) : Math.round((ex.durationSeconds || 0) / 60),
+        value: hasWeight
+          ? (ex.weight || 0)
+          : ex.unit === 'reps' ? (ex.reps || 0) : Math.round((ex.durationSeconds || 0) / 60),
         sets: ex.sets,
       };
     })
     .filter(Boolean) as Array<{ date: string; value: number; sets: number }>;
+
+  const chartLabel = hasWeight ? '📈 Tiến độ tạ (kg)' : preset?.unit === 'reps' ? 'Số reps' : 'Thời gian (phút)';
+  const chartUnit = hasWeight ? 'kg' : preset?.unit === 'reps' ? 'reps' : 'phút';
 
   return (
     <div className="px-4 md:px-8 pt-6 md:pt-8 pb-8">
@@ -103,16 +112,14 @@ export default function ExerciseProgressPage() {
         <>
           {chartData.length > 1 && (
             <div className="bg-card rounded-2xl border border-border p-4 mb-4">
-              <p className="text-sm font-bold text-text-main mb-3">
-                {preset?.unit === 'reps' ? 'Số reps' : 'Thời gian (phút)'}
-              </p>
+              <p className="text-sm font-bold text-text-main mb-3">{chartLabel}</p>
               <ResponsiveContainer width="100%" height={140}>
                 <LineChart data={chartData} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
                   <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#8A8A8A' }} />
                   <YAxis tick={{ fontSize: 10, fill: '#8A8A8A' }} domain={['auto', 'auto']} />
                   <Tooltip
                     contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #E8E7E2' }}
-                    formatter={(v: number) => [v, preset?.unit === 'reps' ? 'reps' : 'phút']}
+                    formatter={(v: number) => [v, chartUnit]}
                   />
                   <Line type="monotone" dataKey="value" stroke="#FF5400" strokeWidth={2.5} dot={{ r: 3, fill: '#FF5400' }} />
                 </LineChart>
