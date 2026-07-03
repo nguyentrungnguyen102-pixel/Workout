@@ -228,6 +228,26 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
                     </div>
                   )}
                 </div>
+
+                {/* Weight input — strength/dumbbell exercises only, optional */}
+                {ex.unit === 'reps' && (
+                  <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border">
+                    <label className="text-xs text-text-secondary flex-1">🏋️ Tạ (kg)</label>
+                    <input
+                      type="number"
+                      min={0}
+                      step={0.5}
+                      placeholder="--"
+                      className="w-20 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
+                      value={ex.weight ?? ''}
+                      onChange={(e) => {
+                        const raw = e.target.value;
+                        const v = raw === '' ? undefined : Math.max(0, parseFloat(raw));
+                        updateExercise(ex.presetId, { weight: Number.isNaN(v as number) ? undefined : v });
+                      }}
+                    />
+                  </div>
+                )}
               </div>
             );
           })
@@ -590,6 +610,7 @@ export default function QuickAddPage() {
       durationSeconds: (preset.unit === 'seconds' || preset.unit === 'minutes')
         ? (yesterday?.durationSeconds ?? (preset.unit === 'seconds' ? preset.defaultValue : preset.defaultValue * 60))
         : undefined,
+      weight: preset.unit === 'reps' ? yesterday?.weight : undefined,
     };
     addExercise(entry);
   };

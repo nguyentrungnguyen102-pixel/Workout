@@ -56,7 +56,17 @@ function getTopExercise(logs: WorkoutLog[]): string | null {
   return [...map.entries()].sort((a, b) => b[1] - a[1])[0][0];
 }
 
-function getVolumeProgress(logs: WorkoutLog[]): Array<{ name: string; thisWeek: number; lastWeek: number }> {
+interface VolumeEntry {
+  name: string;
+  thisWeek: number;
+  lastWeek: number;
+  delta: number;
+}
+
+// Tonnage (sets × reps × weight, in kg) — matches workout-tracker's mobile
+// Progressive Overload volume card. Only counts exercises with a recorded
+// weight (dumbbell/strength); bodyweight reps have no tonnage to compare.
+function getVolumeProgress(logs: WorkoutLog[]): VolumeEntry[] {
   const now = new Date();
   const weekAgo = new Date(now);
   weekAgo.setDate(now.getDate() - 7);
@@ -71,26 +81,29 @@ function getVolumeProgress(logs: WorkoutLog[]): Array<{ name: string; thisWeek: 
   const thisWeekLogs = logs.filter((l) => l.date > weekAgoStr && l.date <= todayStr);
   const lastWeekLogs = logs.filter((l) => l.date > twoWeeksAgoStr && l.date <= weekAgoStr);
 
-  const thisWeekMap = new Map<string, number>();
-  for (const log of thisWeekLogs) {
-    for (const ex of log.exercises) {
-      thisWeekMap.set(ex.name, (thisWeekMap.get(ex.name) || 0) + ex.sets * (ex.reps || 1));
+  const volumes = new Map<string, { thisWeek: number; lastWeek: number }>();
+  const accumulate = (targetLogs: WorkoutLog[], key: 'thisWeek' | 'lastWeek') => {
+    for (const log of targetLogs) {
+      for (const ex of log.exercises) {
+        if (!ex.weight || !ex.reps) continue;
+        const vol = ex.sets * ex.reps * ex.weight;
+        const entry = volumes.get(ex.name) || { thisWeek: 0, lastWeek: 0 };
+        entry[key] += vol;
+        volumes.set(ex.name, entry);
+      }
     }
-  }
-  const lastWeekMap = new Map<string, number>();
-  for (const log of lastWeekLogs) {
-    for (const ex of log.exercises) {
-      lastWeekMap.set(ex.name, (lastWeekMap.get(ex.name) || 0) + ex.sets * (ex.reps || 1));
-    }
-  }
+  };
+  accumulate(thisWeekLogs, 'thisWeek');
+  accumulate(lastWeekLogs, 'lastWeek');
 
-  const allNames = new Set([...thisWeekMap.keys(), ...lastWeekMap.keys()]);
-  return [...allNames]
-    .map((name) => ({
+  return Array.from(volumes.entries())
+    .map(([name, v]) => ({
       name,
-      thisWeek: thisWeekMap.get(name) || 0,
-      lastWeek: lastWeekMap.get(name) || 0,
+      thisWeek: Math.round(v.thisWeek),
+      lastWeek: Math.round(v.lastWeek),
+      delta: v.lastWeek > 0 ? Math.round(((v.thisWeek - v.lastWeek) / v.lastWeek) * 100) : 0,
     }))
+    .filter((e) => e.thisWeek > 0 || e.lastWeek > 0)
     .sort((a, b) => b.thisWeek - a.thisWeek)
     .slice(0, 5);
 }
@@ -322,27 +335,39 @@ export default function StatsPage() {
 
       {volumeProgress.length > 0 && (
         <div className="bg-card rounded-2xl border border-border p-4 mb-4">
-          <p className="text-sm font-bold text-text-main mb-3">Khối lượng tuần này vs tuần trước</p>
-          <div className="space-y-2">
+          <p className="text-sm font-bold text-text-main mb-3">Khối lượng tạ tuần này vs tuần trước (kg)</p>
+          <div className="space-y-3">
             {volumeProgress.map((v) => {
               const max = Math.max(v.thisWeek, v.lastWeek, 1);
+              const neutral = v.delta === 0 || v.lastWeek === 0;
+              const positive = v.delta > 0;
               return (
                 <div key={v.name}>
-                  <div className="flex justify-between text-xs text-text-secondary mb-1">
-                    <span className="truncate max-w-[120px]">{v.name}</span>
-                    <span>{v.thisWeek} vs {v.lastWeek}</span>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="truncate max-w-[120px] text-text-secondary">{v.name}</span>
+                    {!neutral && (
+                      <span className={`font-bold ${positive ? 'text-success' : 'text-danger'}`}>
+                        {positive ? '▲' : '▼'} {Math.abs(v.delta)}%
+                      </span>
+                    )}
                   </div>
-                  <div className="flex gap-1 h-2">
-                    <div className="h-full bg-primary rounded-sm transition-all" style={{ width: `${(v.thisWeek / max) * 50}%` }} />
-                    <div className="h-full bg-border rounded-sm transition-all" style={{ width: `${(v.lastWeek / max) * 50}%` }} />
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xs text-text-muted w-16 flex-shrink-0">Tuần này</span>
+                    <div className="flex-1 h-2 bg-border rounded-full overflow-hidden">
+                      <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${(v.thisWeek / max) * 100}%` }} />
+                    </div>
+                    <span className="text-xs text-text-secondary w-14 text-right flex-shrink-0">{v.thisWeek} kg</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-text-muted w-16 flex-shrink-0">Tuần trước</span>
+                    <div className="flex-1 h-2 bg-border rounded-full overflow-hidden">
+                      <div className="h-full bg-border rounded-full transition-all" style={{ width: `${(v.lastWeek / max) * 100}%` }} />
+                    </div>
+                    <span className="text-xs text-text-secondary w-14 text-right flex-shrink-0">{v.lastWeek} kg</span>
                   </div>
                 </div>
               );
             })}
-          </div>
-          <div className="flex gap-4 mt-2">
-            <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-primary" /><span className="text-xs text-text-secondary">Tuần này</span></div>
-            <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-border" /><span className="text-xs text-text-secondary">Tuần trước</span></div>
           </div>
         </div>
       )}
