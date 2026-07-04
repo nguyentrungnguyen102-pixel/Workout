@@ -23,12 +23,16 @@ export default function OnboardingPage() {
   const handleFinish = async () => {
     if (!firebaseUser) return;
     setSaving(true);
-    await updateProfile(firebaseUser.uid, {
-      weeklyGoalMinutes: goalMinutes,
-      weeklyGoalSessions: goalSessions,
-      onboardingDone: true,
-    });
-    navigate('/');
+    try {
+      await updateProfile(firebaseUser.uid, {
+        weeklyGoalMinutes: goalMinutes,
+        weeklyGoalSessions: goalSessions,
+        onboardingDone: true,
+      });
+      navigate('/');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (

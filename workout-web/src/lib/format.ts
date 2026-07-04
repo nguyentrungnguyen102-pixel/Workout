@@ -1,11 +1,12 @@
 import { Timestamp } from 'firebase/firestore';
 
-export function formatAmount(ex: { unit: string; reps?: number; durationSeconds?: number; distance?: number }): string {
-  if (ex.unit === 'reps') return `${ex.reps ?? 0} cái`;
+export function formatAmount(ex: { unit: string; reps?: number; durationSeconds?: number; distance?: number; weight?: number }): string {
+  const weightSuffix = ex.weight ? ` · ${ex.weight}kg` : '';
+  if (ex.unit === 'reps') return `${ex.reps ?? 0} cái${weightSuffix}`;
   if (ex.unit === 'seconds') return `${ex.durationSeconds ?? 0} giây`;
   if (ex.unit === 'minutes') return `${Math.round((ex.durationSeconds ?? 0) / 60)} phút`;
   if (ex.unit === 'km') return `${ex.distance ?? 0} km`;
-  return `${ex.reps ?? 0}`;
+  return `${ex.reps ?? 0}${weightSuffix}`;
 }
 
 export function formatTime24(ts: Timestamp | undefined | null): string | null {

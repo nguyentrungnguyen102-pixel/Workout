@@ -1,11 +1,10 @@
 import { useEffect, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { X, Play, Pause, ChevronRight, Flame, Target, ChevronDown, ChevronUp } from 'lucide-react';
 import { useUserStore } from '../stores/userStore';
 import { useWorkoutStore } from '../stores/workoutStore';
 import { useProgramStore } from '../stores/programStore';
 import { SYSTEM_PRESETS, CATEGORY_LABELS } from '../constants/exercises';
-import { getTemplates, saveTemplate } from '../services/templateService';
+import { getTemplates, saveTemplate, deleteTemplate } from '../services/templateService';
 import { WorkoutTemplate, ExerciseEntry, WorkoutLog } from '../types/workout';
 import { ExerciseGoal } from '../types/user';
 import { formatAmount } from '../lib/format';
@@ -228,6 +227,29 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
                     </div>
                   )}
                 </div>
+
+                {/* Weight input — reps-based exercises only (strength, core, dumbbell) */}
+                {ex.unit === 'reps' && (
+                  <div className="flex items-center gap-2 mt-2.5 pt-2.5 border-t border-border">
+                    <label className="text-xs font-semibold text-text-secondary flex-1">🏋️ Tạ (kg)</label>
+                    <input
+                      type="number"
+                      min={0}
+                      step="0.5"
+                      inputMode="decimal"
+                      placeholder="--"
+                      className="w-20 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
+                      value={ex.weight ?? ''}
+                      onChange={(e) => {
+                        const raw = e.target.value;
+                        if (raw === '') { updateExercise(ex.presetId, { weight: undefined }); return; }
+                        const v = parseFloat(raw);
+                        if (isNaN(v) || v < 0) return;
+                        updateExercise(ex.presetId, { weight: v || undefined });
+                      }}
+                    />
+                  </div>
+                )}
               </div>
             );
           })
@@ -550,7 +572,6 @@ function SuggestionsCard({ recentLogs, excludeIds, onAddWithValue }: Suggestions
 }
 
 export default function QuickAddPage() {
-  const navigate = useNavigate();
   const { profile, firebaseUser } = useUserStore();
   const { draft, todayLog, yesterdayLog, recentLogs, addExercise, updateExercise, setDraftFromLog, loadRecentLogs } = useWorkoutStore();
   const { loadActiveProgram, getTodayDay } = useProgramStore();
@@ -566,6 +587,16 @@ export default function QuickAddPage() {
     loadActiveProgram(uid);
     getTemplates(uid).then(setTemplates).catch(() => {});
   }, [uid]);
+
+  const handleDeleteTemplate = async (t: WorkoutTemplate) => {
+    if (!confirm(`Xóa template "${t.name}"?`)) return;
+    try {
+      await deleteTemplate(t.id);
+      setTemplates((prev) => prev.filter((x) => x.id !== t.id));
+    } catch {
+      // ignore — template stays in the list, user can retry
+    }
+  };
 
   const todayDay = getTodayDay();
   const firstName = profile?.displayName?.split(' ').pop() || 'bạn';
@@ -721,17 +752,25 @@ export default function QuickAddPage() {
         <div className="flex gap-2 overflow-x-auto pb-1 mb-3 scrollbar-hide">
           <span className="flex-shrink-0 text-xs font-semibold text-text-secondary self-center">📋</span>
           {templates.map((t) => (
-            <button key={t.id}
-              onClick={() => {
-                if (!uid) return;
-                t.exercises.forEach((ex) => {
-                  if (!draftIds.has(ex.presetId)) addExercise(ex);
-                });
-                setShowModal(true);
-              }}
-              className="flex-shrink-0 bg-card border border-border rounded-xl px-3 py-1.5 text-xs font-semibold text-text-main hover:border-primary hover:text-primary transition-colors whitespace-nowrap">
-              {t.name}
-            </button>
+            <div key={t.id} className="flex-shrink-0 flex items-center bg-card border border-border rounded-xl overflow-hidden">
+              <button
+                onClick={() => {
+                  if (!uid) return;
+                  t.exercises.forEach((ex) => {
+                    if (!draftIds.has(ex.presetId)) addExercise(ex);
+                  });
+                  setShowModal(true);
+                }}
+                className="px-3 py-1.5 text-xs font-semibold text-text-main hover:text-primary transition-colors whitespace-nowrap">
+                {t.name}
+              </button>
+              <button
+                onClick={() => handleDeleteTemplate(t)}
+                aria-label="Xóa template"
+                className="px-2 py-1.5 text-text-muted hover:text-danger transition-colors border-l border-border">
+                <X size={12} />
+              </button>
+            </div>
           ))}
         </div>
       )}

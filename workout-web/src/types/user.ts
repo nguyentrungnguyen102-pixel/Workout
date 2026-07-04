@@ -30,11 +30,8 @@ export interface UserProfile {
   email: string;
   photoURL?: string;
   timezone: string;
-  reminderEnabled: boolean;
-  reminderTime: string;
   weeklyGoalMinutes: number;
   weeklyGoalSessions: number;
-  fcmToken?: string;
   sheetsId?: string;
   exerciseGoals?: ExerciseGoal[];
   streak: UserStreak;
