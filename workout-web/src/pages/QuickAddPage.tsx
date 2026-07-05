@@ -1,12 +1,13 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Play, Pause, ChevronRight, Flame, Target, ChevronDown, ChevronUp } from 'lucide-react';
+import { X, Play, Pause, ChevronRight, Flame, Target, ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react';
 import { useUserStore } from '../stores/userStore';
 import { useWorkoutStore } from '../stores/workoutStore';
 import { useProgramStore } from '../stores/programStore';
 import { SYSTEM_PRESETS, CATEGORY_LABELS } from '../constants/exercises';
 import { getTemplates, saveTemplate } from '../services/templateService';
-import { WorkoutTemplate, ExerciseEntry, WorkoutLog } from '../types/workout';
+import { getCustomPresets, saveCustomPreset, deleteCustomPreset } from '../services/customExerciseService';
+import { WorkoutTemplate, ExerciseEntry, WorkoutLog, WorkoutPreset, ExerciseCategory, ExerciseUnit } from '../types/workout';
 import { ExerciseGoal } from '../types/user';
 import { formatAmount } from '../lib/format';
 import { pickCheer, pickWeeklyCheer } from '../lib/cheers';
@@ -83,6 +84,150 @@ function RestTimer() {
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+const ICON_OPTIONS = ['🏋️', '💪', '🤸', '🏃', '🚴', '🧘', '🤼', '🥊', '⚽', '🏊', '🎯', '🔥', '⭐', '🌟', '💥'];
+const CREATE_CATEGORIES: ExerciseCategory[] = ['strength', 'core', 'dumbbell', 'cardio', 'mobility', 'recovery'];
+const UNIT_OPTIONS: { label: string; value: ExerciseUnit }[] = [
+  { label: 'Reps', value: 'reps' },
+  { label: 'Giây', value: 'seconds' },
+  { label: 'Phút', value: 'minutes' },
+];
+
+interface CreateExerciseModalProps {
+  uid: string;
+  onClose: () => void;
+  onCreated: (preset: WorkoutPreset) => void;
+}
+
+function CreateExerciseModal({ uid, onClose, onCreated }: CreateExerciseModalProps) {
+  const [name, setName] = useState('');
+  const [category, setCategory] = useState<ExerciseCategory>('strength');
+  const [unit, setUnit] = useState<ExerciseUnit>('reps');
+  const [defaultValue, setDefaultValue] = useState('10');
+  const [defaultSets, setDefaultSets] = useState('3');
+  const [icon, setIcon] = useState('🏋️');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSave = async () => {
+    if (!name.trim()) { setError('Nhập tên bài tập'); return; }
+    const val = parseFloat(defaultValue);
+    if (!val || val <= 0) { setError('Nhập số lớn hơn 0'); return; }
+    const sets = parseInt(defaultSets, 10);
+    if (unit === 'reps' && (!sets || sets <= 0)) { setError('Nhập số hiệp lớn hơn 0'); return; }
+    setError('');
+    setSaving(true);
+    try {
+      const preset = await saveCustomPreset(uid, {
+        nameVi: name.trim(),
+        category,
+        unit,
+        defaultValue: val,
+        defaultSets: unit === 'reps' ? sets : 3,
+        icon,
+      });
+      onCreated(preset);
+      onClose();
+    } catch {
+      setError('Không tạo được. Thử lại nhé!');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col md:items-center md:justify-center md:bg-black/40 md:p-6">
+      <div className="flex flex-col bg-background w-full h-full md:h-auto md:max-h-[88vh] md:max-w-md md:rounded-3xl md:shadow-2xl md:overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-4 border-b border-border bg-card">
+          <h2 className="text-lg font-black text-text-main">Tạo bài tập mới</h2>
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-card-2 transition-colors">
+            <X size={20} className="text-text-secondary" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+          <div>
+            <p className="text-xs font-semibold text-text-secondary mb-2">Icon</p>
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+              {ICON_OPTIONS.map((ic) => (
+                <button key={ic} type="button" onClick={() => setIcon(ic)}
+                  className={`flex-shrink-0 w-11 h-11 rounded-xl border-2 flex items-center justify-center text-xl transition-colors ${
+                    icon === ic ? 'border-primary bg-primary-light' : 'border-border bg-card'
+                  }`}>
+                  {ic}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="text-xs font-semibold text-text-secondary mb-2">Tên bài tập</p>
+            <input
+              className="w-full bg-card border border-border rounded-xl px-4 py-3 text-sm text-text-main focus:border-primary outline-none transition-colors"
+              placeholder="VD: Hít đất nghịch"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <p className="text-xs font-semibold text-text-secondary mb-2">Nhóm cơ</p>
+            <div className="flex flex-wrap gap-2">
+              {CREATE_CATEGORIES.map((c) => (
+                <button key={c} type="button" onClick={() => setCategory(c)}
+                  className={`text-xs font-semibold px-3 py-1.5 rounded-xl border transition-colors ${
+                    category === c ? 'bg-primary text-white border-primary' : 'bg-card text-text-secondary border-border'
+                  }`}>
+                  {CATEGORY_LABELS[c]}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="text-xs font-semibold text-text-secondary mb-2">Đơn vị đo</p>
+            <div className="flex gap-2">
+              {UNIT_OPTIONS.map((u) => (
+                <button key={u.value} type="button" onClick={() => setUnit(u.value)}
+                  className={`flex-1 text-xs font-semibold py-2 rounded-xl border transition-colors ${
+                    unit === u.value ? 'bg-primary text-white border-primary' : 'bg-card text-text-secondary border-border'
+                  }`}>
+                  {u.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <p className="text-xs font-semibold text-text-secondary mb-2">
+                Mặc định ({unit === 'reps' ? 'reps' : unit === 'seconds' ? 'giây' : 'phút'})
+              </p>
+              <input type="number" min={1} value={defaultValue} onChange={(e) => setDefaultValue(e.target.value)}
+                className="w-full bg-card border border-border rounded-xl px-3 py-2.5 text-sm text-text-main focus:border-primary outline-none" />
+            </div>
+            {unit === 'reps' && (
+              <div className="flex-1">
+                <p className="text-xs font-semibold text-text-secondary mb-2">Số hiệp</p>
+                <input type="number" min={1} value={defaultSets} onChange={(e) => setDefaultSets(e.target.value)}
+                  className="w-full bg-card border border-border rounded-xl px-3 py-2.5 text-sm text-text-main focus:border-primary outline-none" />
+              </div>
+            )}
+          </div>
+
+          {error && <p className="text-xs text-danger font-semibold">{error}</p>}
+        </div>
+
+        <div className="px-4 py-4 border-t border-border bg-card">
+          <button onClick={handleSave} disabled={saving}
+            className="w-full py-4 bg-primary text-white font-black text-base rounded-2xl disabled:opacity-50 shadow-lg shadow-primary/30 transition-opacity">
+            {saving ? 'Đang tạo...' : 'Tạo bài tập ✅'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -493,10 +638,11 @@ function GoalsStrip({ goals, todayLog, todayDateStr, recentLogs, sessionsPerWeek
 interface SuggestionsCardProps {
   recentLogs: WorkoutLog[];
   excludeIds: Set<string>;
-  onAddWithValue: (preset: typeof SYSTEM_PRESETS[0], value: number) => void;
+  presets: WorkoutPreset[];
+  onAddWithValue: (preset: WorkoutPreset, value: number) => void;
 }
 
-function SuggestionsCard({ recentLogs, excludeIds, onAddWithValue }: SuggestionsCardProps) {
+function SuggestionsCard({ recentLogs, excludeIds, presets, onAddWithValue }: SuggestionsCardProps) {
   const [collapsed, setCollapsed] = useState(false);
   const suggestions = buildSuggestions(recentLogs, 4, excludeIds);
   if (suggestions.length === 0) return null;
@@ -519,7 +665,7 @@ function SuggestionsCard({ recentLogs, excludeIds, onAddWithValue }: Suggestions
       {!collapsed && (
         <div className="px-3 pb-3 space-y-2">
           {suggestions.map((s) => {
-            const preset = SYSTEM_PRESETS.find(p => p.id === s.presetId);
+            const preset = presets.find(p => p.id === s.presetId);
             return (
               <div key={s.presetId} className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs font-semibold text-text-main flex-shrink-0 min-w-[80px]">{s.name}</span>
@@ -557,6 +703,8 @@ export default function QuickAddPage() {
   const [activeCategory, setActiveCategory] = useState<Category>('all');
   const [showModal, setShowModal] = useState(false);
   const [templates, setTemplates] = useState<WorkoutTemplate[]>([]);
+  const [customPresets, setCustomPresets] = useState<WorkoutPreset[]>([]);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const uid = firebaseUser?.uid;
 
@@ -565,19 +713,36 @@ export default function QuickAddPage() {
     loadRecentLogs(uid);
     loadActiveProgram(uid);
     getTemplates(uid).then(setTemplates).catch(() => {});
+    getCustomPresets(uid).then(setCustomPresets).catch(() => {});
   }, [uid]);
 
   const todayDay = getTodayDay();
   const firstName = profile?.displayName?.split(' ').pop() || 'bạn';
   const streak = profile?.streak?.current || 0;
 
+  const allPresets = useMemo(() => [...customPresets, ...SYSTEM_PRESETS], [customPresets]);
+
   const filteredPresets = activeCategory === 'all'
-    ? SYSTEM_PRESETS
-    : SYSTEM_PRESETS.filter((p) => p.category === activeCategory);
+    ? allPresets
+    : allPresets.filter((p) => p.category === activeCategory);
 
   const draftIds = new Set(draft.exercises.map((e) => e.presetId));
 
-  const handleAddExercise = (preset: typeof SYSTEM_PRESETS[0]) => {
+  const handleCustomCreated = (preset: WorkoutPreset) => {
+    setCustomPresets((prev) => [preset, ...prev]);
+  };
+
+  const handleDeleteCustom = async (preset: WorkoutPreset) => {
+    if (!confirm(`Xoá "${preset.nameVi}"? Không thể hoàn tác.`)) return;
+    try {
+      await deleteCustomPreset(preset.id);
+      setCustomPresets((prev) => prev.filter((p) => p.id !== preset.id));
+    } catch {
+      // best-effort delete; leave preset in place on failure
+    }
+  };
+
+  const handleAddExercise = (preset: WorkoutPreset) => {
     if (draftIds.has(preset.id)) return;
     const yesterday = yesterdayLog?.exercises.find((e) => e.presetId === preset.id);
     const entry: ExerciseEntry = {
@@ -594,7 +759,7 @@ export default function QuickAddPage() {
     addExercise(entry);
   };
 
-  const handleAddWithValue = (preset: typeof SYSTEM_PRESETS[0], value: number) => {
+  const handleAddWithValue = (preset: WorkoutPreset, value: number) => {
     // Remove existing entry for this preset if it exists so we can re-add with new value
     const entry: ExerciseEntry = {
       presetId: preset.id,
@@ -617,7 +782,7 @@ export default function QuickAddPage() {
     setShowModal(true);
   };
 
-  const getSuggestedValue = (preset: typeof SYSTEM_PRESETS[0]) => {
+  const getSuggestedValue = (preset: WorkoutPreset) => {
     const y = yesterdayLog?.exercises.find((e) => e.presetId === preset.id);
     if (preset.unit === 'reps') {
       const reps = y?.reps ?? preset.defaultValue;
@@ -640,6 +805,14 @@ export default function QuickAddPage() {
     <div className="px-4 md:px-8 pt-4 md:pt-6 pb-24">
       {showModal && uid && (
         <WorkoutSummaryModal onClose={() => setShowModal(false)} uid={uid} />
+      )}
+
+      {showCreateModal && uid && (
+        <CreateExerciseModal
+          uid={uid}
+          onClose={() => setShowCreateModal(false)}
+          onCreated={handleCustomCreated}
+        />
       )}
 
       {/* Compact header */}
@@ -713,6 +886,7 @@ export default function QuickAddPage() {
           ...(todayLog?.exercises || []).map(e => e.presetId),
           ...draft.exercises.map(e => e.presetId),
         ])}
+        presets={allPresets}
         onAddWithValue={handleAddWithValue}
       />
 
@@ -750,25 +924,48 @@ export default function QuickAddPage() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+        <button onClick={() => setShowCreateModal(true)}
+          className="bg-card rounded-2xl p-4 border-2 border-dashed border-border hover:border-primary/60 text-text-secondary hover:text-primary transition-all active:scale-95 flex flex-col items-center justify-center gap-1.5 min-h-[112px]">
+          <Plus size={22} />
+          <span className="text-xs font-bold">Tạo bài tập</span>
+        </button>
         {filteredPresets.map((preset) => {
           const inDraft = draftIds.has(preset.id);
           const cc = CATEGORY_COLORS[preset.category] || CATEGORY_COLORS.strength;
           return (
-            <button key={preset.id} onClick={() => handleAddExercise(preset)}
-              className={`bg-card rounded-2xl p-4 border-2 text-left transition-all active:scale-95 ${
+            <div key={preset.id}
+              role="button"
+              tabIndex={0}
+              onClick={() => handleAddExercise(preset)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleAddExercise(preset); }
+              }}
+              className={`relative bg-card rounded-2xl p-4 border-2 text-left transition-all active:scale-95 cursor-pointer ${
                 inDraft ? 'border-primary' : 'border-border hover:border-primary/40'
               }`}>
+              {preset.isCustom && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleDeleteCustom(preset); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.stopPropagation(); }}
+                  className="absolute top-2 right-2 p-1 rounded-full text-text-muted hover:bg-danger-light hover:text-danger transition-colors"
+                  aria-label={`Xoá ${preset.nameVi}`}>
+                  <Trash2 size={14} />
+                </button>
+              )}
               <div className="text-2xl mb-2">{preset.icon}</div>
-              <p className="font-bold text-text-main text-sm leading-tight mb-1">{preset.nameVi}</p>
+              <p className="font-bold text-text-main text-sm leading-tight mb-1 pr-5">{preset.nameVi}</p>
               <p className="text-xs text-text-secondary mb-2">{getSuggestedValue(preset)}</p>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-1">
                 <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
                   style={{ color: cc.text, backgroundColor: cc.bg }}>
                   {CATEGORY_LABELS[preset.category]}
                 </span>
-                {inDraft && <span className="text-xs font-bold text-primary">✓</span>}
+                {preset.isCustom && (
+                  <span className="text-[9px] font-bold text-primary bg-primary-light px-1.5 py-0.5 rounded-full flex-shrink-0">Tự tạo</span>
+                )}
+                {inDraft && <span className="text-xs font-bold text-primary flex-shrink-0">✓</span>}
               </div>
-            </button>
+            </div>
           );
         })}
       </div>
