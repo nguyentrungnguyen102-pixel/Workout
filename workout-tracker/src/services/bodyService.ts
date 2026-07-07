@@ -5,6 +5,7 @@ import {
   getDocs,
   query,
   where,
+  orderBy,
   limit,
   serverTimestamp,
 } from 'firebase/firestore';
@@ -27,9 +28,14 @@ export async function addBodyMetric(
 }
 
 export async function getBodyMetrics(uid: string, count = 30): Promise<BodyMetric[]> {
+  // orderBy('date', 'desc') must come before limit() — without it Firestore
+  // orders by document ID (random, since addDoc generates an auto-ID), so the
+  // 100-doc window can silently drop the most recent entries once a user
+  // passes 100 total measurements.
   const q = query(
     collection(db, 'bodyMetrics'),
     where('userId', '==', uid),
+    orderBy('date', 'desc'),
     limit(100)
   );
   const snap = await getDocs(q);

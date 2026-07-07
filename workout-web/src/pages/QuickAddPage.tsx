@@ -777,7 +777,7 @@ export default function QuickAddPage() {
         <div className="fixed bottom-16 md:bottom-6 left-0 right-0 md:left-56 lg:left-60 max-w-md md:max-w-3xl lg:max-w-5xl mx-auto px-4 z-40">
           <button onClick={() => setShowModal(true)}
             className="w-full py-4 bg-primary text-white font-black text-base rounded-2xl shadow-lg shadow-primary/40 flex items-center justify-center gap-2">
-            <span>Log workout ({draft.exercises.length} bài)</span>
+            <span>Ghi nhận ({draft.exercises.length} bài)</span>
             <ChevronRight size={20} />
           </button>
         </div>

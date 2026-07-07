@@ -6,6 +6,7 @@ import {
   getDocs,
   query,
   where,
+  orderBy,
   limit,
   serverTimestamp,
   increment,
@@ -92,9 +93,14 @@ export async function logWorkout(uid: string, draft: DraftWorkout): Promise<stri
 }
 
 export async function getRecentLogs(uid: string, count = 10): Promise<WorkoutLog[]> {
+  // orderBy('date', 'desc') must come before limit() — without it Firestore
+  // orders by document ID (random, since logRef uses an auto-ID), so the
+  // 200-doc window can silently drop the most recent logs once a user passes
+  // 200 total entries.
   const q = query(
     collection(db, 'logs'),
     where('userId', '==', uid),
+    orderBy('date', 'desc'),
     limit(200)
   );
   const snap = await getDocs(q);
@@ -108,16 +114,18 @@ export async function getRecentLogs(uid: string, count = 10): Promise<WorkoutLog
 }
 
 export async function getLogsForHeatmap(uid: string, startDate: string): Promise<WorkoutLog[]> {
+  // Filters by date range server-side (using the existing userId+date index)
+  // instead of fetching an arbitrary 200-doc window and filtering client-side,
+  // which silently drops logs for users with more than 200 total entries.
   const q = query(
     collection(db, 'logs'),
     where('userId', '==', uid),
-    limit(200)
+    where('date', '>=', startDate),
+    orderBy('date', 'asc'),
+    limit(2000)
   );
   const snap = await getDocs(q);
-  return snap.docs
-    .map((d) => d.data() as WorkoutLog)
-    .filter((log) => log.date >= startDate)
-    .sort((a, b) => a.date.localeCompare(b.date));
+  return snap.docs.map((d) => d.data() as WorkoutLog);
 }
 
 export function buildDraftFromLog(log: WorkoutLog): DraftWorkout {
@@ -135,7 +143,11 @@ export async function getLogById(logId: string): Promise<WorkoutLog | null> {
 }
 
 export async function getLogsForExercise(uid: string, presetId: string): Promise<WorkoutLog[]> {
-  const q = query(collection(db, 'logs'), where('userId', '==', uid), limit(200));
+  // No index exists on individual exercise presetIds within the exercises
+  // array, so this still fetches-then-filters client-side — but ordering by
+  // date desc (matching the existing composite index) means the fetched
+  // window is the most recent logs, not an arbitrary slice.
+  const q = query(collection(db, 'logs'), where('userId', '==', uid), orderBy('date', 'desc'), limit(500));
   const snap = await getDocs(q);
   return snap.docs
     .map((d) => d.data() as WorkoutLog)
@@ -144,10 +156,11 @@ export async function getLogsForExercise(uid: string, presetId: string): Promise
 }
 
 export async function getLogsForDate(uid: string, date: string): Promise<WorkoutLog[]> {
-  const q = query(collection(db, 'logs'), where('userId', '==', uid), limit(200));
+  // Exact-match equality filters don't need a composite index, so this can
+  // filter server-side instead of scanning a capped, potentially-stale window.
+  const q = query(collection(db, 'logs'), where('userId', '==', uid), where('date', '==', date));
   const snap = await getDocs(q);
   return snap.docs
     .map((d) => d.data() as WorkoutLog)
-    .filter((log) => log.date === date)
     .sort((a, b) => (b.createdAt?.toMillis() ?? Date.now()) - (a.createdAt?.toMillis() ?? Date.now()));
 }

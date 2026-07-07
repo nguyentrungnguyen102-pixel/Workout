@@ -5,7 +5,7 @@ import {
   Intensity,
   WorkoutLog,
 } from '../types/workout';
-import { logWorkout as saveLog, getRecentLogs } from '../services/workoutService';
+import { logWorkout as saveLog, getLogsForHeatmap } from '../services/workoutService';
 import { updateStreakAfterLog, updateWeeklyMinutes } from '../services/userService';
 import { todayString, yesterdayString } from '../lib/date';
 import { aggregateExercises } from '../lib/dayTimeline';
@@ -151,9 +151,23 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
     });
   },
 
-  // Fetches recent logs and derives todayLog + yesterdayLog from the same dataset
+  // Fetches recent logs and derives todayLog + yesterdayLog from the same dataset.
+  // Uses a date-range fetch (last 35 days) rather than a fixed doc count — a
+  // count-based cap undercounts "days trained this week/month" for users who
+  // log more than once a day, since older days get pushed out of the window
+  // before the month/week does.
   loadRecentLogs: async (uid) => {
-    const logs = await getRecentLogs(uid, 30);
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 35);
+    const cutoffStr = `${cutoff.getFullYear()}-${String(cutoff.getMonth() + 1).padStart(2, '0')}-${String(cutoff.getDate()).padStart(2, '0')}`;
+    const logs = await getLogsForHeatmap(uid, cutoffStr);
+    // getLogsForHeatmap only orders by date — break ties within the same date
+    // by createdAt desc so "todayLogs[0]" / "yesterdayLogs[0]" below picks the
+    // most-recently-logged entry as the base, same as before this fetch changed.
+    logs.sort((a, b) => {
+      const d = b.date.localeCompare(a.date);
+      return d !== 0 ? d : (b.createdAt?.toMillis() ?? 0) - (a.createdAt?.toMillis() ?? 0);
+    });
     const today = todayString();
     const yesterday = yesterdayString();
 
