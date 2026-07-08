@@ -187,20 +187,52 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
 
                 <div className="flex items-center gap-3 flex-wrap">
                   {ex.unit === 'reps' && (
-                    <div className="flex items-center gap-2 flex-1">
-                      <label className="text-xs text-text-secondary">Số lượng:</label>
-                      <input
-                        type="number"
-                        min={1}
-                        className="w-20 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
-                        value={ex.reps ?? 0}
-                        onChange={(e) => {
-                          const v = parseInt(e.target.value) || 0;
-                          updateExercise(ex.presetId, { reps: Math.max(1, v) });
-                        }}
-                      />
-                      <span className="text-xs text-text-secondary">cái</span>
-                    </div>
+                    <>
+                      <div className="flex items-center gap-2">
+                        <label className="text-xs text-text-secondary">Hiệp:</label>
+                        <input
+                          type="number"
+                          min={1}
+                          className="w-14 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
+                          value={ex.sets ?? 3}
+                          onChange={(e) => {
+                            const v = parseInt(e.target.value) || 0;
+                            updateExercise(ex.presetId, { sets: Math.max(1, v) });
+                          }}
+                        />
+                      </div>
+                      <div className="flex items-center gap-2 flex-1">
+                        <label className="text-xs text-text-secondary">Số lượng:</label>
+                        <input
+                          type="number"
+                          min={1}
+                          className="w-20 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
+                          value={ex.reps ?? 0}
+                          onChange={(e) => {
+                            const v = parseInt(e.target.value) || 0;
+                            updateExercise(ex.presetId, { reps: Math.max(1, v) });
+                          }}
+                        />
+                        <span className="text-xs text-text-secondary">cái</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <label className="text-xs text-text-secondary">🏋️ Tạ (kg):</label>
+                        <input
+                          type="number"
+                          min={0}
+                          step={0.5}
+                          placeholder="--"
+                          className="w-16 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
+                          value={ex.weight ?? ''}
+                          onChange={(e) => {
+                            if (e.target.value === '') { updateExercise(ex.presetId, { weight: undefined }); return; }
+                            const v = parseFloat(e.target.value);
+                            if (isNaN(v) || v < 0) return;
+                            updateExercise(ex.presetId, { weight: v });
+                          }}
+                        />
+                      </div>
+                    </>
                   )}
 
                   {(ex.unit === 'seconds' || ex.unit === 'minutes') && (
@@ -585,25 +617,28 @@ export default function QuickAddPage() {
       name: preset.nameVi,
       category: preset.category,
       unit: preset.unit,
-      sets: 1,
+      sets: yesterday?.sets ?? preset.defaultSets ?? 3,
       reps: preset.unit === 'reps' ? (yesterday?.reps ?? preset.defaultValue) : undefined,
       durationSeconds: (preset.unit === 'seconds' || preset.unit === 'minutes')
         ? (yesterday?.durationSeconds ?? (preset.unit === 'seconds' ? preset.defaultValue : preset.defaultValue * 60))
         : undefined,
+      weight: preset.unit === 'reps' ? yesterday?.weight : undefined,
     };
     addExercise(entry);
   };
 
   const handleAddWithValue = (preset: typeof SYSTEM_PRESETS[0], value: number) => {
     // Remove existing entry for this preset if it exists so we can re-add with new value
+    const yesterday = yesterdayLog?.exercises.find((e) => e.presetId === preset.id);
     const entry: ExerciseEntry = {
       presetId: preset.id,
       name: preset.nameVi,
       category: preset.category,
       unit: preset.unit,
-      sets: 1,
+      sets: yesterday?.sets ?? preset.defaultSets ?? 3,
       reps: preset.unit === 'reps' ? value : undefined,
       durationSeconds: (preset.unit === 'seconds' || preset.unit === 'minutes') ? value : undefined,
+      weight: preset.unit === 'reps' ? yesterday?.weight : undefined,
     };
     if (draftIds.has(preset.id)) {
       // Update existing

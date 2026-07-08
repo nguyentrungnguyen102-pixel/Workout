@@ -74,13 +74,15 @@ function getVolumeProgress(logs: WorkoutLog[]): Array<{ name: string; thisWeek: 
   const thisWeekMap = new Map<string, number>();
   for (const log of thisWeekLogs) {
     for (const ex of log.exercises) {
-      thisWeekMap.set(ex.name, (thisWeekMap.get(ex.name) || 0) + ex.sets * (ex.reps || 1));
+      if (!ex.weight || !ex.reps) continue;
+      thisWeekMap.set(ex.name, (thisWeekMap.get(ex.name) || 0) + ex.sets * ex.reps * ex.weight);
     }
   }
   const lastWeekMap = new Map<string, number>();
   for (const log of lastWeekLogs) {
     for (const ex of log.exercises) {
-      lastWeekMap.set(ex.name, (lastWeekMap.get(ex.name) || 0) + ex.sets * (ex.reps || 1));
+      if (!ex.weight || !ex.reps) continue;
+      lastWeekMap.set(ex.name, (lastWeekMap.get(ex.name) || 0) + ex.sets * ex.reps * ex.weight);
     }
   }
 
@@ -88,9 +90,10 @@ function getVolumeProgress(logs: WorkoutLog[]): Array<{ name: string; thisWeek: 
   return [...allNames]
     .map((name) => ({
       name,
-      thisWeek: thisWeekMap.get(name) || 0,
-      lastWeek: lastWeekMap.get(name) || 0,
+      thisWeek: Math.round(thisWeekMap.get(name) || 0),
+      lastWeek: Math.round(lastWeekMap.get(name) || 0),
     }))
+    .filter((e) => e.thisWeek > 0 || e.lastWeek > 0)
     .sort((a, b) => b.thisWeek - a.thisWeek)
     .slice(0, 5);
 }
@@ -322,7 +325,7 @@ export default function StatsPage() {
 
       {volumeProgress.length > 0 && (
         <div className="bg-card rounded-2xl border border-border p-4 mb-4">
-          <p className="text-sm font-bold text-text-main mb-3">Khối lượng tuần này vs tuần trước</p>
+          <p className="text-sm font-bold text-text-main mb-3">📈 Khối lượng tạ (kg) — tuần này vs tuần trước</p>
           <div className="space-y-2">
             {volumeProgress.map((v) => {
               const max = Math.max(v.thisWeek, v.lastWeek, 1);
@@ -330,7 +333,7 @@ export default function StatsPage() {
                 <div key={v.name}>
                   <div className="flex justify-between text-xs text-text-secondary mb-1">
                     <span className="truncate max-w-[120px]">{v.name}</span>
-                    <span>{v.thisWeek} vs {v.lastWeek}</span>
+                    <span>{v.thisWeek} kg vs {v.lastWeek} kg</span>
                   </div>
                   <div className="flex gap-1 h-2">
                     <div className="h-full bg-primary rounded-sm transition-all" style={{ width: `${(v.thisWeek / max) * 50}%` }} />
