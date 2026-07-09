@@ -119,7 +119,7 @@ export default function ExerciseProgressPage() {
                   )}
                   <Tooltip
                     contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #E8E7E2' }}
-                    formatter={(v: number, name: string) => [v, name === 'weight' ? 'kg' : (preset?.unit === 'reps' ? 'reps' : 'phút')]}
+                    formatter={(v: number, name: string) => [v, name]}
                   />
                   {hasWeightData && <Legend wrapperStyle={{ fontSize: 11 }} />}
                   <Line yAxisId="left" type="monotone" dataKey="value" name={preset?.unit === 'reps' ? 'reps' : 'phút'} stroke="#FF5400" strokeWidth={2.5} dot={{ r: 3, fill: '#FF5400' }} />
