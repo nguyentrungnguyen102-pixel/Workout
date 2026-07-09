@@ -99,6 +99,10 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
   const [templateName, setTemplateName] = useState('');
   const [showTemplateInput, setShowTemplateInput] = useState(false);
 
+  const totalVolume = draft.exercises.reduce((sum, ex) => (
+    ex.weight && ex.reps ? sum + ex.sets * ex.reps * ex.weight : sum
+  ), 0);
+
   // Default the workout time to "now" when the modal opens with no time set.
   useEffect(() => {
     if (!draft.startedAt) setStartedAt(new Date());
@@ -164,11 +168,20 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
           <p className="text-[10px] text-text-muted mt-1">Mặc định là bây giờ. Sửa nếu bạn quên ghi lúc tập.</p>
         </div>
 
+        {totalVolume > 0 && (
+          <div className="bg-primary-light border border-primary/20 rounded-2xl p-3 flex items-center justify-between">
+            <span className="text-xs font-semibold text-primary">🏋️ Tổng volume buổi tập</span>
+            <span className="text-sm font-black text-primary">{totalVolume.toLocaleString('vi-VN')} kg</span>
+          </div>
+        )}
+
         {draft.exercises.length === 0 ? (
           <p className="text-text-secondary text-center py-8 text-sm">Chưa có bài tập nào. Quay lại để thêm.</p>
         ) : (
           draft.exercises.map((ex) => {
             const cc = CATEGORY_COLORS[ex.category] || CATEGORY_COLORS.strength;
+            const isWeighted = ex.unit === 'reps' && (ex.category === 'dumbbell' || ex.category === 'strength');
+            const volume = ex.weight && ex.reps ? ex.sets * ex.reps * ex.weight : 0;
             return (
               <div key={ex.presetId} className="bg-card rounded-2xl p-4 border border-border">
                 <div className="flex items-start justify-between mb-3">
@@ -227,7 +240,30 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
                       </span>
                     </div>
                   )}
+
+                  {isWeighted && (
+                    <div className="flex items-center gap-2 flex-1">
+                      <label className="text-xs text-text-secondary">Tạ (kg):</label>
+                      <input
+                        type="number"
+                        min={0}
+                        step={0.5}
+                        placeholder="0"
+                        className="w-20 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
+                        value={ex.weight ?? ''}
+                        onChange={(e) => {
+                          const v = e.target.value === '' ? undefined : Math.max(0, parseFloat(e.target.value) || 0);
+                          updateExercise(ex.presetId, { weight: v });
+                        }}
+                      />
+                      <span className="text-xs text-text-secondary">kg</span>
+                    </div>
+                  )}
                 </div>
+
+                {volume > 0 && (
+                  <p className="text-[11px] text-text-muted mt-2">Volume: {volume.toLocaleString('vi-VN')} kg</p>
+                )}
               </div>
             );
           })
@@ -577,6 +613,9 @@ export default function QuickAddPage() {
 
   const draftIds = new Set(draft.exercises.map((e) => e.presetId));
 
+  const isWeightedPreset = (preset: typeof SYSTEM_PRESETS[0]) =>
+    preset.unit === 'reps' && (preset.category === 'dumbbell' || preset.category === 'strength');
+
   const handleAddExercise = (preset: typeof SYSTEM_PRESETS[0]) => {
     if (draftIds.has(preset.id)) return;
     const yesterday = yesterdayLog?.exercises.find((e) => e.presetId === preset.id);
@@ -590,11 +629,13 @@ export default function QuickAddPage() {
       durationSeconds: (preset.unit === 'seconds' || preset.unit === 'minutes')
         ? (yesterday?.durationSeconds ?? (preset.unit === 'seconds' ? preset.defaultValue : preset.defaultValue * 60))
         : undefined,
+      weight: isWeightedPreset(preset) ? yesterday?.weight : undefined,
     };
     addExercise(entry);
   };
 
   const handleAddWithValue = (preset: typeof SYSTEM_PRESETS[0], value: number) => {
+    const yesterday = yesterdayLog?.exercises.find((e) => e.presetId === preset.id);
     // Remove existing entry for this preset if it exists so we can re-add with new value
     const entry: ExerciseEntry = {
       presetId: preset.id,
@@ -604,6 +645,7 @@ export default function QuickAddPage() {
       sets: 1,
       reps: preset.unit === 'reps' ? value : undefined,
       durationSeconds: (preset.unit === 'seconds' || preset.unit === 'minutes') ? value : undefined,
+      weight: isWeightedPreset(preset) ? yesterday?.weight : undefined,
     };
     if (draftIds.has(preset.id)) {
       // Update existing
@@ -632,6 +674,11 @@ export default function QuickAddPage() {
       return formatAmount({ unit: 'minutes', durationSeconds: secs });
     }
     return `${preset.defaultValue}`;
+  };
+
+  const getLastWeight = (preset: typeof SYSTEM_PRESETS[0]): number | undefined => {
+    if (!isWeightedPreset(preset)) return undefined;
+    return yesterdayLog?.exercises.find((e) => e.presetId === preset.id)?.weight;
   };
 
   const todayDateStr = todayString();
@@ -753,6 +800,7 @@ export default function QuickAddPage() {
         {filteredPresets.map((preset) => {
           const inDraft = draftIds.has(preset.id);
           const cc = CATEGORY_COLORS[preset.category] || CATEGORY_COLORS.strength;
+          const lastWeight = getLastWeight(preset);
           return (
             <button key={preset.id} onClick={() => handleAddExercise(preset)}
               className={`bg-card rounded-2xl p-4 border-2 text-left transition-all active:scale-95 ${
@@ -760,7 +808,9 @@ export default function QuickAddPage() {
               }`}>
               <div className="text-2xl mb-2">{preset.icon}</div>
               <p className="font-bold text-text-main text-sm leading-tight mb-1">{preset.nameVi}</p>
-              <p className="text-xs text-text-secondary mb-2">{getSuggestedValue(preset)}</p>
+              <p className="text-xs text-text-secondary mb-2">
+                {getSuggestedValue(preset)}{lastWeight ? ` · ⚖️ ${lastWeight}kg` : ''}
+              </p>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
                   style={{ color: cc.text, backgroundColor: cc.bg }}>

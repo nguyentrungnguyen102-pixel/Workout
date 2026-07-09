@@ -87,6 +87,3 @@ export async function updateWeeklyMinutes(uid: string, minutes: number): Promise
   });
 }
 
-export async function saveFcmToken(uid: string, token: string): Promise<void> {
-  await updateDoc(doc(db, 'users', uid), { fcmToken: token });
-}

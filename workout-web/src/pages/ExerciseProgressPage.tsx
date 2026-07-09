@@ -6,7 +6,7 @@ import { getLogsForExercise } from '../services/workoutService';
 import { computePRs, getPRLabel } from '../services/prService';
 import { SYSTEM_PRESETS } from '../constants/exercises';
 import { WorkoutLog } from '../types/workout';
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
 function formatDateShort(dateStr: string): string {
   const d = new Date(dateStr + 'T00:00:00');
@@ -61,9 +61,12 @@ export default function ExerciseProgressPage() {
         date: formatDateShort(log.date),
         value: ex.unit === 'reps' ? (ex.reps || 0) : Math.round((ex.durationSeconds || 0) / 60),
         sets: ex.sets,
+        weight: ex.weight,
       };
     })
-    .filter(Boolean) as Array<{ date: string; value: number; sets: number }>;
+    .filter(Boolean) as Array<{ date: string; value: number; sets: number; weight?: number }>;
+
+  const hasWeightData = chartData.some((d) => d.weight !== undefined);
 
   return (
     <div className="px-4 md:px-8 pt-6 md:pt-8 pb-8">
@@ -105,16 +108,24 @@ export default function ExerciseProgressPage() {
             <div className="bg-card rounded-2xl border border-border p-4 mb-4">
               <p className="text-sm font-bold text-text-main mb-3">
                 {preset?.unit === 'reps' ? 'Số reps' : 'Thời gian (phút)'}
+                {hasWeightData ? ' · Tạ (kg)' : ''}
               </p>
               <ResponsiveContainer width="100%" height={140}>
                 <LineChart data={chartData} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
                   <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#8A8A8A' }} />
-                  <YAxis tick={{ fontSize: 10, fill: '#8A8A8A' }} domain={['auto', 'auto']} />
+                  <YAxis yAxisId="left" tick={{ fontSize: 10, fill: '#8A8A8A' }} domain={['auto', 'auto']} />
+                  {hasWeightData && (
+                    <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10, fill: '#8A8A8A' }} domain={['auto', 'auto']} />
+                  )}
                   <Tooltip
                     contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #E8E7E2' }}
-                    formatter={(v: number) => [v, preset?.unit === 'reps' ? 'reps' : 'phút']}
+                    formatter={(v: number, name: string) => [v, name === 'weight' ? 'kg' : (preset?.unit === 'reps' ? 'reps' : 'phút')]}
                   />
-                  <Line type="monotone" dataKey="value" stroke="#FF5400" strokeWidth={2.5} dot={{ r: 3, fill: '#FF5400' }} />
+                  {hasWeightData && <Legend wrapperStyle={{ fontSize: 11 }} />}
+                  <Line yAxisId="left" type="monotone" dataKey="value" name={preset?.unit === 'reps' ? 'reps' : 'phút'} stroke="#FF5400" strokeWidth={2.5} dot={{ r: 3, fill: '#FF5400' }} />
+                  {hasWeightData && (
+                    <Line yAxisId="right" type="monotone" dataKey="weight" name="kg" stroke="#B45309" strokeWidth={2} strokeDasharray="4 3" dot={{ r: 3, fill: '#B45309' }} connectNulls />
+                  )}
                 </LineChart>
               </ResponsiveContainer>
             </div>

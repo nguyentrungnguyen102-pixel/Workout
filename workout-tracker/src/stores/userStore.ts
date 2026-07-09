@@ -30,8 +30,6 @@ export const useUserStore = create<UserStore>((set, get) => ({
       email: firebaseUser?.email || '',
       photoURL: firebaseUser?.photoURL || undefined,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      reminderEnabled: true,
-      reminderTime: '07:30',
       weeklyGoalMinutes: 150,
       weeklyGoalSessions: 4,
       streak: { current: 0, longest: 0, lastWorkoutDate: '', streakStartDate: '' },
