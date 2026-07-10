@@ -35,15 +35,23 @@ export function getISOWeek(dateStr: string): { week: number; year: number } {
   return { week, year: thursday.getFullYear() };
 }
 
-export function getWeekLabel(dateStr: string): string {
-  const todayStr = todayString();
-  const { week: tw, year: ty } = getISOWeek(todayStr);
-  const { week: dw, year: dy } = getISOWeek(dateStr);
-  if (ty === dy && tw === dw) return 'Tuần này';
-  if (ty === dy && tw - 1 === dw) return 'Tuần trước';
+function mondayOf(dateStr: string): Date {
   const d = new Date(dateStr + 'T00:00:00');
   const monday = new Date(d);
   monday.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  return monday;
+}
+
+export function getWeekLabel(dateStr: string): string {
+  // Compare Monday-of-week by elapsed days rather than ISO week+year, since
+  // ISO week numbers reset at each year boundary and "week N of year Y" vs
+  // "week N-1 of year Y" breaks around New Year's (e.g. week 1 of 2026 vs
+  // week 52 of 2025 are consecutive weeks but have different `year`).
+  const todayMonday = mondayOf(todayString());
+  const monday = mondayOf(dateStr);
+  const diffDays = Math.round((todayMonday.getTime() - monday.getTime()) / 86_400_000);
+  if (diffDays === 0) return 'Tuần này';
+  if (diffDays === 7) return 'Tuần trước';
   return `Tuần ${monday.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}`;
 }
 

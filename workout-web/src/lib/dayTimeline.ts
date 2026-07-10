@@ -1,5 +1,6 @@
 import { WorkoutLog, ExerciseEntry } from '../types/workout';
 import { formatTime24 } from './format';
+import { todayString } from './date';
 
 export interface TimelineItem {
   time: string | null;
@@ -35,10 +36,11 @@ export function weekStartStr(): string {
 // Sum reps & durationSeconds for one preset across the current week's logs.
 export function sumThisWeek(logs: WorkoutLog[], presetId: string): { reps: number; seconds: number } {
   const ws = weekStartStr();
+  const today = todayString();
   let reps = 0;
   let seconds = 0;
   for (const l of logs) {
-    if (l.date < ws) continue;
+    if (l.date < ws || l.date > today) continue;
     for (const ex of l.exercises) {
       if (ex.presetId !== presetId) continue;
       reps += ex.reps ?? 0;
@@ -53,13 +55,15 @@ export function aggregateExercises(logs: WorkoutLog[]): ExerciseEntry[] {
   for (const log of logs) {
     for (const ex of log.exercises) {
       if (!map.has(ex.presetId)) {
-        map.set(ex.presetId, { ...ex, sets: 1, reps: ex.reps ?? 0, durationSeconds: ex.durationSeconds ?? 0 });
+        map.set(ex.presetId, { ...ex, sets: ex.sets ?? 1, reps: ex.reps ?? 0, durationSeconds: ex.durationSeconds ?? 0, distance: ex.distance ?? 0 });
       } else {
         const existing = map.get(ex.presetId)!;
         map.set(ex.presetId, {
           ...existing,
+          sets: (existing.sets ?? 0) + (ex.sets ?? 0),
           reps: (existing.reps ?? 0) + (ex.reps ?? 0),
           durationSeconds: (existing.durationSeconds ?? 0) + (ex.durationSeconds ?? 0),
+          distance: (existing.distance ?? 0) + (ex.distance ?? 0),
         });
       }
     }

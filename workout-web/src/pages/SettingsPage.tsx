@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { LogOut, ChevronRight, Plus, X, Target } from 'lucide-react';
 import { signOut } from 'firebase/auth';
@@ -22,6 +22,20 @@ export default function SettingsPage() {
   const [goalSearch, setGoalSearch] = useState('');
   const [newGoalPresetId, setNewGoalPresetId] = useState('');
   const [newGoalValue, setNewGoalValue] = useState('');
+
+  // AuthGuard only gates on auth resolution, not on userStore.loadProfile()'s
+  // Firestore fetch — profile is frequently still null on mount and populates
+  // moments later. Re-sync the local form state once it arrives so a page
+  // load/refresh on this route doesn't show the user's goals as empty.
+  const profileSyncedRef = useRef(false);
+  useEffect(() => {
+    if (profile && !profileSyncedRef.current) {
+      profileSyncedRef.current = true;
+      setWeeklyGoal(String(profile.weeklyGoalMinutes || 150));
+      setSheetsId(profile.sheetsId || '');
+      setGoals(profile.exerciseGoals || []);
+    }
+  }, [profile]);
 
   const uid = firebaseUser?.uid;
   const streak = profile?.streak?.current || 0;

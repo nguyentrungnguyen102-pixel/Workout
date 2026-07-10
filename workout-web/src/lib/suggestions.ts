@@ -28,11 +28,14 @@ function roundNice(value: number, unit: string): number {
 }
 
 export function buildSuggestions(logs: WorkoutLog[], max = 4, excludeIds?: Set<string>): Suggestion[] {
-  // Filter logs from last 30 days
+  // Filter logs from last 30 days. WorkoutLog.date is always a local-timezone
+  // YYYY-MM-DD string, so the cutoff must be computed the same way (not via
+  // toISOString, which is UTC and can shift the boundary by a day).
   const now = new Date();
   const cutoff = new Date(now);
   cutoff.setDate(cutoff.getDate() - 30);
-  const cutoffStr = cutoff.toISOString().slice(0, 10);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const cutoffStr = `${cutoff.getFullYear()}-${pad(cutoff.getMonth() + 1)}-${pad(cutoff.getDate())}`;
 
   const recentLogs = logs.filter((l) => l.date >= cutoffStr);
 
@@ -45,6 +48,8 @@ export function buildSuggestions(logs: WorkoutLog[], max = 4, excludeIds?: Set<s
       let bestValue: number;
       if (ex.unit === 'reps') {
         bestValue = ex.reps ?? 0;
+      } else if (ex.unit === 'km') {
+        bestValue = ex.distance ?? 0;
       } else {
         bestValue = ex.durationSeconds ?? 0;
       }
