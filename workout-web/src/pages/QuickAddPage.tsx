@@ -203,6 +203,25 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
                     </div>
                   )}
 
+                  {ex.unit === 'reps' && (
+                    <div className="flex items-center gap-2 flex-1">
+                      <label className="text-xs text-text-secondary">🏋️ Tạ (kg):</label>
+                      <input
+                        type="number"
+                        min={0}
+                        step="0.5"
+                        placeholder="--"
+                        className="w-20 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
+                        value={ex.weight ?? ''}
+                        onChange={(e) => {
+                          const v = parseFloat(e.target.value);
+                          updateExercise(ex.presetId, { weight: !isNaN(v) && v >= 0 ? v : undefined });
+                        }}
+                      />
+                      <span className="text-xs text-text-secondary">kg</span>
+                    </div>
+                  )}
+
                   {(ex.unit === 'seconds' || ex.unit === 'minutes') && (
                     <div className="flex items-center gap-2 flex-1">
                       <label className="text-xs text-text-secondary">
