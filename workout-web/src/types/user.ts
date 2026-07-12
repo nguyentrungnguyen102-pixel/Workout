@@ -34,7 +34,6 @@ export interface UserProfile {
   reminderTime: string;
   weeklyGoalMinutes: number;
   weeklyGoalSessions: number;
-  fcmToken?: string;
   sheetsId?: string;
   exerciseGoals?: ExerciseGoal[];
   streak: UserStreak;
