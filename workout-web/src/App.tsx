@@ -68,10 +68,11 @@ export default function App() {
             <Route path="history" element={<Navigate to="/stats" replace />} />
             <Route path="history/day/:date" element={<DayDetailPage />} />
             <Route path="history/:logId" element={<LogDetailPage />} />
-            <Route path="body" element={<BodyPage />} />
+            <Route path="body" element={<Navigate to="/settings/body" replace />} />
             <Route path="stats" element={<StatsPage />} />
             <Route path="stats/exercise/:presetId" element={<ExerciseProgressPage />} />
             <Route path="settings" element={<SettingsPage />} />
+            <Route path="settings/body" element={<BodyPage />} />
             <Route path="programs" element={<ProgramsPage />} />
             <Route path="programs/:id" element={<ProgramDetailPage />} />
           </Route>

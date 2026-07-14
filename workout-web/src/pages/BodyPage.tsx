@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Plus, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Plus, X } from 'lucide-react';
 import { useUserStore } from '../stores/userStore';
 import { useBodyStore } from '../stores/bodyStore';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
@@ -92,6 +93,7 @@ function AddMetricForm({ onSave, onClose }: AddMetricFormProps) {
 }
 
 export default function BodyPage() {
+  const navigate = useNavigate();
   const { firebaseUser } = useUserStore();
   const { metrics, latestMetric, loading, loadMetrics, addMetric } = useBodyStore();
   const [showForm, setShowForm] = useState(false);
@@ -121,7 +123,13 @@ export default function BodyPage() {
   return (
     <div className="px-4 md:px-8 pt-6 md:pt-8 pb-8">
       <div className="flex items-center justify-between mb-5">
-        <h1 className="text-2xl font-black text-text-main">Cơ thể</h1>
+        <div className="flex items-center gap-3">
+          <button onClick={() => navigate('/settings')}
+            className="p-2 rounded-xl hover:bg-card-2 transition-colors">
+            <ArrowLeft size={20} className="text-text-secondary" />
+          </button>
+          <h1 className="text-2xl font-black text-text-main">Cơ thể</h1>
+        </div>
         <button onClick={() => setShowForm(true)}
           className="flex items-center gap-1.5 bg-primary text-white text-sm font-bold px-4 py-2 rounded-xl">
           <Plus size={16} />

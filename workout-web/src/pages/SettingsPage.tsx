@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { LogOut, ChevronRight, Plus, X, Target } from 'lucide-react';
 import { signOut } from 'firebase/auth';
@@ -7,6 +7,8 @@ import { useUserStore } from '../stores/userStore';
 import { ExerciseGoal } from '../types/user';
 import { SYSTEM_PRESETS } from '../constants/exercises';
 import { APP_VERSION } from '../constants/version';
+import { getBodyMetrics } from '../services/bodyService';
+import { BodyMetric } from '../types/body';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -39,6 +41,23 @@ export default function SettingsPage() {
 
   const uid = firebaseUser?.uid;
   const streak = profile?.streak?.current || 0;
+
+  // Latest weight preview for the "Cơ thể" card — fetch just the 2 most
+  // recent body-metric records (not the full history) so this settings page
+  // stays light; getBodyMetrics already sorts newest-first.
+  const [bodyMetrics, setBodyMetrics] = useState<BodyMetric[]>([]);
+  useEffect(() => {
+    if (!uid) return;
+    getBodyMetrics(uid, 2).then(setBodyMetrics).catch(() => setBodyMetrics([]));
+  }, [uid]);
+
+  const latestWeight = bodyMetrics[0]?.weight;
+  const weightDelta = useMemo(() => {
+    const latest = bodyMetrics[0]?.weight;
+    const prev = bodyMetrics[1]?.weight;
+    if (latest === undefined || prev === undefined) return null;
+    return Math.round((latest - prev) * 10) / 10;
+  }, [bodyMetrics]);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -297,6 +316,33 @@ export default function SettingsPage() {
         </div>
         <ChevronRight size={18} className="text-text-secondary" />
       </Link>
+
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => navigate('/settings/body')}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/settings/body'); } }}
+        className="flex items-center justify-between bg-card rounded-2xl border border-border p-4 mb-4 hover:border-primary/40 transition-colors cursor-pointer">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-xl bg-primary-light flex items-center justify-center text-lg flex-shrink-0">📏</div>
+          <div className="min-w-0">
+            <p className="font-semibold text-text-main text-sm">Cơ thể</p>
+            {latestWeight !== undefined ? (
+              <p className="text-xs text-text-secondary mt-0.5">
+                {latestWeight} kg
+                {weightDelta !== null && weightDelta !== 0 && (
+                  <span className={`ml-1.5 font-semibold ${weightDelta > 0 ? 'text-danger' : 'text-success'}`}>
+                    {weightDelta > 0 ? '+' : ''}{weightDelta} kg
+                  </span>
+                )}
+              </p>
+            ) : (
+              <p className="text-xs text-text-secondary mt-0.5">Chưa có dữ liệu</p>
+            )}
+          </div>
+        </div>
+        <ChevronRight size={18} className="text-text-secondary flex-shrink-0" />
+      </div>
 
       <div className="bg-card rounded-2xl border border-border p-4 mb-4">
         <p className="text-xs font-semibold text-text-secondary mb-2">THÔNG TIN</p>

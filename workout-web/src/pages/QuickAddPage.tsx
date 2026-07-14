@@ -5,9 +5,11 @@ import { useUserStore } from '../stores/userStore';
 import { useWorkoutStore } from '../stores/workoutStore';
 import { useProgramStore } from '../stores/programStore';
 import { SYSTEM_PRESETS, CATEGORY_LABELS } from '../constants/exercises';
+import { PROGRAM_TEMPLATES } from '../constants/programTemplates';
 import { getTemplates, saveTemplate } from '../services/templateService';
 import { getCustomPresets, saveCustomPreset, deleteCustomPreset } from '../services/customExerciseService';
 import { WorkoutTemplate, ExerciseEntry, WorkoutLog, WorkoutPreset, ExerciseCategory, ExerciseUnit } from '../types/workout';
+import { WorkoutProgram } from '../types/program';
 import { ExerciseGoal } from '../types/user';
 import { formatAmount } from '../lib/format';
 import { pickCheer, pickWeeklyCheer } from '../lib/cheers';
@@ -762,11 +764,119 @@ function SuggestionsCard({ recentLogs, excludeIds, presets, onAddWithValue }: Su
   );
 }
 
+function formatShortDate(dateStr: string): string {
+  // Defensive: dateStr is expected as 'YYYY-MM-DD'; fall back gracefully if malformed.
+  const d = new Date(`${dateStr}T00:00:00`);
+  if (Number.isNaN(d.getTime())) return dateStr || '--';
+  return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+// recentLogs (from workoutStore.loadRecentLogs -> getLogsForHeatmap) is sorted
+// ASCENDING by date (oldest first), so the most recent log is the LAST item,
+// not recentLogs[0]. When several sessions share the most recent date, merge
+// them (dedup by presetId) the same way the store merges yesterday's logs.
+function getMostRecentLog(recentLogs: WorkoutLog[], yesterdayLog: WorkoutLog | null): WorkoutLog | null {
+  if (!recentLogs || recentLogs.length === 0) return null;
+  const maxDate = recentLogs.reduce((max, l) => (l?.date && l.date > max ? l.date : max), recentLogs[0]?.date ?? '');
+  if (!maxDate) return null;
+  if (yesterdayLog && yesterdayLog.date === maxDate) return yesterdayLog;
+  const sameDate = recentLogs.filter((l) => l.date === maxDate);
+  if (sameDate.length === 0) return null;
+  if (sameDate.length === 1) return sameDate[0];
+  const merged: ExerciseEntry[] = [];
+  const seen = new Set<string>();
+  sameDate.forEach((l) => {
+    (l.exercises || []).forEach((e) => {
+      if (e?.presetId && !seen.has(e.presetId)) {
+        seen.add(e.presetId);
+        merged.push(e);
+      }
+    });
+  });
+  return { ...sameDate[0], exercises: merged };
+}
+
+interface RecentSessionCardProps {
+  log: WorkoutLog;
+  presets: WorkoutPreset[];
+  onRepeat: () => void;
+}
+
+function RecentSessionCard({ log, presets, onRepeat }: RecentSessionCardProps) {
+  const exercises = log.exercises || [];
+  if (exercises.length === 0) return null;
+  const shown = exercises.slice(0, 4);
+  const extra = exercises.length - shown.length;
+
+  return (
+    <div className="rounded-2xl border border-border bg-card mb-3 p-3">
+      <div className="flex items-center justify-between mb-2.5">
+        <p className="text-xs font-bold text-text-secondary">🔁 Buổi gần nhất</p>
+        <span className="text-xs text-text-muted">{formatShortDate(log.date)}</span>
+      </div>
+      <div className="flex flex-wrap gap-1.5 mb-3">
+        {shown.map((ex) => {
+          const preset = presets.find((p) => p.id === ex.presetId);
+          return (
+            <span key={ex.presetId}
+              className="inline-flex items-center gap-1 text-xs font-semibold text-text-main bg-card-2 border border-border rounded-full px-2.5 py-1">
+              <span>{preset?.icon ?? '🏋️'}</span>
+              {ex.name || preset?.nameVi || 'Bài tập'}
+            </span>
+          );
+        })}
+        {extra > 0 && (
+          <span className="text-xs font-semibold text-text-secondary bg-card-2 border border-border rounded-full px-2.5 py-1">
+            +{extra} bài
+          </span>
+        )}
+      </div>
+      <button onClick={onRepeat}
+        className="w-full py-2.5 bg-primary text-white text-sm font-bold rounded-xl active:scale-[0.99] transition-transform">
+        Tập lại buổi này →
+      </button>
+    </div>
+  );
+}
+
+interface ProgramSuggestionCardProps {
+  templates: WorkoutProgram[];
+}
+
+function ProgramSuggestionCard({ templates }: ProgramSuggestionCardProps) {
+  const navigate = useNavigate();
+  if (templates.length === 0) return null;
+
+  return (
+    <div className="rounded-2xl border border-border bg-card mb-3 p-3">
+      <div className="flex items-center justify-between mb-2.5">
+        <p className="text-xs font-bold text-text-secondary">📅 Gợi ý chương trình</p>
+        <button onClick={() => navigate('/programs')} className="text-xs font-semibold text-primary">
+          Xem tất cả →
+        </button>
+      </div>
+      <div className="space-y-2">
+        {templates.map((t) => (
+          <button key={t.id} onClick={() => navigate(`/programs/${t.id}`)}
+            className="w-full flex items-center gap-3 bg-card-2 border border-border rounded-xl p-3 text-left hover:border-primary/40 transition-colors">
+            <span className="text-2xl flex-shrink-0">{t.emoji}</span>
+            <div className="min-w-0 flex-1">
+              <p className="font-bold text-text-main text-sm truncate">{t.nameVi}</p>
+              <p className="text-xs text-text-secondary truncate">{t.descriptionVi}</p>
+            </div>
+            <ChevronRight size={16} className="text-text-secondary flex-shrink-0" />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function QuickAddPage() {
   const navigate = useNavigate();
   const { profile, firebaseUser } = useUserStore();
   const { draft, todayLog, yesterdayLog, recentLogs, addExercise, updateExercise, setDraftFromLog, loadRecentLogs } = useWorkoutStore();
-  const { loadActiveProgram, getTodayDay } = useProgramStore();
+  const { activeState, loadActiveProgram, getTodayDay } = useProgramStore();
   const [activeCategory, setActiveCategory] = useState<Category>('all');
   const [showModal, setShowModal] = useState(false);
   const [templates, setTemplates] = useState<WorkoutTemplate[]>([]);
@@ -788,6 +898,49 @@ export default function QuickAddPage() {
   const streak = profile?.streak?.current || 0;
 
   const allPresets = useMemo(() => [...customPresets, ...SYSTEM_PRESETS], [customPresets]);
+
+  // "Buổi gần nhất" — most recent past session, only relevant when today has
+  // no log yet (otherwise the user is already looking at today's summary).
+  const mostRecentLog = useMemo(
+    () => (todayLog ? null : getMostRecentLog(recentLogs, yesterdayLog)),
+    [todayLog, recentLogs, yesterdayLog]
+  );
+
+  // "Gợi ý chương trình" — only shown when no program is active. Score each
+  // template by how many of the user's top-trained categories (from actual
+  // logged exercises, not the coarse single-value template.focus field) it
+  // covers, then keep the top 2 (ties preserve PROGRAM_TEMPLATES file order
+  // via Array#sort's stable sort).
+  const recommendedTemplates = useMemo<WorkoutProgram[]>(() => {
+    if (activeState) return [];
+    const categoryCounts: Partial<Record<ExerciseCategory, number>> = {};
+    recentLogs.forEach((log) => {
+      (log.exercises || []).forEach((ex) => {
+        if (!ex?.category) return;
+        categoryCounts[ex.category] = (categoryCounts[ex.category] || 0) + 1;
+      });
+    });
+    const topCategories = new Set(
+      Object.entries(categoryCounts)
+        .sort((a, b) => (b[1] as number) - (a[1] as number))
+        .slice(0, 3)
+        .map(([cat]) => cat)
+    );
+    if (topCategories.size === 0) return PROGRAM_TEMPLATES.slice(0, 2);
+    const scored = PROGRAM_TEMPLATES.map((t) => {
+      const templateCategories = new Set<string>();
+      t.days.forEach((d) => {
+        (d.exercises || []).forEach((ex) => {
+          const preset = SYSTEM_PRESETS.find((p) => p.id === ex.presetId);
+          if (preset) templateCategories.add(preset.category);
+        });
+      });
+      let score = 0;
+      templateCategories.forEach((c) => { if (topCategories.has(c)) score += 1; });
+      return { template: t, score };
+    });
+    return scored.sort((a, b) => b.score - a.score).slice(0, 2).map((s) => s.template);
+  }, [activeState, recentLogs]);
 
   const filteredPresets = activeCategory === 'all'
     ? allPresets
@@ -894,13 +1047,6 @@ export default function QuickAddPage() {
           )}
         </div>
         <div className="flex items-center gap-2">
-          {!todayLog && yesterdayLog && (
-            <button
-              onClick={() => { if (uid) { setDraftFromLog(yesterdayLog); setShowModal(true); } }}
-              className="flex items-center gap-1 bg-primary-light px-3 py-1.5 rounded-xl text-xs font-bold text-primary">
-              ⚡ Hôm qua
-            </button>
-          )}
           {!todayLog && draft.exercises.length > 0 && (
             <button onClick={() => setShowModal(true)}
               className="flex items-center gap-1 bg-card-2 border border-border px-3 py-1.5 rounded-xl text-xs font-bold text-text-main">
@@ -929,6 +1075,20 @@ export default function QuickAddPage() {
 
       {/* Weekly plan score: this week vs last week + breakdown + tip */}
       <WeeklyPlanCard logs={recentLogs} profile={profile} />
+
+      {/* Most recent past session — 1-tap repeat, only when today has no log yet */}
+      {mostRecentLog && (
+        <RecentSessionCard
+          log={mostRecentLog}
+          presets={allPresets}
+          onRepeat={() => { if (uid) { setDraftFromLog(mostRecentLog); setShowModal(true); } }}
+        />
+      )}
+
+      {/* Program suggestions — only while the user has no active program */}
+      {!activeState && recommendedTemplates.length > 0 && (
+        <ProgramSuggestionCard templates={recommendedTemplates} />
+      )}
 
       {/* Weekly forecast */}
       <WeeklyForecastCard recentLogs={recentLogs} />
