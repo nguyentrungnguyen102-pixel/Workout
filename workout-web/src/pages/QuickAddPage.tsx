@@ -139,7 +139,7 @@ function CreateExerciseModal({ uid, onClose, onCreated }: CreateExerciseModalPro
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col md:items-center md:justify-center md:bg-black/40 md:p-6">
+    <div className="fixed inset-0 z-[60] flex flex-col md:items-center md:justify-center md:bg-black/40 md:p-6">
       <div className="flex flex-col bg-background w-full h-full md:h-auto md:max-h-[88vh] md:max-w-md md:rounded-3xl md:shadow-2xl md:overflow-hidden">
         <div className="flex items-center justify-between px-4 py-4 border-b border-border bg-card">
           <h2 className="text-lg font-black text-text-main">Tạo bài tập mới</h2>
@@ -282,7 +282,7 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col md:items-center md:justify-center md:bg-black/40 md:p-6">
+    <div className="fixed inset-0 z-[60] flex flex-col md:items-center md:justify-center md:bg-black/40 md:p-6">
       <div className="flex flex-col bg-background w-full h-full md:h-auto md:max-h-[88vh] md:max-w-lg md:rounded-3xl md:shadow-2xl md:overflow-hidden">
       {toast && (
         <div className="absolute top-4 left-4 right-4 bg-success text-white text-sm font-semibold py-3 px-4 rounded-xl text-center z-10">
