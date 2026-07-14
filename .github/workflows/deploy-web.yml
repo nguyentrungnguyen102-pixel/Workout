@@ -2,7 +2,7 @@ name: Deploy Workout Web to GitHub Pages
 
 on:
   push:
-    branches: [claude/workout-tracker-app-VlOYg]
+    branches: [main]
     paths:
       - 'workout-web/**'
 
