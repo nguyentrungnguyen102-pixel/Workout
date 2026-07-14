@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useUserStore } from '../stores/userStore';
 import { getLogsForExercise } from '../services/workoutService';
 import { computePRs, getPRLabel } from '../services/prService';
+import { getCustomPresets } from '../services/customExerciseService';
 import { SYSTEM_PRESETS } from '../constants/exercises';
-import { WorkoutLog } from '../types/workout';
+import { WorkoutLog, WorkoutPreset } from '../types/workout';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 
 function formatDateShort(dateStr: string): string {
@@ -35,9 +36,13 @@ export default function ExerciseProgressPage() {
   const { firebaseUser } = useUserStore();
   const [logs, setLogs] = useState<WorkoutLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [customPresets, setCustomPresets] = useState<WorkoutPreset[]>([]);
 
   const uid = firebaseUser?.uid;
-  const preset = SYSTEM_PRESETS.find((p) => p.id === presetId);
+  const preset = useMemo(
+    () => [...customPresets, ...SYSTEM_PRESETS].find((p) => p.id === presetId),
+    [customPresets, presetId]
+  );
 
   useEffect(() => {
     if (!uid || !presetId) return;
@@ -47,6 +52,11 @@ export default function ExerciseProgressPage() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [uid, presetId]);
+
+  useEffect(() => {
+    if (!uid) return;
+    getCustomPresets(uid).then(setCustomPresets).catch(() => {});
+  }, [uid]);
 
   const prs = computePRs(logs);
   const pr = prs.find((p) => p.presetId === presetId);
