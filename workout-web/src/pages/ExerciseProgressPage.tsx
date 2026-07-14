@@ -69,6 +69,10 @@ export default function ExerciseProgressPage() {
     .map((log) => {
       const ex = log.exercises.find((e) => e.presetId === presetId);
       if (!ex) return null;
+      // Chart is single-unit: once any session has weight, it becomes a kg
+      // chart — sessions without weight are dropped rather than mixing reps
+      // values onto the kg axis.
+      if (hasWeight && !ex.weight) return null;
       const value = hasWeight && ex.weight
         ? ex.weight
         : ex.unit === 'reps' ? (ex.reps || 0) : Math.round((ex.durationSeconds || 0) / 60);

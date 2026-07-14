@@ -361,7 +361,7 @@ export default function StatsPage() {
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-text-muted w-16 flex-shrink-0">Tuần trước</span>
                     <div className="flex-1 h-2 bg-border rounded-full overflow-hidden">
-                      <div className="h-full bg-border rounded-full transition-all" style={{ width: `${(v.lastWeek / max) * 100}%` }} />
+                      <div className="h-full bg-text-secondary rounded-full transition-all" style={{ width: `${(v.lastWeek / max) * 100}%` }} />
                     </div>
                     <span className="text-xs text-text-secondary w-14 text-right flex-shrink-0">{v.lastWeek} kg</span>
                   </div>
