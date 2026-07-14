@@ -1,15 +1,25 @@
-import { Outlet, NavLink } from 'react-router-dom';
-import { Dumbbell, Calendar, User, BarChart2, Settings } from 'lucide-react';
+import { Outlet, NavLink, useLocation } from 'react-router-dom';
+import { Dumbbell, BarChart2, Settings } from 'lucide-react';
 
+// W4: 5 tabs -> 3. /history and /body still exist as routes (deep links,
+// day/log detail pages, W5 will fold Body into Settings) — they're just no
+// longer surfaced as their own nav destinations.
 const tabs = [
   { to: '/', label: 'Tập', icon: Dumbbell, end: true },
-  { to: '/history', label: 'Lịch sử', icon: Calendar, end: false },
-  { to: '/body', label: 'Cơ thể', icon: User, end: false },
   { to: '/stats', label: 'Thống kê', icon: BarChart2, end: false },
   { to: '/settings', label: 'Cài đặt', icon: Settings, end: false },
 ];
 
+// /stats tab should also read as active on its merged-in /history/* pages
+// (e.g. /history/day/:date, /history/:logId), since NavLink's own `end`
+// matching only handles the /stats prefix itself.
+function isStatsActive(pathname: string): boolean {
+  return pathname.startsWith('/stats') || pathname.startsWith('/history');
+}
+
 export default function Layout() {
+  const { pathname } = useLocation();
+
   return (
     <div className="min-h-screen bg-background md:flex">
       {/* Sidebar — desktop only */}
@@ -24,18 +34,22 @@ export default function Layout() {
               key={to}
               to={to}
               end={end}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
-                  isActive ? 'bg-primary-light text-primary' : 'text-text-secondary hover:bg-background'
-                }`
-              }
+              className={({ isActive }) => {
+                const active = to === '/stats' ? isActive || isStatsActive(pathname) : isActive;
+                return `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                  active ? 'bg-primary-light text-primary' : 'text-text-secondary hover:bg-background'
+                }`;
+              }}
             >
-              {({ isActive }) => (
-                <>
-                  <Icon size={20} strokeWidth={isActive ? 2.5 : 1.8} />
-                  <span>{label}</span>
-                </>
-              )}
+              {({ isActive }) => {
+                const active = to === '/stats' ? isActive || isStatsActive(pathname) : isActive;
+                return (
+                  <>
+                    <Icon size={20} strokeWidth={active ? 2.5 : 1.8} />
+                    <span>{label}</span>
+                  </>
+                );
+              }}
             </NavLink>
           ))}
         </nav>
@@ -55,18 +69,22 @@ export default function Layout() {
             key={to}
             to={to}
             end={end}
-            className={({ isActive }) =>
-              `flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-[10px] font-semibold transition-colors ${
-                isActive ? 'text-primary' : 'text-text-muted'
-              }`
-            }
+            className={({ isActive }) => {
+              const active = to === '/stats' ? isActive || isStatsActive(pathname) : isActive;
+              return `flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-[10px] font-semibold transition-colors ${
+                active ? 'text-primary' : 'text-text-muted'
+              }`;
+            }}
           >
-            {({ isActive }) => (
-              <>
-                <Icon size={20} strokeWidth={isActive ? 2.5 : 1.8} />
-                <span>{label}</span>
-              </>
-            )}
+            {({ isActive }) => {
+              const active = to === '/stats' ? isActive || isStatsActive(pathname) : isActive;
+              return (
+                <>
+                  <Icon size={20} strokeWidth={active ? 2.5 : 1.8} />
+                  <span>{label}</span>
+                </>
+              );
+            }}
           </NavLink>
         ))}
       </nav>

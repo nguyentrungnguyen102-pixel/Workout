@@ -8,7 +8,6 @@ import LoginPage from './pages/LoginPage';
 import OnboardingPage from './pages/OnboardingPage';
 import Layout from './components/Layout';
 import QuickAddPage from './pages/QuickAddPage';
-import HistoryPage from './pages/HistoryPage';
 import LogDetailPage from './pages/LogDetailPage';
 import DayDetailPage from './pages/DayDetailPage';
 import BodyPage from './pages/BodyPage';
@@ -63,7 +62,10 @@ export default function App() {
           <Route path="/onboarding" element={<AuthGuard><OnboardingPage /></AuthGuard>} />
           <Route element={<AuthGuard><Layout /></AuthGuard>}>
             <Route index element={<QuickAddPage />} />
-            <Route path="history" element={<HistoryPage />} />
+            {/* /history merged into /stats (W4) — path 'history' (exact) does
+                not match 'history/day/:date' or 'history/:logId' in v7, so
+                this redirect can't swallow those still-live sub-routes. */}
+            <Route path="history" element={<Navigate to="/stats" replace />} />
             <Route path="history/day/:date" element={<DayDetailPage />} />
             <Route path="history/:logId" element={<LogDetailPage />} />
             <Route path="body" element={<BodyPage />} />

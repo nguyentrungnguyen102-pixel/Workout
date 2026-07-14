@@ -50,7 +50,7 @@ function logsInWeek(logs: WorkoutLog[], weekStartDate: string): WorkoutLog[] {
 // (reps-based exercises) counts as ~3 minutes. Old logs can be missing
 // totalDurationMinutes entirely, so that field is only trusted when it's a
 // positive number; otherwise this re-derives it from the exercises.
-function estimateLogMinutes(log: WorkoutLog): number {
+export function estimateLogMinutes(log: WorkoutLog): number {
   if (typeof log.totalDurationMinutes === 'number' && log.totalDurationMinutes > 0) {
     return log.totalDurationMinutes;
   }
