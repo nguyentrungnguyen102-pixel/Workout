@@ -71,6 +71,56 @@ export function computePRs(logs: WorkoutLog[]): PersonalRecord[] {
   return Array.from(map.values());
 }
 
+// Compares a freshly-saved log against the PRs computed from logs that
+// existed *before* it, so we only celebrate an exercise the user has
+// actually done before and just beat — a first-time exercise isn't a PR yet.
+export function computeNewPRs(existingLogs: WorkoutLog[], newLog: WorkoutLog): PersonalRecord[] {
+  const baseline = new Map(computePRs(existingLogs).map((pr) => [pr.presetId, pr]));
+  const newPRs: PersonalRecord[] = [];
+
+  for (const ex of newLog.exercises) {
+    const prev = baseline.get(ex.presetId);
+    if (!prev) continue;
+
+    if (ex.unit === 'reps') {
+      const newReps = ex.reps ?? 0;
+      const curReps = prev.bestReps ?? 0;
+      const newWeight = ex.weight;
+      const curWeight = prev.bestWeight;
+      const repsImproved = newReps > curReps;
+      const weightImproved = !!newWeight && (!curWeight || newWeight > curWeight);
+      if (repsImproved || weightImproved) {
+        newPRs.push({
+          presetId: ex.presetId,
+          name: ex.name,
+          category: ex.category,
+          unit: ex.unit,
+          bestReps: repsImproved ? newReps : prev.bestReps,
+          bestWeight: weightImproved ? newWeight : prev.bestWeight,
+          previousBest: repsImproved ? curReps : curWeight,
+          achievedDate: newLog.date,
+        });
+      }
+    } else {
+      const newDur = ex.durationSeconds ?? 0;
+      const curDur = prev.bestDurationSeconds ?? 0;
+      if (newDur > curDur) {
+        newPRs.push({
+          presetId: ex.presetId,
+          name: ex.name,
+          category: ex.category,
+          unit: ex.unit,
+          bestDurationSeconds: newDur,
+          previousBest: curDur,
+          achievedDate: newLog.date,
+        });
+      }
+    }
+  }
+
+  return newPRs;
+}
+
 export function getPRLabel(pr: PersonalRecord): string {
   if (pr.unit === 'reps') {
     const parts: string[] = [];

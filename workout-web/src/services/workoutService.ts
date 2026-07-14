@@ -23,7 +23,7 @@ function deriveIntensity(exercises: WorkoutLog['exercises']): { intensity: Inten
   return { intensity: 'light', score: 3 };
 }
 
-export async function logWorkout(uid: string, draft: DraftWorkout): Promise<string> {
+export async function logWorkout(uid: string, draft: DraftWorkout): Promise<WorkoutLog> {
   if (draft.exercises.length === 0) throw new Error('No exercises');
 
   // Date is derived from the (possibly back-dated) startedAt so the log lands
@@ -88,7 +88,18 @@ export async function logWorkout(uid: string, draft: DraftWorkout): Promise<stri
     )
   );
 
-  return logRef.id;
+  return {
+    id: logRef.id,
+    userId: uid,
+    date,
+    exercises: draft.exercises,
+    totalDurationMinutes: Math.round(totalDurationMinutes),
+    intensityScore: score,
+    intensity: draft.intensity || intensity,
+    caloriesEstimate,
+    source: 'manual',
+    syncedToSheets: false,
+  };
 }
 
 // ⚠️ Server-side orderBy/date-range is intentionally NOT used in the queries

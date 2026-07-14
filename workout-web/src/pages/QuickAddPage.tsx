@@ -12,6 +12,7 @@ import { WorkoutTemplate, ExerciseEntry, WorkoutLog, WorkoutPreset, ExerciseCate
 import { WorkoutProgram } from '../types/program';
 import { ExerciseGoal } from '../types/user';
 import { formatAmount } from '../lib/format';
+import { getPRLabel } from '../services/prService';
 import { pickCheer, pickWeeklyCheer } from '../lib/cheers';
 import { buildSuggestions, roundNice } from '../lib/suggestions';
 import { sumThisWeek } from '../lib/dayTimeline';
@@ -875,15 +876,30 @@ function ProgramSuggestionCard({ templates }: ProgramSuggestionCardProps) {
 export default function QuickAddPage() {
   const navigate = useNavigate();
   const { profile, firebaseUser } = useUserStore();
-  const { draft, todayLog, yesterdayLog, recentLogs, addExercise, updateExercise, setDraftFromLog, loadRecentLogs } = useWorkoutStore();
+  const { draft, todayLog, yesterdayLog, recentLogs, addExercise, updateExercise, setDraftFromLog, loadRecentLogs, newPRs, clearNewPRs } = useWorkoutStore();
   const { activeState, loadActiveProgram, getTodayDay } = useProgramStore();
   const [activeCategory, setActiveCategory] = useState<Category>('all');
   const [showModal, setShowModal] = useState(false);
   const [templates, setTemplates] = useState<WorkoutTemplate[]>([]);
   const [customPresets, setCustomPresets] = useState<WorkoutPreset[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [prToast, setPrToast] = useState('');
 
   const uid = firebaseUser?.uid;
+
+  // Fires once the summary modal has closed and handed off any PRs the save
+  // beat — kept separate from the modal's own save-confirmation toast so it
+  // survives past the modal's 800ms auto-close.
+  useEffect(() => {
+    if (newPRs.length === 0) return;
+    const label = newPRs.length === 1
+      ? `🏆 PR mới: ${newPRs[0].name} — ${getPRLabel(newPRs[0])}`
+      : `🏆 ${newPRs.length} PR mới! ${newPRs.map((p) => p.name).join(', ')}`;
+    setPrToast(label);
+    clearNewPRs();
+    const t = setTimeout(() => setPrToast(''), 4000);
+    return () => clearTimeout(t);
+  }, [newPRs, clearNewPRs]);
 
   useEffect(() => {
     if (!uid) return;
@@ -1026,6 +1042,12 @@ export default function QuickAddPage() {
 
   return (
     <div className="px-4 md:px-8 pt-4 md:pt-6 pb-24">
+      {prToast && (
+        <div className="fixed top-4 left-4 right-4 md:left-1/2 md:right-auto md:-translate-x-1/2 md:w-full md:max-w-md bg-primary text-white text-sm font-bold py-3 px-4 rounded-xl text-center z-[70] shadow-lg shadow-primary/30">
+          {prToast}
+        </div>
+      )}
+
       {showModal && uid && (
         <WorkoutSummaryModal onClose={() => setShowModal(false)} uid={uid} />
       )}

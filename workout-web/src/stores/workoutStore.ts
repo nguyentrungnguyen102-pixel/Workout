@@ -7,6 +7,7 @@ import {
 } from '../types/workout';
 import { logWorkout as saveLog, getLogsForHeatmap } from '../services/workoutService';
 import { updateStreakAfterLog, updateWeeklyMinutes } from '../services/userService';
+import { computeNewPRs, PersonalRecord } from '../services/prService';
 import { todayString, yesterdayString } from '../lib/date';
 import { aggregateExercises } from '../lib/dayTimeline';
 
@@ -17,6 +18,7 @@ interface WorkoutStore {
   yesterdayLog: WorkoutLog | null;
   todayLog: WorkoutLog | null;
   recentLogs: WorkoutLog[];
+  newPRs: PersonalRecord[];
 
   startDraft: () => void;
   addExercise: (exercise: ExerciseEntry) => void;
@@ -29,6 +31,7 @@ interface WorkoutStore {
   resetDraft: () => void;
 
   logWorkout: (uid: string) => Promise<void>;
+  clearNewPRs: () => void;
   repeatYesterday: (uid: string) => Promise<void>;
   loadYesterdayLog: (uid: string) => Promise<void>;
   loadTodayLog: (uid: string) => Promise<void>;
@@ -63,6 +66,7 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
   yesterdayLog: null,
   todayLog: null,
   recentLogs: [],
+  newPRs: [],
 
   startDraft: () =>
     set((s) => ({
@@ -123,20 +127,28 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
     const { draft } = get();
     set({ isLogging: true });
     try {
-      await saveLog(uid, draft);
+      // PR baseline must come from logs saved BEFORE this one — fetch it
+      // ahead of the write so the just-saved entries aren't counted against
+      // themselves. '2000-01-01' matches the full-history fetch StatsPage
+      // uses for the same computePRs() call.
+      const existingLogs = await getLogsForHeatmap(uid, '2000-01-01');
+      const savedLog = await saveLog(uid, draft);
+      const newPRs = computeNewPRs(existingLogs, savedLog);
       await updateStreakAfterLog(uid);
       await updateWeeklyMinutes(uid, draft.exercises.reduce((sum, e) => {
         if (e.unit === 'minutes') return sum + (e.durationSeconds || 0) / 60;
         if (e.unit === 'seconds') return sum + (e.durationSeconds || 0) / 60;
         return sum + 3;
       }, 0));
-      set({ draft: emptyDraft(), isLogging: false });
+      set({ draft: emptyDraft(), isLogging: false, newPRs });
       await get().loadRecentLogs(uid);
     } catch (err) {
       set({ isLogging: false });
       throw err;
     }
   },
+
+  clearNewPRs: () => set({ newPRs: [] }),
 
   repeatYesterday: async (uid) => {
     const { yesterdayLog } = get();
