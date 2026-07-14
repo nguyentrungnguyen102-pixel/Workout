@@ -749,7 +749,9 @@ export default function QuickAddPage() {
   const draftIds = new Set(draft.exercises.map((e) => e.presetId));
 
   const handleCustomCreated = (preset: WorkoutPreset) => {
-    setCustomPresets((prev) => [preset, ...prev]);
+    // The mount-time getCustomPresets() can resolve after creation and already
+    // contain this preset — dedupe by id so the card doesn't render twice.
+    setCustomPresets((prev) => [preset, ...prev.filter((p) => p.id !== preset.id)]);
   };
 
   const handleDeleteCustom = async (preset: WorkoutPreset) => {
