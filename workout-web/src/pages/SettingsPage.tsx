@@ -315,6 +315,14 @@ export default function SettingsPage() {
             <span className="text-text-secondary">Phiên bản</span>
             <span className="text-text-main font-medium">v{APP_VERSION}</span>
           </div>
+          <div className="flex justify-between text-sm gap-3">
+            <span className="text-text-secondary flex-shrink-0">Tài khoản</span>
+            <span className="text-text-main font-medium break-all text-right">{firebaseUser?.email || '(không có email)'}</span>
+          </div>
+          <div className="flex justify-between text-sm gap-3">
+            <span className="text-text-secondary flex-shrink-0">Mã người dùng</span>
+            <span className="text-text-main font-mono text-xs break-all text-right">{firebaseUser?.uid || '--'}</span>
+          </div>
         </div>
       </div>
 

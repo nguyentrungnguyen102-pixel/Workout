@@ -222,13 +222,14 @@ export default function HistoryPage() {
   useEffect(() => {
     if (!uid) return;
     setLoading(true);
-    Promise.all([
+    // allSettled: one failed query must not blank the whole page
+    Promise.allSettled([
       getLogsForHeatmap(uid, '2000-01-01'),
       getRecentLogs(uid, 50),
     ]).then(([hm, recent]) => {
-      setHeatmapLogs(hm);
-      setRecentLogs(recent);
-    }).catch(() => {}).finally(() => setLoading(false));
+      if (hm.status === 'fulfilled') setHeatmapLogs(hm.value);
+      if (recent.status === 'fulfilled') setRecentLogs(recent.value);
+    }).finally(() => setLoading(false));
   }, [uid]);
 
   const today = toDateStr(new Date());
