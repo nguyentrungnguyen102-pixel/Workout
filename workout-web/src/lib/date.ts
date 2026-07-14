@@ -3,10 +3,18 @@ export function todayString(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-export function yesterdayString(): string {
+// Local (not UTC) date string N days ago — same local-component approach as
+// todayString, so callers building day-offset cutoffs stay consistent with
+// how WorkoutLog.date is generated everywhere else (avoids toISOString's UTC
+// shift, which is off by a day for timezones ahead of UTC in the early hours).
+export function daysAgoString(days: number): string {
   const d = new Date();
-  d.setDate(d.getDate() - 1);
+  d.setDate(d.getDate() - days);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+export function yesterdayString(): string {
+  return daysAgoString(1);
 }
 
 export function daysBetween(a: string, b: string): number {

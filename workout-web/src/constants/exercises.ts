@@ -21,6 +21,8 @@ export const SYSTEM_PRESETS: WorkoutPreset[] = [
   { id: 'reverse_crunch', name: 'Reverse Crunch', nameVi: 'Gập bụng ngược', category: 'core', unit: 'reps', defaultValue: 15, defaultSets: 3, icon: '⬇️', isCustom: false, usageCount: 0 },
   { id: 'v_up', name: 'V-Up', nameVi: 'Gập bụng chữ V', category: 'core', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '✌️', isCustom: false, usageCount: 0 },
   { id: 'flutter_kick', name: 'Flutter Kick', nameVi: 'Đá chân bơi', category: 'core', unit: 'reps', defaultValue: 30, defaultSets: 3, icon: '🏊', isCustom: false, usageCount: 0 },
+  { id: 'toe_touch', name: 'Toe Touch', nameVi: 'Tay chạm chân', category: 'core', unit: 'reps', defaultValue: 15, defaultSets: 3, icon: '🦶', isCustom: false, usageCount: 0 },
+  { id: 'ab_wheel', name: 'Ab Wheel Rollout', nameVi: 'Con lăn bụng', category: 'core', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '☸️', isCustom: false, usageCount: 0 },
 
   // Cardio
   { id: 'running', name: 'Running', nameVi: 'Chạy bộ', category: 'cardio', unit: 'minutes', defaultValue: 30, defaultSets: 1, icon: '🏃', isCustom: false, usageCount: 0 },

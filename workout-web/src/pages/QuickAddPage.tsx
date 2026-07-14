@@ -1,6 +1,6 @@
-import { useEffect, useState, useRef, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Play, Pause, ChevronRight, Flame, Target, ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react';
+import { X, ChevronRight, Flame, Target, ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react';
 import { useUserStore } from '../stores/userStore';
 import { useWorkoutStore } from '../stores/workoutStore';
 import { useProgramStore } from '../stores/programStore';
@@ -11,7 +11,7 @@ import { WorkoutTemplate, ExerciseEntry, WorkoutLog, WorkoutPreset, ExerciseCate
 import { ExerciseGoal } from '../types/user';
 import { formatAmount } from '../lib/format';
 import { pickCheer, pickWeeklyCheer } from '../lib/cheers';
-import { buildSuggestions } from '../lib/suggestions';
+import { buildSuggestions, roundNice } from '../lib/suggestions';
 import { sumThisWeek } from '../lib/dayTimeline';
 import { todayString } from '../lib/date';
 
@@ -40,53 +40,6 @@ const CATEGORY_COLORS: Record<string, { text: string; bg: string }> = {
   recovery: { text: '#7C3AED', bg: '#F5F3FF' },
   dumbbell: { text: '#B45309', bg: '#FEF3C7' },
 };
-
-function RestTimer() {
-  const [seconds, setSeconds] = useState(0);
-  const [running, setRunning] = useState(false);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  const start = (s: number) => {
-    setSeconds(s);
-    setRunning(true);
-  };
-
-  useEffect(() => {
-    if (running && seconds > 0) {
-      intervalRef.current = setInterval(() => setSeconds((s) => s - 1), 1000);
-    } else if (seconds === 0 && running) {
-      setRunning(false);
-    }
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [running, seconds]);
-
-  const toggle = () => setRunning((r) => !r);
-
-  const mm = String(Math.floor(seconds / 60)).padStart(2, '0');
-  const ss = String(seconds % 60).padStart(2, '0');
-
-  return (
-    <div className="mt-4">
-      <p className="text-xs font-semibold text-text-secondary mb-2">Nghỉ giữa hiệp</p>
-      <div className="flex gap-2 mb-3">
-        {[30, 60, 90].map((s) => (
-          <button key={s} onClick={() => start(s)}
-            className="flex-1 py-2 rounded-lg border border-border text-sm font-semibold text-text-secondary bg-card hover:border-primary hover:text-primary transition-colors">
-            {s}s
-          </button>
-        ))}
-      </div>
-      {seconds > 0 && (
-        <div className="flex items-center gap-3 bg-card-2 rounded-xl p-3">
-          <span className="text-2xl font-black text-primary tabular-nums">{mm}:{ss}</span>
-          <button onClick={toggle} className="ml-auto p-2 rounded-full bg-primary text-white">
-            {running ? <Pause size={16} /> : <Play size={16} />}
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
 
 const ICON_OPTIONS = ['🏋️', '💪', '🤸', '🏃', '🚴', '🧘', '🤼', '🥊', '⚽', '🏊', '🎯', '🔥', '⭐', '🌟', '💥'];
 const CREATE_CATEGORIES: ExerciseCategory[] = ['strength', 'core', 'dumbbell', 'cardio', 'mobility', 'recovery'];
@@ -281,6 +234,76 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
     }
   };
 
+  // Small pill chips that let you tap to fill the number input instead of
+  // typing — still fully editable by hand afterwards via the input itself.
+  // Chip bases are frozen per exercise at first render so tapping a chip
+  // doesn't shift the whole row to recompute around the new value.
+  const chipBaseRef = useRef<Map<string, number>>(new Map());
+  const renderQuickChips = (ex: ExerciseEntry) => {
+    type Chip = { key: string; label: string; active: boolean; onClick: () => void };
+    let chips: Chip[] = [];
+
+    if (ex.unit === 'reps') {
+      if (!chipBaseRef.current.has(ex.presetId)) {
+        chipBaseRef.current.set(
+          ex.presetId,
+          ex.reps && ex.reps > 0
+            ? ex.reps
+            : (SYSTEM_PRESETS.find((p) => p.id === ex.presetId)?.defaultValue ?? 10)
+        );
+      }
+      const base = chipBaseRef.current.get(ex.presetId)!;
+      const values = Array.from(new Set([0.5, 0.75, 1, 1.25].map((m) => roundNice(base * m, 'reps'))));
+      chips = values.map((v) => ({
+        key: `reps-${v}`,
+        label: `${v}`,
+        active: (ex.reps ?? 0) === v,
+        onClick: () => updateExercise(ex.presetId, { reps: v }),
+      }));
+    } else if (ex.unit === 'seconds') {
+      chips = [20, 30, 45, 60, 90].map((v) => ({
+        key: `sec-${v}`,
+        label: `${v}s`,
+        active: (ex.durationSeconds ?? 0) === v,
+        onClick: () => updateExercise(ex.presetId, { durationSeconds: v }),
+      }));
+    } else if (ex.unit === 'minutes') {
+      chips = [5, 10, 15, 20, 30].map((m) => ({
+        key: `min-${m}`,
+        label: `${m}p`,
+        active: (ex.durationSeconds ?? 0) === m * 60,
+        onClick: () => updateExercise(ex.presetId, { durationSeconds: m * 60 }),
+      }));
+    } else if (ex.unit === 'km') {
+      chips = [1, 2, 3, 5].map((v) => ({
+        key: `km-${v}`,
+        label: `${v}km`,
+        active: (ex.distance ?? 0) === v,
+        onClick: () => updateExercise(ex.presetId, { distance: v }),
+      }));
+    }
+
+    if (chips.length === 0) return null;
+
+    return (
+      <div className="flex flex-wrap gap-1.5 mt-2">
+        {chips.map((c) => (
+          <button
+            key={c.key}
+            type="button"
+            onClick={c.onClick}
+            className={`px-2.5 py-1 rounded-full border text-xs font-semibold transition-colors ${
+              c.active
+                ? 'bg-primary text-white border-primary'
+                : 'bg-card-2 border-border text-text-secondary hover:border-primary hover:text-primary'
+            }`}>
+            {c.label}
+          </button>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="fixed inset-0 z-[60] flex flex-col md:items-center md:justify-center md:bg-black/40 md:p-6">
       <div className="flex flex-col bg-background w-full h-full md:h-auto md:max-h-[88vh] md:max-w-lg md:rounded-3xl md:shadow-2xl md:overflow-hidden">
@@ -372,7 +395,27 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
                       </span>
                     </div>
                   )}
+
+                  {ex.unit === 'km' && (
+                    <div className="flex items-center gap-2 flex-1">
+                      <label className="text-xs text-text-secondary">Quãng đường:</label>
+                      <input
+                        type="number"
+                        min={0}
+                        step={0.1}
+                        className="w-20 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
+                        value={ex.distance ?? 0}
+                        onChange={(e) => {
+                          const v = parseFloat(e.target.value) || 0;
+                          updateExercise(ex.presetId, { distance: Math.max(0, v) });
+                        }}
+                      />
+                      <span className="text-xs text-text-secondary">km</span>
+                    </div>
+                  )}
                 </div>
+
+                {renderQuickChips(ex)}
 
                 {/* Weight input — strength/dumbbell exercises only, optional */}
                 {ex.unit === 'reps' && (
@@ -397,8 +440,6 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
             );
           })
         )}
-
-        <RestTimer />
 
         <div className="mt-4">
           <p className="text-xs font-semibold text-text-secondary mb-2">Ghi chú</p>
@@ -664,7 +705,7 @@ interface SuggestionsCardProps {
 
 function SuggestionsCard({ recentLogs, excludeIds, presets, onAddWithValue }: SuggestionsCardProps) {
   const [collapsed, setCollapsed] = useState(false);
-  const suggestions = buildSuggestions(recentLogs, 4, excludeIds);
+  const suggestions = buildSuggestions(recentLogs, 5, excludeIds);
   if (suggestions.length === 0) return null;
 
   function formatSuggestionValue(value: number, unit: string): string {
@@ -688,7 +729,12 @@ function SuggestionsCard({ recentLogs, excludeIds, presets, onAddWithValue }: Su
             const preset = presets.find(p => p.id === s.presetId);
             return (
               <div key={s.presetId} className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-semibold text-text-main flex-shrink-0 min-w-[80px]">{s.name}</span>
+                <span className="text-xs font-semibold text-text-main flex-shrink-0 min-w-[80px] inline-flex items-center gap-1">
+                  {s.name}
+                  {s.isNew && (
+                    <span className="text-[10px] font-bold text-primary bg-primary-light px-1.5 py-0.5 rounded-full">Thử mới ✨</span>
+                  )}
+                </span>
                 <div className="flex gap-1.5 flex-wrap">
                   <button
                     onClick={() => preset && onAddWithValue(preset, s.light)}

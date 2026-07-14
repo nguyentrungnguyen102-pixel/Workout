@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.0.1';
+export const APP_VERSION = '2.1.0';
 
 // Lich su phien ban chinh thuc (sau dot don nhanh 14/07/2026 — gop cac
 // nang cap tot nhat tu cac nhanh phien hang ngay vao mot ban duy nhat).
@@ -8,4 +8,5 @@ export const PHASE_HISTORY = [
   { version: '1.2.0', phase: 3, summary: 'History redesign + heatmap, Exercise Goals, stats period tabs, smart suggestions, bài core/abs, tổng tuần theo bài' },
   { version: '2.0.0', phase: 4, summary: 'Bản hợp nhất: dọn notification chết + version tracking; fix orderBy/date-range Firestore; 5 bug fix lib (tuần/gợi ý/nhãn tuần); weight (kg) tracking + biểu đồ; tự tạo bài tập custom' },
   { version: '2.0.1', phase: 4, summary: 'Hotfix: bỏ orderBy server-side làm ẩn toàn bộ log (doc thiếu field date bị Firestore loại); Lịch sử không blank khi 1 query lỗi; Cài đặt hiện email + mã người dùng' },
+  { version: '2.1.0', phase: 5, summary: 'Bỏ đồng hồ nghỉ giữa hiệp, chip chọn nhanh số lượng/thời gian, 2 bài bụng mới (tay chạm chân, con lăn), gợi ý bài mới cùng nhóm "Thử mới ✨"' },
 ] as const;

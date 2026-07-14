@@ -1,5 +1,6 @@
 import { WorkoutLog } from '../types/workout';
 import { SYSTEM_PRESETS } from '../constants/exercises';
+import { daysAgoString } from './date';
 
 export interface Suggestion {
   presetId: string;
@@ -10,9 +11,10 @@ export interface Suggestion {
   moderate: number;
   high: number;
   baseline: number;
+  isNew?: boolean;
 }
 
-function roundNice(value: number, unit: string): number {
+export function roundNice(value: number, unit: string): number {
   if (unit === 'reps') {
     const rounded = Math.round(value / 5) * 5;
     return Math.max(1, rounded);
@@ -35,14 +37,12 @@ function stepFor(unit: string): number {
   return 1;
 }
 
-export function buildSuggestions(logs: WorkoutLog[], max = 4, excludeIds?: Set<string>): Suggestion[] {
-  // Filter logs from last 30 days. Uses local date components (not
-  // toISOString, which is UTC) to stay consistent with how WorkoutLog.date
-  // is built everywhere else — otherwise the cutoff is off by a day for
-  // timezones ahead of UTC during local early-morning hours.
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - 30);
-  const cutoffStr = `${cutoff.getFullYear()}-${String(cutoff.getMonth() + 1).padStart(2, '0')}-${String(cutoff.getDate()).padStart(2, '0')}`;
+export function buildSuggestions(logs: WorkoutLog[], max = 5, excludeIds?: Set<string>): Suggestion[] {
+  // Filter logs from last 30 days. Uses the app's shared local-date helper
+  // (not toISOString, which is UTC) to stay consistent with how
+  // WorkoutLog.date is built everywhere else — otherwise the cutoff is off
+  // by a day for timezones ahead of UTC during local early-morning hours.
+  const cutoffStr = daysAgoString(30);
 
   const recentLogs = logs.filter((l) => l.date >= cutoffStr);
 
@@ -126,5 +126,56 @@ export function buildSuggestions(logs: WorkoutLog[], max = 4, excludeIds?: Set<s
     return fb - fa;
   });
 
-  return suggestions.slice(0, max);
+  const result = suggestions.slice(0, max);
+
+  // "Thử mới" — if there's still room, fill up to 2 extra slots with system
+  // presets from the user's most-trained category (by recentLogs) that they
+  // haven't done in the last 30 days and that aren't already excluded.
+  if (result.length < max) {
+    const categoryCounts = new Map<string, number>();
+    for (const log of recentLogs) {
+      for (const ex of log.exercises) {
+        categoryCounts.set(ex.category, (categoryCounts.get(ex.category) ?? 0) + 1);
+      }
+    }
+    let topCategory: string | undefined;
+    let topCount = 0;
+    for (const [category, count] of categoryCounts.entries()) {
+      if (count > topCount) {
+        topCount = count;
+        topCategory = category;
+      }
+    }
+
+    if (topCategory) {
+      const slotsLeft = Math.min(2, max - result.length);
+      const candidates = SYSTEM_PRESETS.filter(
+        (p) => p.category === topCategory && !statsMap.has(p.id) && !excludeIds?.has(p.id)
+      ).slice(0, slotsLeft);
+
+      for (const preset of candidates) {
+        const baseline = preset.unit === 'minutes' ? preset.defaultValue * 60 : preset.defaultValue;
+        const step = stepFor(preset.unit);
+        const light = roundNice(baseline * 0.75, preset.unit);
+        let moderate = baseline;
+        let high = roundNice(baseline * 1.25, preset.unit);
+        if (moderate <= light) moderate = light + step;
+        if (high <= moderate) high = moderate + step;
+
+        result.push({
+          presetId: preset.id,
+          name: preset.nameVi,
+          unit: preset.unit,
+          category: preset.category,
+          light,
+          moderate,
+          high,
+          baseline,
+          isNew: true,
+        });
+      }
+    }
+  }
+
+  return result;
 }
