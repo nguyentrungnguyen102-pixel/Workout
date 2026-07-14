@@ -420,25 +420,6 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
 
                 {renderQuickChips(ex)}
 
-                {/* Weight input — strength/dumbbell exercises only, optional */}
-                {ex.unit === 'reps' && (
-                  <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border">
-                    <label className="text-xs text-text-secondary flex-1">🏋️ Tạ (kg)</label>
-                    <input
-                      type="number"
-                      min={0}
-                      step={0.5}
-                      placeholder="--"
-                      className="w-20 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
-                      value={ex.weight ?? ''}
-                      onChange={(e) => {
-                        const raw = e.target.value;
-                        const v = raw === '' ? undefined : Math.max(0, parseFloat(raw));
-                        updateExercise(ex.presetId, { weight: Number.isNaN(v as number) ? undefined : v });
-                      }}
-                    />
-                  </div>
-                )}
               </div>
             );
           })
@@ -1076,19 +1057,6 @@ export default function QuickAddPage() {
       {/* Weekly plan score: this week vs last week + breakdown + tip */}
       <WeeklyPlanCard logs={recentLogs} profile={profile} />
 
-      {/* Most recent past session — 1-tap repeat, only when today has no log yet */}
-      {mostRecentLog && (
-        <RecentSessionCard
-          log={mostRecentLog}
-          presets={allPresets}
-          onRepeat={() => { if (uid) { setDraftFromLog(mostRecentLog); setShowModal(true); } }}
-        />
-      )}
-
-      {/* Program suggestions — only while the user has no active program */}
-      {!activeState && recommendedTemplates.length > 0 && (
-        <ProgramSuggestionCard templates={recommendedTemplates} />
-      )}
 
       {/* Weekly forecast */}
       <WeeklyForecastCard recentLogs={recentLogs} />
@@ -1202,6 +1170,21 @@ export default function QuickAddPage() {
           );
         })}
       </div>
+
+      {/* Program block — bottom of Home per owner's preference: quick logging
+          and the weekly plan stay above the fold, program shortcuts below. */}
+      {mostRecentLog && (
+        <div className="mt-4">
+          <RecentSessionCard
+            log={mostRecentLog}
+            presets={allPresets}
+            onRepeat={() => { if (uid) { setDraftFromLog(mostRecentLog); setShowModal(true); } }}
+          />
+        </div>
+      )}
+      {!activeState && recommendedTemplates.length > 0 && (
+        <ProgramSuggestionCard templates={recommendedTemplates} />
+      )}
 
       {draft.exercises.length > 0 && (
         <div className="fixed bottom-16 md:bottom-6 left-0 right-0 md:left-56 lg:left-60 max-w-md md:max-w-3xl lg:max-w-5xl mx-auto px-4 z-40">

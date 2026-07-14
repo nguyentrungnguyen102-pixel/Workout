@@ -2,12 +2,21 @@ import { useMemo, useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { WorkoutLog } from '../types/workout';
 import { UserProfile } from '../types/user';
-import { computeWeeklyPlan, mondayOf, WeeklyPlanScore } from '../lib/weeklyPlan';
+import { computeWeeklyPlan, mondayOf, WeeklyPlanItem, WeeklyPlanScore } from '../lib/weeklyPlan';
 import { todayString, daysAgoString } from '../lib/date';
 
 interface WeeklyPlanCardProps {
   logs: WorkoutLog[];
   profile: UserProfile | null;
+}
+
+// Same display convention as GoalsStrip's formatGoalLabel: reps show as
+// "x/y cái", durations show minutes once the target reaches a minute —
+// never raw seconds.
+function formatItemProgress(it: WeeklyPlanItem): string {
+  if (!it.isDuration) return `${it.done}/${it.target} cái`;
+  if (it.target >= 60) return `${Math.round(it.done / 60)}/${Math.round(it.target / 60)} phút`;
+  return `${it.done}/${it.target}s`;
 }
 
 function buildTip(thisWeek: WeeklyPlanScore, lastWeek: WeeklyPlanScore | null): string {
@@ -18,11 +27,6 @@ function buildTip(thisWeek: WeeklyPlanScore, lastWeek: WeeklyPlanScore | null): 
     if (worst.pct < 70) {
       return `💡 Tuần trước hụt ${worst.name} (${worst.pct}%) — ưu tiên bài này tuần này`;
     }
-  }
-
-  if (thisWeek.minutesTarget > 0 && thisWeek.minutesPct < 70) {
-    const remain = Math.max(0, thisWeek.minutesTarget - thisWeek.minutesDone);
-    return `💡 Còn thiếu ${remain} phút vận động để đạt mục tiêu tuần`;
   }
 
   if (lastWeek) {
@@ -100,7 +104,7 @@ export default function WeeklyPlanCard({ logs, profile }: WeeklyPlanCardProps) {
             <div key={it.presetId}>
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs font-semibold text-text-main truncate max-w-[60%]">{it.name}</span>
-                <span className="text-xs text-text-secondary">{it.done}/{it.target}</span>
+                <span className="text-xs text-text-secondary">{formatItemProgress(it)}</span>
               </div>
               <div className="h-1.5 bg-border rounded-full overflow-hidden">
                 <div
@@ -110,21 +114,6 @@ export default function WeeklyPlanCard({ logs, profile }: WeeklyPlanCardProps) {
               </div>
             </div>
           ))}
-
-          {thisWeek.minutesTarget > 0 && (
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-semibold text-text-main">Phút vận động</span>
-                <span className="text-xs text-text-secondary">{thisWeek.minutesDone}/{thisWeek.minutesTarget} phút</span>
-              </div>
-              <div className="h-1.5 bg-border rounded-full overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all ${thisWeek.minutesPct >= 100 ? 'bg-success' : 'bg-primary'}`}
-                  style={{ width: `${thisWeek.minutesPct}%` }}
-                />
-              </div>
-            </div>
-          )}
         </div>
       )}
 

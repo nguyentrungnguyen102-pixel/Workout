@@ -7,14 +7,12 @@ export interface WeeklyPlanItem {
   done: number;
   target: number;
   pct: number; // 0-100, capped
+  isDuration: boolean; // duration goal (values are seconds) vs reps goal
 }
 
 export interface WeeklyPlanScore {
-  score: number; // 0-100, average of all components
+  score: number; // 0-100, average of enabled-goal percentages
   items: WeeklyPlanItem[]; // one per enabled ExerciseGoal
-  minutesDone: number;
-  minutesTarget: number;
-  minutesPct: number; // 0-100, capped
   sessions: number;
   totalReps: number;
 }
@@ -63,49 +61,44 @@ export function estimateLogMinutes(log: WorkoutLog): number {
   return Math.max(1, Math.round(minutes));
 }
 
+// Counting convention matches GoalsStrip exactly (getGoalCurrent /
+// getWeeklyGoal / sumThisWeek in pages/QuickAddPage.tsx + lib/dayTimeline.ts):
+// done = RAW reps (not sets×reps) or raw durationSeconds; weekly target =
+// (targetReps ?? targetDurationSeconds) × weeklyGoalSessions. Any other
+// formula makes this card disagree with the goal bars right below it on the
+// Home page, which reads as broken numbers.
 function computeGoalItem(goal: ExerciseGoal, weekLogs: WorkoutLog[], sessionsPerWeek: number): WeeklyPlanItem {
   let done = 0;
   for (const l of weekLogs) {
     for (const ex of l.exercises || []) {
       if (ex.presetId !== goal.presetId) continue;
-      if (goal.targetReps) done += (ex.sets || 1) * (ex.reps || 0);
+      if (goal.targetReps) done += ex.reps || 0;
       else if (goal.targetDurationSeconds) done += ex.durationSeconds || 0;
     }
   }
-  // Weekly target = daily target × sessionsPerWeek. This mirrors the
-  // convention GoalsStrip already uses on the Home page (see
-  // getWeeklyGoal() in pages/QuickAddPage.tsx: `dailyTarget * Math.max(1,
-  // sessionsPerWeek)`), NOT a flat ×7 — a goal is meant to be hit on the
-  // user's planned training days per week, not literally every calendar
-  // day. Kept consistent here so this card's numbers agree with the
-  // per-goal weekly bars already shown in GoalsStrip.
-  const dailyTarget = goal.targetReps
-    ? goal.targetSets * goal.targetReps
-    : (goal.targetDurationSeconds || 0);
-  const target = dailyTarget * sessionsPerWeek;
+  const dailyTarget = goal.targetReps ?? goal.targetDurationSeconds ?? 0;
+  const target = dailyTarget * Math.max(1, sessionsPerWeek);
   const pct = target > 0 ? Math.min(100, Math.round((done / target) * 100)) : 0;
-  return { presetId: goal.presetId, name: goal.name, done, target, pct };
+  return {
+    presetId: goal.presetId,
+    name: goal.name,
+    done,
+    target,
+    pct,
+    isDuration: !goal.targetReps && !!goal.targetDurationSeconds,
+  };
 }
 
-// Hand-calculated cases (used to sanity-check this implementation; there is
-// no test runner in this repo — see W3.4 in the task notes):
+// Hand-calculated cases (no test runner in this repo):
 //
-// Case A — goal + minutes both present:
-//   goal { presetId:'pushup', targetSets:3, targetReps:10, enabled:true } (dailyTarget=30)
-//   profile.weeklyGoalSessions = 5 -> weekly target = 150
-//   week logs contain pushup entries totalling sets*reps = 90 -> pct = round(90/150*100) = 60
-//   weeklyGoalMinutes = 100, minutesDone = 80 -> minutesPct = 80
-//   score = round((60 + 80) / 2) = 70
-//
-// Case B — log missing totalDurationMinutes:
-//   log.exercises = [{ unit:'reps', sets:3, reps:10 }, { unit:'seconds', durationSeconds:120 }]
-//   estimateLogMinutes = round(3 + 120/60) = round(5) = 5 (no NaN, no crash)
-//
-// Case C — no goals enabled, only weeklyGoalMinutes set:
-//   items = [], minutesPct computed normally, score = minutesPct alone (single component average)
-//
-// Case D — neither goals nor weeklyGoalMinutes set:
-//   components.length === 0 -> computeWeeklyPlan returns null (caller hides the card)
+// Case A — reps goal: { targetReps: 20 }, weeklyGoalSessions = 5 -> weekly
+//   target = 100; week logs contain raw reps totalling 60 -> pct = 60.
+//   (Matches GoalsStrip's weekly bar for the same goal.)
+// Case B — duration goal (chạy bộ): { targetDurationSeconds: 1800 },
+//   sessions 5 -> target 9000s; done 3600s -> pct = 40; the card displays
+//   "60/150 phút", never raw seconds.
+// Case C — no goals enabled -> returns null (card hidden). Weekly minutes
+//   are intentionally NOT part of this score (owner doesn't track them).
 export function computeWeeklyPlan(
   logs: WorkoutLog[],
   profile: UserProfile | null,
@@ -117,30 +110,20 @@ export function computeWeeklyPlan(
 
   const items: WeeklyPlanItem[] = goals.map((g) => computeGoalItem(g, weekLogs, sessionsPerWeek));
 
-  const weeklyGoalMinutes = profile?.weeklyGoalMinutes || 0;
-  const minutesDone = weekLogs.reduce((sum, l) => sum + estimateLogMinutes(l), 0);
-  const minutesPct = weeklyGoalMinutes > 0 ? Math.min(100, Math.round((minutesDone / weeklyGoalMinutes) * 100)) : 0;
+  if (items.length === 0) return null;
 
-  const components: number[] = items.map((it) => it.pct);
-  if (weeklyGoalMinutes > 0) components.push(minutesPct);
-
-  if (components.length === 0) return null;
-
-  const score = Math.round(components.reduce((s, v) => s + v, 0) / components.length);
+  const score = Math.round(items.reduce((s, it) => s + it.pct, 0) / items.length);
 
   let totalReps = 0;
   for (const l of weekLogs) {
     for (const ex of l.exercises || []) {
-      if (ex.unit === 'reps') totalReps += (ex.sets || 1) * (ex.reps || 0);
+      if (ex.unit === 'reps') totalReps += ex.reps || 0;
     }
   }
 
   return {
     score,
     items,
-    minutesDone: Math.round(minutesDone),
-    minutesTarget: weeklyGoalMinutes,
-    minutesPct,
     sessions: weekLogs.length,
     totalReps,
   };
