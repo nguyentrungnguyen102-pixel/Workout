@@ -14,6 +14,7 @@ import { pickCheer, pickWeeklyCheer } from '../lib/cheers';
 import { buildSuggestions, roundNice } from '../lib/suggestions';
 import { sumThisWeek } from '../lib/dayTimeline';
 import { todayString } from '../lib/date';
+import WeeklyPlanCard from '../components/WeeklyPlanCard';
 
 function toLocalInput(d: Date): string {
   const p = (n: number) => String(n).padStart(2, '0');
@@ -925,6 +926,9 @@ export default function QuickAddPage() {
           </div>
         </div>
       )}
+
+      {/* Weekly plan score: this week vs last week + breakdown + tip */}
+      <WeeklyPlanCard logs={recentLogs} profile={profile} />
 
       {/* Weekly forecast */}
       <WeeklyForecastCard recentLogs={recentLogs} />
