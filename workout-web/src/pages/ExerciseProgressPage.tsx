@@ -51,19 +51,27 @@ export default function ExerciseProgressPage() {
   const prs = computePRs(logs);
   const pr = prs.find((p) => p.presetId === presetId);
 
+  const hasWeight = logs.some((log) => log.exercises.find((e) => e.presetId === presetId)?.weight);
+
   const chartData = [...logs]
     .reverse()
     .slice(-20)
     .map((log) => {
       const ex = log.exercises.find((e) => e.presetId === presetId);
       if (!ex) return null;
+      const value = hasWeight && ex.weight
+        ? ex.weight
+        : ex.unit === 'reps' ? (ex.reps || 0) : Math.round((ex.durationSeconds || 0) / 60);
       return {
         date: formatDateShort(log.date),
-        value: ex.unit === 'reps' ? (ex.reps || 0) : Math.round((ex.durationSeconds || 0) / 60),
+        value,
         sets: ex.sets,
       };
     })
     .filter(Boolean) as Array<{ date: string; value: number; sets: number }>;
+
+  const chartLabel = hasWeight ? 'Tiến độ tạ (kg)' : preset?.unit === 'reps' ? 'Số reps' : 'Thời gian (phút)';
+  const chartUnit = hasWeight ? 'kg' : preset?.unit === 'reps' ? 'reps' : 'phút';
 
   return (
     <div className="px-4 md:px-8 pt-6 md:pt-8 pb-8">
@@ -104,7 +112,7 @@ export default function ExerciseProgressPage() {
           {chartData.length > 1 && (
             <div className="bg-card rounded-2xl border border-border p-4 mb-4">
               <p className="text-sm font-bold text-text-main mb-3">
-                {preset?.unit === 'reps' ? 'Số reps' : 'Thời gian (phút)'}
+                {chartLabel}
               </p>
               <ResponsiveContainer width="100%" height={140}>
                 <LineChart data={chartData} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
@@ -112,7 +120,7 @@ export default function ExerciseProgressPage() {
                   <YAxis tick={{ fontSize: 10, fill: '#8A8A8A' }} domain={['auto', 'auto']} />
                   <Tooltip
                     contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #E8E7E2' }}
-                    formatter={(v: number) => [v, preset?.unit === 'reps' ? 'reps' : 'phút']}
+                    formatter={(v: number) => [v, chartUnit]}
                   />
                   <Line type="monotone" dataKey="value" stroke="#FF5400" strokeWidth={2.5} dot={{ r: 3, fill: '#FF5400' }} />
                 </LineChart>
