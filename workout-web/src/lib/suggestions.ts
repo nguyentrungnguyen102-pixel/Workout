@@ -55,6 +55,8 @@ export function buildSuggestions(logs: WorkoutLog[], max = 4, excludeIds?: Set<s
       let bestValue: number;
       if (ex.unit === 'reps') {
         bestValue = ex.reps ?? 0;
+      } else if (ex.unit === 'km') {
+        bestValue = ex.distance ?? 0;
       } else {
         bestValue = ex.durationSeconds ?? 0;
       }

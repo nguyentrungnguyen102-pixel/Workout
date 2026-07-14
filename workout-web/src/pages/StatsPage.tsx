@@ -129,7 +129,7 @@ export default function StatsPage() {
   const last30Str = `${last30Start.getFullYear()}-${String(last30Start.getMonth() + 1).padStart(2, '0')}-${String(last30Start.getDate()).padStart(2, '0')}`;
   const last30Logs = logs.filter((l) => l.date >= last30Str);
   const uniqueDays30 = new Set(last30Logs.map((l) => l.date)).size;
-  const consistencyScore = Math.round((uniqueDays30 / 30) * 100);
+  const consistencyScore = Math.min(100, Math.round((uniqueDays30 / 30) * 100));
 
   const sevenDayData = get7DayData(logs);
   const topExercise = getTopExercise(logs);
