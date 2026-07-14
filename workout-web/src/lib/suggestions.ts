@@ -27,12 +27,22 @@ function roundNice(value: number, unit: string): number {
   return Math.max(1, Math.round(value));
 }
 
+// Rounding step per unit — also the minimum gap enforced between light/moderate/high
+// below, since ±10%/+20% of a small baseline can round to the same nice number.
+function stepFor(unit: string): number {
+  if (unit === 'reps' || unit === 'seconds') return 5;
+  if (unit === 'minutes') return 60;
+  return 1;
+}
+
 export function buildSuggestions(logs: WorkoutLog[], max = 4, excludeIds?: Set<string>): Suggestion[] {
-  // Filter logs from last 30 days
-  const now = new Date();
-  const cutoff = new Date(now);
+  // Filter logs from last 30 days. Uses local date components (not
+  // toISOString, which is UTC) to stay consistent with how WorkoutLog.date
+  // is built everywhere else — otherwise the cutoff is off by a day for
+  // timezones ahead of UTC during local early-morning hours.
+  const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - 30);
-  const cutoffStr = cutoff.toISOString().slice(0, 10);
+  const cutoffStr = `${cutoff.getFullYear()}-${String(cutoff.getMonth() + 1).padStart(2, '0')}-${String(cutoff.getDate()).padStart(2, '0')}`;
 
   const recentLogs = logs.filter((l) => l.date >= cutoffStr);
 
@@ -86,9 +96,14 @@ export function buildSuggestions(logs: WorkoutLog[], max = 4, excludeIds?: Set<s
     }
     if (baseline === 0) continue;
 
+    const step = stepFor(stats.unit);
     const light = roundNice(baseline * 0.9, stats.unit);
-    const moderate = roundNice(baseline * 1.1, stats.unit);
-    const high = roundNice(baseline * 1.2, stats.unit);
+    let moderate = roundNice(baseline * 1.1, stats.unit);
+    let high = roundNice(baseline * 1.2, stats.unit);
+    // Guarantee visibly distinct light/moderate/high buttons — rounding alone
+    // collapses these for common small baselines (e.g. baseline=10 or 12).
+    if (moderate <= light) moderate = light + step;
+    if (high <= moderate) high = moderate + step;
 
     suggestions.push({
       presetId,
