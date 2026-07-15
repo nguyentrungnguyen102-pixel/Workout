@@ -39,3 +39,5 @@ jobs:
               }
             }
             console.log(`Done: ${deleted} deleted, ${failed} failed, kept: ${[...keep].join(', ')}`);
+
+# touched 15/07 to re-run after default-branch switch: delete VlOYg + merged we7yox
