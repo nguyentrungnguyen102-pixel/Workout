@@ -311,12 +311,17 @@ export default function StatsPage() {
   const { start: prevPeriodStart, end: prevPeriodEnd } = getPeriodRange(period, periodOffset - 1);
   const prevPeriodLogs = logs.filter(l => (l.date || '') >= prevPeriodStart && (l.date || '') <= prevPeriodEnd);
   const periodLabel = getPeriodLabel(period, periodOffset);
-  // Elapsed-day counts for both windows — lets the coach compare like-for-like
-  // (a "week so far" of 3 days shouldn't be judged against a full 7-day prior
-  // week) and lets it scale weekly goal targets to the actual period length
-  // (a month has ~4.3x a week's quota, a quarter ~13x, not 1x).
+  // Elapsed-day count for the current window — lets the coach compare
+  // like-for-like (a "week so far" of 3 days shouldn't be judged against a
+  // full 7-day prior week) and lets it scale weekly goal targets to the
+  // actual period length (a month has ~4.3x a week's quota, a quarter ~13x).
+  // getPeriodRange only truncates the window at "today" when offset===0 —
+  // any other offset is two fully-closed periods, where prorating by day
+  // count would introduce a fake trend from ordinary calendar-length
+  // differences (e.g. 31-day Jan vs 28-day Feb), so prevPeriodDays is pinned
+  // to periodDays there and the ratio collapses to 1 (no-op).
   const periodDays = daysBetween(periodStart, periodEnd) + 1;
-  const prevPeriodDays = daysBetween(prevPeriodStart, prevPeriodEnd) + 1;
+  const prevPeriodDays = periodOffset === 0 ? daysBetween(prevPeriodStart, prevPeriodEnd) + 1 : periodDays;
   const periodMinutes = periodLogs.reduce((s, l) => s + (l.totalDurationMinutes || 0), 0);
   const periodKcal = periodLogs.reduce((s, l) => s + (l.caloriesEstimate || 0), 0);
   const periodSessions = periodLogs.length;

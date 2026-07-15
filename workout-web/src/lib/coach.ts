@@ -75,8 +75,12 @@ export function buildCoachInsights(
       const minDelta = minutes - prevMinutes;
       const trendUp = minDelta > 0 || (minDelta === 0 && sessDelta >= 0);
       const emoji = trendUp ? '📈' : '📉';
-      const verb = trendUp ? 'hơn' : 'kém';
-      const sessPart = sessDelta === 0 ? 'bằng kỳ trước về số buổi' : `${verb} kỳ trước ${Math.abs(sessDelta)} buổi`;
+      // Each part's wording follows its OWN delta's sign — sessions and
+      // minutes can trend in opposite directions (fewer, longer sessions),
+      // and reusing the overall trend's verb for both would describe the
+      // session-count change backwards in that case.
+      const sessVerb = sessDelta > 0 ? 'hơn' : 'kém';
+      const sessPart = sessDelta === 0 ? 'bằng kỳ trước về số buổi' : `${sessVerb} kỳ trước ${Math.abs(sessDelta)} buổi`;
       const minPart = `${minDelta >= 0 ? '+' : ''}${minDelta} phút`;
       insights.push(`${emoji} ${periodLabel}: ${sessions} buổi · ${minutes} phút — ${sessPart}, ${minPart}`);
     }
