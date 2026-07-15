@@ -5,7 +5,7 @@ import { useUserStore } from '../stores/userStore';
 import { getRecentLogs, getLogsForHeatmap } from '../services/workoutService';
 import { computePRs, getPRLabel } from '../services/prService';
 import { WorkoutLog } from '../types/workout';
-import { getWeekLabel, formatTimeOfDay, formatDayOfWeekVi, formatDateVi } from '../lib/date';
+import { getWeekLabel, formatTimeOfDay, formatDayOfWeekVi, formatDateVi, daysBetween } from '../lib/date';
 import { SYSTEM_PRESETS } from '../constants/exercises';
 import MonthCalendar from '../components/MonthCalendar';
 import HourHeatmap from '../components/HourHeatmap';
@@ -311,6 +311,12 @@ export default function StatsPage() {
   const { start: prevPeriodStart, end: prevPeriodEnd } = getPeriodRange(period, periodOffset - 1);
   const prevPeriodLogs = logs.filter(l => (l.date || '') >= prevPeriodStart && (l.date || '') <= prevPeriodEnd);
   const periodLabel = getPeriodLabel(period, periodOffset);
+  // Elapsed-day counts for both windows — lets the coach compare like-for-like
+  // (a "week so far" of 3 days shouldn't be judged against a full 7-day prior
+  // week) and lets it scale weekly goal targets to the actual period length
+  // (a month has ~4.3x a week's quota, a quarter ~13x, not 1x).
+  const periodDays = daysBetween(periodStart, periodEnd) + 1;
+  const prevPeriodDays = daysBetween(prevPeriodStart, prevPeriodEnd) + 1;
   const periodMinutes = periodLogs.reduce((s, l) => s + (l.totalDurationMinutes || 0), 0);
   const periodKcal = periodLogs.reduce((s, l) => s + (l.caloriesEstimate || 0), 0);
   const periodSessions = periodLogs.length;
@@ -391,7 +397,7 @@ export default function StatsPage() {
       </div>
 
       {/* Coach insights (C3) */}
-      <CoachInsights allLogs={logs} periodLogs={periodLogs} prevPeriodLogs={prevPeriodLogs} profile={profile} periodLabel={periodLabel} />
+      <CoachInsights allLogs={logs} periodLogs={periodLogs} prevPeriodLogs={prevPeriodLogs} profile={profile} periodLabel={periodLabel} periodDays={periodDays} prevPeriodDays={prevPeriodDays} />
 
       {/* Weekly plan card (W3) */}
       <WeeklyPlanCard logs={logs} profile={profile} />
@@ -403,7 +409,7 @@ export default function StatsPage() {
       <HourHeatmap logs={periodLogs} />
 
       {/* Exercise period table (C2.2) */}
-      <ExercisePeriodTable periodLogs={periodLogs} prevPeriodLogs={prevPeriodLogs} presets={SYSTEM_PRESETS} />
+      <ExercisePeriodTable periodLogs={periodLogs} prevPeriodLogs={prevPeriodLogs} presets={SYSTEM_PRESETS} periodDays={periodDays} prevPeriodDays={prevPeriodDays} />
 
       {/* Category breakdown */}
       {categoryStats.size > 0 && (

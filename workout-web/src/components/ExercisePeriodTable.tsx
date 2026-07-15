@@ -7,6 +7,8 @@ interface ExercisePeriodTableProps {
   periodLogs: WorkoutLog[];
   prevPeriodLogs: WorkoutLog[];
   presets?: WorkoutPreset[];
+  periodDays: number;
+  prevPeriodDays: number;
 }
 
 interface ExerciseAgg {
@@ -72,8 +74,13 @@ function formatSignedUnitValue(unit: string, delta: number): string {
   return `${sign}${formatUnitValue(unit, Math.abs(delta), false)}`;
 }
 
-export default function ExercisePeriodTable({ periodLogs, prevPeriodLogs, presets }: ExercisePeriodTableProps) {
+export default function ExercisePeriodTable({ periodLogs, prevPeriodLogs, presets, periodDays, prevPeriodDays }: ExercisePeriodTableProps) {
   const presetList = presets ?? SYSTEM_PRESETS;
+  // periodLogs can be a partial "period to date" window (e.g. 3 days into the
+  // current week) while prevPeriodLogs is always the full previous period —
+  // prorate the previous total to the same day count so the "▼ -80%" delta
+  // isn't just an artifact of comparing 3 days against 7.
+  const prorate = Math.max(1, periodDays) / Math.max(1, prevPeriodDays);
 
   const { groups, isEmpty } = useMemo(() => {
     const current = aggregate(periodLogs);
@@ -90,7 +97,7 @@ export default function ExercisePeriodTable({ periodLogs, prevPeriodLogs, preset
       const icon = preset?.icon || '🏋️';
       const name = preset?.nameVi || agg.name;
       const prevAgg = prev.get(agg.presetId);
-      const prevTotal = prevAgg?.total || 0;
+      const prevTotal = (prevAgg?.total || 0) * prorate;
       const delta = agg.total - prevTotal;
       const deltaPct = prevTotal > 0 ? Math.round((delta / prevTotal) * 100) : 0;
 
@@ -119,7 +126,7 @@ export default function ExercisePeriodTable({ periodLogs, prevPeriodLogs, preset
       .sort((a, b) => b.sessions - a.sessions);
 
     return { groups: groupsArr, isEmpty: periodLogs.length === 0 };
-  }, [periodLogs, prevPeriodLogs, presetList]);
+  }, [periodLogs, prevPeriodLogs, presetList, prorate]);
 
   const navigate = useNavigate();
 

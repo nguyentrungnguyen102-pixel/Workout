@@ -46,20 +46,29 @@ export function buildCoachInsights(
   periodLogs: WorkoutLog[],
   prevPeriodLogs: WorkoutLog[],
   profile: UserProfile | null,
-  periodLabel: string
+  periodLabel: string,
+  periodDays: number,
+  prevPeriodDays: number
 ): string[] {
   if (allLogs.length === 0) return [];
 
   const insights: string[] = [];
 
-  // 1) Period trend: sessions + minutes vs previous period.
+  // 1) Period trend: sessions + minutes vs previous period, prorated to the
+  // current period's elapsed-day count — periodLogs is "period to date" (can
+  // be a partial week/month/quarter) while prevPeriodLogs is always a full
+  // closed period, so comparing raw totals makes an on-pace user look like
+  // they're falling behind on every day but the period's last.
   {
     const sessions = periodLogs.length;
     const minutes = periodLogs.reduce((s, l) => s + estimateLogMinutes(l), 0);
-    const prevSessions = prevPeriodLogs.length;
-    const prevMinutes = prevPeriodLogs.reduce((s, l) => s + estimateLogMinutes(l), 0);
+    const prevSessionsRaw = prevPeriodLogs.length;
+    const prevMinutesRaw = prevPeriodLogs.reduce((s, l) => s + estimateLogMinutes(l), 0);
+    const prorate = Math.max(1, periodDays) / Math.max(1, prevPeriodDays);
+    const prevSessions = Math.round(prevSessionsRaw * prorate);
+    const prevMinutes = Math.round(prevMinutesRaw * prorate);
 
-    if (prevSessions === 0 && prevMinutes === 0) {
+    if (prevSessionsRaw === 0 && prevMinutesRaw === 0) {
       insights.push(`📈 ${periodLabel}: ${sessions} buổi · ${minutes} phút — kỳ trước chưa tập`);
     } else {
       const sessDelta = sessions - prevSessions;
@@ -172,12 +181,16 @@ export function buildCoachInsights(
   {
     const goals = (profile?.exerciseGoals || []).filter((g) => g.enabled);
     const sessionsPerWeek = Math.max(1, profile?.weeklyGoalSessions || 5);
+    // Goal targets are defined per week (dailyTarget × sessionsPerWeek) — scale
+    // that quota to the actual period length so "Tháng"/"3 tháng" views don't
+    // judge a month of reps against a single week's target.
+    const sessionsInPeriod = sessionsPerWeek * (Math.max(1, periodDays) / 7);
 
     let worst: { goal: ExerciseGoal; current: number; target: number; pct: number } | null = null;
     for (const g of goals) {
       const current = sumGoalValue(g, periodLogs);
       const dailyTarget = g.targetReps ?? g.targetDurationSeconds ?? 0;
-      const target = dailyTarget * sessionsPerWeek;
+      const target = Math.round(dailyTarget * sessionsInPeriod);
       const pct = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
       if (!worst || pct < worst.pct) worst = { goal: g, current, target, pct };
     }
