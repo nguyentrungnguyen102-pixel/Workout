@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.4.1';
+export const APP_VERSION = '2.5.0';
 
 // Lich su phien ban chinh thuc (sau dot don nhanh 14/07/2026 — gop cac
 // nang cap tot nhat tu cac nhanh phien hang ngay vao mot ban duy nhat).
@@ -13,4 +13,5 @@ export const PHASE_HISTORY = [
   { version: '2.3.0', phase: 5, summary: 'Gộp Lịch sử + Thống kê một trang: KPI, lịch tháng (tuần hiện tại 10 dòng), heatmap khung giờ tập theo thứ, còn 3 tab điều hướng' },
   { version: '2.4.0', phase: 5, summary: 'Trang chủ có Buổi gần nhất (tập lại 1 chạm) + gợi ý chương trình phù hợp; mục Cơ thể chuyển vào Cài đặt' },
   { version: '2.4.1', phase: 5, summary: 'Theo góp ý: kế hoạch tuần khớp số với mục tiêu (reps thô, phút hiển thị đúng), bỏ track phút vận động; bỏ ô nhập tạ (kg); khối chương trình chuyển xuống cuối trang chủ' },
+  { version: '2.5.0', phase: 6, summary: 'Thông báo "PR mới 🏆" ngay khi lưu buổi tập vượt kỷ lục cá nhân (reps/thời gian) — so khớp toàn bộ lịch sử trước khi ghi log' },
 ] as const;
