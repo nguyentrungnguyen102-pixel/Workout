@@ -19,20 +19,33 @@ function formatItemProgress(it: WeeklyPlanItem): string {
   return `${it.done}/${it.target}s`;
 }
 
+// Tips always carry the concrete numbers, not just a percentage — "hụt 30%"
+// alone was unreadable per owner feedback.
 function buildTip(thisWeek: WeeklyPlanScore, lastWeek: WeeklyPlanScore | null): string {
   if (thisWeek.score >= 100) return '💡 Tuyệt vời! Đạt 100% kế hoạch tuần 🎉';
 
   if (lastWeek && lastWeek.items.length > 0) {
     const worst = lastWeek.items.reduce((min, it) => (it.pct < min.pct ? it : min), lastWeek.items[0]);
     if (worst.pct < 70) {
-      return `💡 Tuần trước hụt ${worst.name} (${worst.pct}%) — ưu tiên bài này tuần này`;
+      return `💡 Tuần trước hụt ${worst.name}: chỉ đạt ${formatItemProgress(worst)} (${worst.pct}%) — ưu tiên bài này tuần này`;
+    }
+  }
+
+  // Point at this week's weakest goal with the exact remaining amount.
+  if (thisWeek.items.length > 0) {
+    const worstNow = thisWeek.items.reduce((min, it) => (it.pct < min.pct ? it : min), thisWeek.items[0]);
+    if (worstNow.pct < 100) {
+      const remain = Math.max(0, worstNow.target - worstNow.done);
+      const remainLabel = worstNow.isDuration
+        ? (worstNow.target >= 60 ? `${Math.round(remain / 60)} phút` : `${remain}s`)
+        : `${remain} cái`;
+      return `💡 ${worstNow.name} đang ${formatItemProgress(worstNow)} (${worstNow.pct}%) — còn thiếu ${remainLabel} nữa`;
     }
   }
 
   if (lastWeek) {
     const delta = thisWeek.score - lastWeek.score;
     if (delta > 0) return `💡 Duy trì phong độ — hơn tuần trước ${delta}%!`;
-    return '💡 Duy trì phong độ tập luyện!';
   }
 
   return '💡 Duy trì phong độ tập luyện!';
@@ -99,21 +112,39 @@ export default function WeeklyPlanCard({ logs, profile }: WeeklyPlanCardProps) {
       </button>
 
       {expanded && (
-        <div className="mt-2 space-y-2.5">
-          {thisWeek.items.map((it) => (
-            <div key={it.presetId}>
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-semibold text-text-main truncate max-w-[60%]">{it.name}</span>
-                <span className="text-xs text-text-secondary">{formatItemProgress(it)}</span>
+        <div className="mt-2 space-y-3">
+          {thisWeek.items.map((it) => {
+            const prev = lastWeek?.items.find((p) => p.presetId === it.presetId) ?? null;
+            return (
+              <div key={it.presetId}>
+                <p className="text-xs font-semibold text-text-main truncate mb-1">{it.name}</p>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[10px] text-text-muted w-14 flex-shrink-0">Tuần này</span>
+                  <div className="flex-1 h-1.5 bg-border rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${it.pct >= 100 ? 'bg-success' : 'bg-primary'}`}
+                      style={{ width: `${it.pct}%` }}
+                    />
+                  </div>
+                  <span className="text-[11px] text-text-secondary w-24 text-right flex-shrink-0">
+                    {formatItemProgress(it)} ({it.pct}%)
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-text-muted w-14 flex-shrink-0">Tuần trước</span>
+                  <div className="flex-1 h-1.5 bg-border rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-text-secondary transition-all"
+                      style={{ width: `${prev ? prev.pct : 0}%` }}
+                    />
+                  </div>
+                  <span className="text-[11px] text-text-muted w-24 text-right flex-shrink-0">
+                    {prev ? `${formatItemProgress(prev)} (${prev.pct}%)` : 'chưa có dữ liệu'}
+                  </span>
+                </div>
               </div>
-              <div className="h-1.5 bg-border rounded-full overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all ${it.pct >= 100 ? 'bg-success' : 'bg-primary'}`}
-                  style={{ width: `${it.pct}%` }}
-                />
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Flame, Trophy, Clock } from 'lucide-react';
+import { Flame, Trophy, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useUserStore } from '../stores/userStore';
 import { getRecentLogs, getLogsForHeatmap } from '../services/workoutService';
 import { computePRs, getPRLabel } from '../services/prService';
 import { WorkoutLog } from '../types/workout';
 import { getWeekLabel, formatTimeOfDay, formatDayOfWeekVi, formatDateVi } from '../lib/date';
+import { SYSTEM_PRESETS } from '../constants/exercises';
 import MonthCalendar from '../components/MonthCalendar';
 import HourHeatmap from '../components/HourHeatmap';
 import WeeklyPlanCard from '../components/WeeklyPlanCard';
+import ExercisePeriodTable from '../components/ExercisePeriodTable';
+import CoachInsights from '../components/CoachInsights';
 
 type Period = 'week' | 'month' | 'quarter';
 
@@ -16,22 +19,91 @@ function toDateStr(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-function getPeriodRange(p: Period): { start: string; end: string } {
+// Monday (local) of the week containing `d`. Re-implemented here (not
+// imported from lib/weeklyPlan.ts, which is being edited concurrently by
+// someone else) using the same (getDay()+6)%7 convention used across the
+// codebase (dayTimeline.ts's weekStartStr, weeklyPlan.ts's mondayOf).
+function mondayOfLocal(d: Date): Date {
+  const dow = (d.getDay() + 6) % 7; // 0=Mon..6=Sun
+  const mon = new Date(d);
+  mon.setDate(d.getDate() - dow);
+  return mon;
+}
+
+function lastDayOfMonth(year: number, month0: number): Date {
+  return new Date(year, month0 + 1, 0);
+}
+
+// getPeriodRange: `offset` shifts the period backward (negative) or forward
+// (positive, capped at 0 by the UI) relative to the current period.
+// offset 0 always means "period-to-date" (ends today); non-zero offsets are
+// whole/closed periods (end = last day of that period).
+function getPeriodRange(p: Period, offset: number): { start: string; end: string } {
   const now = new Date();
   const today = toDateStr(now);
+
   if (p === 'week') {
-    const dow = (now.getDay() + 6) % 7;
-    const mon = new Date(now);
-    mon.setDate(now.getDate() - dow);
-    return { start: toDateStr(mon), end: today };
+    const curMonday = mondayOfLocal(now);
+    const mon = new Date(curMonday);
+    mon.setDate(curMonday.getDate() + offset * 7);
+    const sun = new Date(mon);
+    sun.setDate(mon.getDate() + 6);
+    return { start: toDateStr(mon), end: offset === 0 ? today : toDateStr(sun) };
   }
+
   if (p === 'month') {
-    return { start: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`, end: today };
+    const ymIndex = now.getFullYear() * 12 + now.getMonth() + offset;
+    const year = Math.floor(ymIndex / 12);
+    const month0 = ymIndex % 12;
+    const start = `${year}-${String(month0 + 1).padStart(2, '0')}-01`;
+    if (offset === 0) return { start, end: today };
+    return { start, end: toDateStr(lastDayOfMonth(year, month0)) };
   }
-  // quarter: rolling 3 calendar months back from today
-  const start = new Date(now);
-  start.setMonth(start.getMonth() - 3);
-  return { start: toDateStr(start), end: today };
+
+  // quarter (3 months): window = 3 calendar months ending at the anchor
+  // month (currentMonth + offset*3), e.g. offset 0 today=Jul -> May..Jul.
+  const anchorYmIndex = now.getFullYear() * 12 + now.getMonth() + offset * 3;
+  const startYmIndex = anchorYmIndex - 2;
+  const startYear = Math.floor(startYmIndex / 12);
+  const startMonth0 = startYmIndex % 12;
+  const start = `${startYear}-${String(startMonth0 + 1).padStart(2, '0')}-01`;
+  if (offset === 0) return { start, end: today };
+  const endYear = Math.floor(anchorYmIndex / 12);
+  const endMonth0 = anchorYmIndex % 12;
+  return { start, end: toDateStr(lastDayOfMonth(endYear, endMonth0)) };
+}
+
+const MONTH_ABBR_VI = ['Th1', 'Th2', 'Th3', 'Th4', 'Th5', 'Th6', 'Th7', 'Th8', 'Th9', 'Th10', 'Th11', 'Th12'];
+
+function getPeriodLabel(p: Period, offset: number): string {
+  const now = new Date();
+
+  if (p === 'week') {
+    const curMonday = mondayOfLocal(now);
+    const mon = new Date(curMonday);
+    mon.setDate(curMonday.getDate() + offset * 7);
+    const sun = new Date(mon);
+    sun.setDate(mon.getDate() + 6);
+    const dd = (d: Date) => String(d.getDate()).padStart(2, '0');
+    const mm = (d: Date) => String(d.getMonth() + 1).padStart(2, '0');
+    if (mon.getMonth() === sun.getMonth()) return `${dd(mon)}–${dd(sun)}/${mm(sun)}`;
+    return `${dd(mon)}/${mm(mon)}–${dd(sun)}/${mm(sun)}`;
+  }
+
+  if (p === 'month') {
+    const ymIndex = now.getFullYear() * 12 + now.getMonth() + offset;
+    const year = Math.floor(ymIndex / 12);
+    const month0 = ymIndex % 12;
+    return `Tháng ${month0 + 1}/${year}`;
+  }
+
+  // quarter
+  const anchorYmIndex = now.getFullYear() * 12 + now.getMonth() + offset * 3;
+  const startYmIndex = anchorYmIndex - 2;
+  const startMonth0 = startYmIndex % 12;
+  const endYear = Math.floor(anchorYmIndex / 12);
+  const endMonth0 = anchorYmIndex % 12;
+  return `${MONTH_ABBR_VI[startMonth0]}–${MONTH_ABBR_VI[endMonth0]}/${endYear}`;
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -190,6 +262,7 @@ export default function StatsPage() {
   const [recentLogs, setRecentLogs] = useState<WorkoutLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<Period>('week');
+  const [periodOffset, setPeriodOffset] = useState(0);
 
   const uid = firebaseUser?.uid;
 
@@ -233,8 +306,11 @@ export default function StatsPage() {
   const prs = computePRs(logs).slice(0, 6);
   const volumeProgress = getVolumeProgress(logs);
 
-  const { start: periodStart, end: periodEnd } = getPeriodRange(period);
+  const { start: periodStart, end: periodEnd } = getPeriodRange(period, periodOffset);
   const periodLogs = logs.filter(l => (l.date || '') >= periodStart && (l.date || '') <= periodEnd);
+  const { start: prevPeriodStart, end: prevPeriodEnd } = getPeriodRange(period, periodOffset - 1);
+  const prevPeriodLogs = logs.filter(l => (l.date || '') >= prevPeriodStart && (l.date || '') <= prevPeriodEnd);
+  const periodLabel = getPeriodLabel(period, periodOffset);
   const periodMinutes = periodLogs.reduce((s, l) => s + (l.totalDurationMinutes || 0), 0);
   const periodKcal = periodLogs.reduce((s, l) => s + (l.caloriesEstimate || 0), 0);
   const periodSessions = periodLogs.length;
@@ -264,14 +340,38 @@ export default function StatsPage() {
       <h1 className="text-2xl font-black text-text-main mb-4">Thống kê</h1>
 
       {/* Period selector — drives KPI strip, HourHeatmap and category breakdown */}
-      <div className="flex gap-1 p-1 bg-card-2 rounded-xl mb-4">
+      <div className="flex gap-1 p-1 bg-card-2 rounded-xl mb-3">
         {(['week', 'month', 'quarter'] as const).map(p => (
-          <button key={p} onClick={() => setPeriod(p)}
+          <button key={p} onClick={() => { setPeriod(p); setPeriodOffset(0); }}
             className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${
               period === p ? 'bg-white shadow-sm text-primary' : 'text-text-secondary'}`}>
             {p === 'week' ? 'Tuần' : p === 'month' ? 'Tháng' : '3 tháng'}
           </button>
         ))}
+      </div>
+
+      {/* Period navigation */}
+      <div className="flex items-center justify-between mb-4">
+        <button onClick={() => setPeriodOffset(o => o - 1)}
+          aria-label="Kỳ trước"
+          className="w-8 h-8 flex items-center justify-center rounded-lg bg-card-2 text-text-secondary hover:text-primary active:scale-95 transition-all flex-shrink-0">
+          <ChevronLeft size={16} />
+        </button>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-black text-text-main">{periodLabel}</span>
+          {periodOffset !== 0 && (
+            <button onClick={() => setPeriodOffset(0)}
+              className="text-xs font-bold text-primary underline underline-offset-2">
+              Hôm nay
+            </button>
+          )}
+        </div>
+        <button onClick={() => setPeriodOffset(o => Math.min(0, o + 1))}
+          disabled={periodOffset === 0}
+          aria-label="Kỳ sau"
+          className="w-8 h-8 flex items-center justify-center rounded-lg bg-card-2 text-text-secondary hover:text-primary active:scale-95 transition-all disabled:opacity-30 disabled:pointer-events-none flex-shrink-0">
+          <ChevronRight size={16} />
+        </button>
       </div>
 
       {/* KPI strip */}
@@ -290,6 +390,9 @@ export default function StatsPage() {
         </div>
       </div>
 
+      {/* Coach insights (C3) */}
+      <CoachInsights allLogs={logs} periodLogs={periodLogs} prevPeriodLogs={prevPeriodLogs} profile={profile} periodLabel={periodLabel} />
+
       {/* Weekly plan card (W3) */}
       <WeeklyPlanCard logs={logs} profile={profile} />
 
@@ -298,6 +401,9 @@ export default function StatsPage() {
 
       {/* Hour-of-day heatmap */}
       <HourHeatmap logs={periodLogs} />
+
+      {/* Exercise period table (C2.2) */}
+      <ExercisePeriodTable periodLogs={periodLogs} prevPeriodLogs={prevPeriodLogs} presets={SYSTEM_PRESETS} />
 
       {/* Category breakdown */}
       {categoryStats.size > 0 && (
