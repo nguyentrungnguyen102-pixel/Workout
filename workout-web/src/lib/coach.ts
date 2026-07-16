@@ -46,28 +46,43 @@ export function buildCoachInsights(
   periodLogs: WorkoutLog[],
   prevPeriodLogs: WorkoutLog[],
   profile: UserProfile | null,
-  periodLabel: string
+  periodLabel: string,
+  periodDays: number,
+  prevPeriodDays: number
 ): string[] {
   if (allLogs.length === 0) return [];
 
   const insights: string[] = [];
 
-  // 1) Period trend: sessions + minutes vs previous period.
+  // 1) Period trend: sessions + minutes vs previous period, prorated to the
+  // current period's elapsed-day count — periodLogs can be a partial "period
+  // to date" window (e.g. 3 days into the current week) while prevPeriodLogs
+  // is always a full closed prior period, so comparing raw totals makes an
+  // on-pace user look like they're falling behind on every day but the
+  // period's last (callers pin prevPeriodDays === periodDays, a no-op ratio,
+  // whenever both periods are already fully closed).
   {
     const sessions = periodLogs.length;
     const minutes = periodLogs.reduce((s, l) => s + estimateLogMinutes(l), 0);
-    const prevSessions = prevPeriodLogs.length;
-    const prevMinutes = prevPeriodLogs.reduce((s, l) => s + estimateLogMinutes(l), 0);
+    const prevSessionsRaw = prevPeriodLogs.length;
+    const prevMinutesRaw = prevPeriodLogs.reduce((s, l) => s + estimateLogMinutes(l), 0);
+    const prorate = Math.max(1, periodDays) / Math.max(1, prevPeriodDays);
+    const prevSessions = Math.round(prevSessionsRaw * prorate);
+    const prevMinutes = Math.round(prevMinutesRaw * prorate);
 
-    if (prevSessions === 0 && prevMinutes === 0) {
+    if (prevSessionsRaw === 0 && prevMinutesRaw === 0) {
       insights.push(`📈 ${periodLabel}: ${sessions} buổi · ${minutes} phút — kỳ trước chưa tập`);
     } else {
       const sessDelta = sessions - prevSessions;
       const minDelta = minutes - prevMinutes;
       const trendUp = minDelta > 0 || (minDelta === 0 && sessDelta >= 0);
       const emoji = trendUp ? '📈' : '📉';
-      const verb = trendUp ? 'hơn' : 'kém';
-      const sessPart = sessDelta === 0 ? 'bằng kỳ trước về số buổi' : `${verb} kỳ trước ${Math.abs(sessDelta)} buổi`;
+      // Each part's wording follows its OWN delta's sign — sessions and
+      // minutes can trend in opposite directions (fewer, longer sessions),
+      // and reusing the overall trend's verb for both would describe the
+      // session-count change backwards in that case.
+      const sessVerb = sessDelta > 0 ? 'hơn' : 'kém';
+      const sessPart = sessDelta === 0 ? 'bằng kỳ trước về số buổi' : `${sessVerb} kỳ trước ${Math.abs(sessDelta)} buổi`;
       const minPart = `${minDelta >= 0 ? '+' : ''}${minDelta} phút`;
       insights.push(`${emoji} ${periodLabel}: ${sessions} buổi · ${minutes} phút — ${sessPart}, ${minPart}`);
     }
@@ -172,12 +187,16 @@ export function buildCoachInsights(
   {
     const goals = (profile?.exerciseGoals || []).filter((g) => g.enabled);
     const sessionsPerWeek = Math.max(1, profile?.weeklyGoalSessions || 5);
+    // Goal targets are defined per week (dailyTarget × sessionsPerWeek) —
+    // scale that quota to the actual period length so "Tháng"/"3 tháng"
+    // views don't judge a month of reps against a single week's target.
+    const sessionsInPeriod = sessionsPerWeek * (Math.max(1, periodDays) / 7);
 
     let worst: { goal: ExerciseGoal; current: number; target: number; pct: number } | null = null;
     for (const g of goals) {
       const current = sumGoalValue(g, periodLogs);
       const dailyTarget = g.targetReps ?? g.targetDurationSeconds ?? 0;
-      const target = dailyTarget * sessionsPerWeek;
+      const target = Math.round(dailyTarget * sessionsInPeriod);
       const pct = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
       if (!worst || pct < worst.pct) worst = { goal: g, current, target, pct };
     }

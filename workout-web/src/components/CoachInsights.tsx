@@ -8,10 +8,12 @@ interface CoachInsightsProps {
   prevPeriodLogs: WorkoutLog[];
   profile: UserProfile | null;
   periodLabel: string;
+  periodDays: number;
+  prevPeriodDays: number;
 }
 
-export default function CoachInsights({ allLogs, periodLogs, prevPeriodLogs, profile, periodLabel }: CoachInsightsProps) {
-  const insights = buildCoachInsights(allLogs, periodLogs, prevPeriodLogs, profile, periodLabel);
+export default function CoachInsights({ allLogs, periodLogs, prevPeriodLogs, profile, periodLabel, periodDays, prevPeriodDays }: CoachInsightsProps) {
+  const insights = buildCoachInsights(allLogs, periodLogs, prevPeriodLogs, profile, periodLabel, periodDays, prevPeriodDays);
 
   if (insights.length === 0) return null;
 

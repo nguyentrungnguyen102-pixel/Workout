@@ -878,9 +878,18 @@ export default function QuickAddPage() {
       : `🏆 ${newPRs.length} PR mới! ${newPRs.map((p) => p.name).join(', ')}`;
     setPrToast(label);
     clearNewPRs();
+  }, [newPRs, clearNewPRs]);
+
+  // Auto-hide keyed on the toast text itself, not on newPRs — clearNewPRs()
+  // above changes newPRs on the same tick the toast is shown, which would
+  // otherwise re-run a timeout declared in that same effect and cancel it
+  // (via the cleanup below) before it ever fired, leaving the banner stuck
+  // on screen until the next PR.
+  useEffect(() => {
+    if (!prToast) return;
     const t = setTimeout(() => setPrToast(''), 4000);
     return () => clearTimeout(t);
-  }, [newPRs, clearNewPRs]);
+  }, [prToast]);
 
   useEffect(() => {
     if (!uid) return;
