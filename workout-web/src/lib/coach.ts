@@ -46,18 +46,29 @@ export function buildCoachInsights(
   periodLogs: WorkoutLog[],
   prevPeriodLogs: WorkoutLog[],
   profile: UserProfile | null,
-  periodLabel: string
+  periodLabel: string,
+  periodDays: number,
+  prevPeriodDays: number
 ): string[] {
   if (allLogs.length === 0) return [];
 
   const insights: string[] = [];
 
-  // 1) Period trend: sessions + minutes vs previous period.
+  // Ratio to scale the previous period's totals down to the current period's
+  // elapsed-day count. Callers pass prevPeriodDays === periodDays when both
+  // periods being compared are already-closed (full) periods — day-count
+  // differences there are calendar noise (31-day Jan vs 28-day Feb), not a
+  // real signal, so the ratio is a no-op (1) in that case.
+  const prorateRatio = prevPeriodDays > 0 ? periodDays / prevPeriodDays : 1;
+
+  // 1) Period trend: sessions + minutes vs previous period (prorated to the
+  // same elapsed-day count so a period still in progress isn't compared
+  // against a previous period's full total).
   {
     const sessions = periodLogs.length;
     const minutes = periodLogs.reduce((s, l) => s + estimateLogMinutes(l), 0);
-    const prevSessions = prevPeriodLogs.length;
-    const prevMinutes = prevPeriodLogs.reduce((s, l) => s + estimateLogMinutes(l), 0);
+    const prevSessions = Math.round(prevPeriodLogs.length * prorateRatio);
+    const prevMinutes = Math.round(prevPeriodLogs.reduce((s, l) => s + estimateLogMinutes(l), 0) * prorateRatio);
 
     if (prevSessions === 0 && prevMinutes === 0) {
       insights.push(`📈 ${periodLabel}: ${sessions} buổi · ${minutes} phút — kỳ trước chưa tập`);
@@ -177,7 +188,12 @@ export function buildCoachInsights(
     for (const g of goals) {
       const current = sumGoalValue(g, periodLogs);
       const dailyTarget = g.targetReps ?? g.targetDurationSeconds ?? 0;
-      const target = dailyTarget * sessionsPerWeek;
+      // Weekly quota (dailyTarget × sessionsPerWeek) scaled to this period's
+      // actual day count — a week's quota shouldn't stand in unscaled for a
+      // month or quarter, which clamped % done at 100% far too early.
+      // Rounded so formatGoalCount (which doesn't round reps) prints a whole
+      // number instead of a fractional target.
+      const target = Math.round(dailyTarget * sessionsPerWeek * (periodDays / 7));
       const pct = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
       if (!worst || pct < worst.pct) worst = { goal: g, current, target, pct };
     }

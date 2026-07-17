@@ -878,9 +878,18 @@ export default function QuickAddPage() {
       : `🏆 ${newPRs.length} PR mới! ${newPRs.map((p) => p.name).join(', ')}`;
     setPrToast(label);
     clearNewPRs();
+  }, [newPRs, clearNewPRs]);
+
+  // Owns the auto-hide timer separately from the effect above — clearNewPRs()
+  // changes `newPRs` in the same tick the timer above would've started,
+  // which re-ran that effect and cancelled its own timeout before it ever
+  // fired (toast stuck on screen forever). Keying on `prToast` itself avoids
+  // that self-cancellation.
+  useEffect(() => {
+    if (!prToast) return;
     const t = setTimeout(() => setPrToast(''), 4000);
     return () => clearTimeout(t);
-  }, [newPRs, clearNewPRs]);
+  }, [prToast]);
 
   useEffect(() => {
     if (!uid) return;

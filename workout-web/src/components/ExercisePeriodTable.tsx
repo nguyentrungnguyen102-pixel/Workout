@@ -7,6 +7,8 @@ interface ExercisePeriodTableProps {
   periodLogs: WorkoutLog[];
   prevPeriodLogs: WorkoutLog[];
   presets?: WorkoutPreset[];
+  periodDays: number;
+  prevPeriodDays: number;
 }
 
 interface ExerciseAgg {
@@ -72,13 +74,18 @@ function formatSignedUnitValue(unit: string, delta: number): string {
   return `${sign}${formatUnitValue(unit, Math.abs(delta), false)}`;
 }
 
-export default function ExercisePeriodTable({ periodLogs, prevPeriodLogs, presets }: ExercisePeriodTableProps) {
+export default function ExercisePeriodTable({ periodLogs, prevPeriodLogs, presets, periodDays, prevPeriodDays }: ExercisePeriodTableProps) {
   const presetList = presets ?? SYSTEM_PRESETS;
 
   const { groups, isEmpty } = useMemo(() => {
     const current = aggregate(periodLogs);
     const prev = aggregate(prevPeriodLogs);
     const presetById = new Map(presetList.map((p) => [p.id, p]));
+    // Prorate the previous period's totals to the current period's
+    // elapsed-day count — same reasoning as coach.ts's buildCoachInsights:
+    // callers pass prevPeriodDays === periodDays for two closed periods, so
+    // this is a no-op (ratio 1) there.
+    const prorateRatio = prevPeriodDays > 0 ? periodDays / prevPeriodDays : 1;
 
     const byCategory = new Map<string, { sessions: number; rows: Array<{
       presetId: string; icon: string; name: string; sessions: number; totalLabel: string;
@@ -90,7 +97,8 @@ export default function ExercisePeriodTable({ periodLogs, prevPeriodLogs, preset
       const icon = preset?.icon || '🏋️';
       const name = preset?.nameVi || agg.name;
       const prevAgg = prev.get(agg.presetId);
-      const prevTotal = prevAgg?.total || 0;
+      const prevTotalRaw = prevAgg?.total || 0;
+      const prevTotal = prevTotalRaw * prorateRatio;
       const delta = agg.total - prevTotal;
       const deltaPct = prevTotal > 0 ? Math.round((delta / prevTotal) * 100) : 0;
 
@@ -103,7 +111,7 @@ export default function ExercisePeriodTable({ periodLogs, prevPeriodLogs, preset
         sessions: agg.sessions,
         totalLabel: formatUnitValue(agg.unit, agg.total, false),
         bestLabel: formatUnitValue(agg.unit, agg.best, true),
-        deltaNode: prevTotal === 0
+        deltaNode: prevTotalRaw === 0
           ? 'new'
           : { positive: delta >= 0, valueLabel: formatSignedUnitValue(agg.unit, delta), pctLabel: `${deltaPct >= 0 ? '+' : ''}${deltaPct}%` },
       });
@@ -119,7 +127,7 @@ export default function ExercisePeriodTable({ periodLogs, prevPeriodLogs, preset
       .sort((a, b) => b.sessions - a.sessions);
 
     return { groups: groupsArr, isEmpty: periodLogs.length === 0 };
-  }, [periodLogs, prevPeriodLogs, presetList]);
+  }, [periodLogs, prevPeriodLogs, presetList, periodDays, prevPeriodDays]);
 
   const navigate = useNavigate();
 
