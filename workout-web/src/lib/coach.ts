@@ -1,181 +1,381 @@
 import { WorkoutLog } from '../types/workout';
 import { UserProfile } from '../types/user';
-import { estimateLogMinutes } from './weeklyPlan';
-import { todayString, daysAgoString, daysBetween } from './date';
-import { computePRs } from '../services/prService';
-import { CATEGORY_LABELS } from '../constants/exercises';
+import { daysAgoString, daysBetween, todayString } from './date';
+import { computePRs, PersonalRecord } from '../services/prService';
+import { logMinutes, ENERGY_METHOD_NOTE } from './energy';
+import { strengthStandard, bmiStandard, whoActivityStandard, ageFromBirthYear, Band } from './standards';
 
-// Calisthenics reference norms (adult, bodyweight) — thresholds to REACH
-// each tier [Cơ bản, Trung cấp, Giỏi, Chuyên nghiệp]. Below the first
-// threshold the lifter is still "Mới tập" (tier 0). Only presets with a
-// well-known bodyweight-standard exist here; everything else is simply
-// excluded from the strength side of the score (never guessed).
-const STRENGTH_STANDARDS: Record<string, { unit: 'reps' | 'seconds'; tiers: number[] }> = {
-  pushup: { unit: 'reps', tiers: [10, 25, 45, 60] },
-  pullup: { unit: 'reps', tiers: [3, 8, 15, 22] },
-  squat: { unit: 'reps', tiers: [20, 40, 60, 90] },
-  dip: { unit: 'reps', tiers: [5, 12, 25, 40] },
-  burpee: { unit: 'reps', tiers: [10, 20, 35, 50] },
-  lunge: { unit: 'reps', tiers: [15, 30, 50, 70] },
-  situp: { unit: 'reps', tiers: [20, 35, 50, 70] },
-  crunch: { unit: 'reps', tiers: [20, 40, 60, 80] },
-  plank: { unit: 'seconds', tiers: [30, 60, 120, 180] },
-  side_plank: { unit: 'seconds', tiers: [20, 45, 90, 120] },
+// Dynamic, standards-backed "Đánh giá thể lực" (fitness assessment) engine.
+// Replaces the old buildCoachReport (hardcoded STRENGTH_STANDARDS/TIER_NAMES
+// tier arrays + canned TIPS pool) with dimensions scored against the
+// published-standard evaluators in standards.ts (ExRx/ACSM strength norms,
+// WHO 2020 activity guideline, Asian/VN BMI cutoffs) plus two training
+// heuristics (consistency, progression) that are explicitly labeled as
+// in-app recommendations rather than external citations.
+
+export interface AssessmentDimension {
+  key: 'strength' | 'activity' | 'consistency' | 'body' | 'progression';
+  label: string;
+  valueText: string;
+  tierLabel: string;
+  bands: { label: string; min: number }[];
+  value: number;
+  unit: string;
+  source: string;
+  nextText?: string;
+  score: number;
+}
+
+export interface FitnessAssessment {
+  score: number;
+  level: string;
+  emoji: string;
+  weights: { key: string; label: string; pct: number }[];
+  dimensions: AssessmentDimension[];
+  weekLine: string;
+  focus: string;
+  needsProfile: boolean;
+  methodNote: string;
+}
+
+const BASE_WEIGHTS: Record<AssessmentDimension['key'], number> = {
+  strength: 35,
+  activity: 20,
+  consistency: 20,
+  body: 15,
+  progression: 10,
 };
 
-const TIER_NAMES = ['Mới tập', 'Cơ bản', 'Trung cấp', 'Giỏi', 'Chuyên nghiệp']; // index 0..4
+const DIMENSION_LABELS: Record<AssessmentDimension['key'], string> = {
+  strength: 'Sức mạnh',
+  activity: 'Vận động (WHO)',
+  consistency: 'Đều đặn',
+  body: 'Vóc dáng',
+  progression: 'Tiến bộ',
+};
 
-// Count of thresholds `best` meets or exceeds -> tier index 0..4.
-function tierOf(best: number, tiers: number[]): number {
+interface DimBuild {
+  dimension: AssessmentDimension;
+  hasData: boolean;
+  focusText: string;
+}
+
+// Generic ascending-band tier lookup for the two in-app heuristic
+// dimensions (consistency/progression) that aren't backed by a
+// standards.ts published table — higher value is always better for both.
+function tierFor(value: number, bands: Band[]): number {
   let tier = 0;
-  for (const t of tiers) {
-    if (best >= t) tier++;
-  }
+  bands.forEach((b, i) => {
+    if (value >= b.min) tier = i;
+  });
   return tier;
 }
 
-function fmtBest(best: number, unit: 'reps' | 'seconds'): string {
-  return unit === 'reps' ? `${best} cái` : `${best}s`;
+function nextMilestoneText(value: number, bands: Band[], unit: string, tierIndex: number): string | undefined {
+  if (tierIndex >= bands.length - 1) return undefined;
+  const need = Math.round((bands[tierIndex + 1].min - value) * 10) / 10;
+  if (need <= 0) return undefined;
+  return `cần +${need}${unit ? ' ' + unit : ''} để đạt ${bands[tierIndex + 1].label}`;
 }
 
-// Deterministic small hash — same pattern as lib/cheers.ts hashSeed, kept
-// local here so this file doesn't need to import from cheers.ts.
-function hashSeed(seed: string): number {
-  let hash = 0;
-  for (let i = 0; i < seed.length; i++) {
-    const char = seed.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash; // Convert to 32-bit int
-  }
-  return Math.abs(hash);
-}
-
-// ISO week key (Thursday-based week number, same algorithm as getISOWeek in
-// lib/date.ts) — a string so it can be hashed directly to rotate the coach
-// tip once per week instead of once per day.
-function isoWeekKey(dateStr: string): string {
-  const d = new Date(dateStr + 'T00:00:00');
-  const thursday = new Date(d);
-  thursday.setDate(d.getDate() - ((d.getDay() + 6) % 7) + 3);
-  const yearStart = new Date(thursday.getFullYear(), 0, 1);
-  const week = Math.ceil(((thursday.getTime() - yearStart.getTime()) / 86_400_000 + 1) / 7);
-  return `${thursday.getFullYear()}-W${week}`;
-}
-
-type FocusDimension = 'strength' | 'consistency' | 'volume' | 'progression' | 'balance';
-
-// 2-3 short, executive/office-worker-tone tips per dimension. Rotated weekly
-// (see isoWeekKey above) and picked from the pool matching whichever
-// dimension is currently the user's weakest, so the tip stays relevant.
-const TIPS: Record<FocusDimension, string[]> = {
-  strength: [
-    '💡 Tăng tải từ từ (~10% mỗi tuần) thay vì cố max reps mỗi buổi — bền hơn nhiều.',
-    '💡 Chững reps? Thử tempo chậm (3 giây hạ) để cơ chịu tải lâu hơn, hiệu quả hơn đếm số.',
-    '💡 Xen kẽ ngày nặng/nhẹ để cơ hồi phục — đừng dồn hết vào 1 buổi rồi nghỉ cả tuần.',
-  ],
-  consistency: [
-    '💡 Đặt lịch tập như một cuộc họp không thể huỷ — 15-20 phút mỗi buổi là đủ.',
-    '💡 Dân văn phòng: 3 buổi ngắn đều đặn/tuần hiệu quả hơn 1 buổi dài rồi nghỉ dài.',
-    '💡 Nhắc bản thân bằng lịch điện thoại — thói quen thắng ý chí về lâu dài.',
-  ],
-  volume: [
-    '💡 Đi bộ hoặc đạp xe 10 phút giữa giờ làm cũng tính — không cần phòng gym mới đạt chuẩn WHO.',
-    '💡 Chia nhỏ 150 phút/tuần thành các đoạn 10-15 phút dễ duy trì hơn 1 buổi dài cuối tuần.',
-    '💡 Đứng dậy vận động mỗi giờ làm việc — cộng dồn cả tuần cũng ra số phút đáng kể.',
-  ],
-  progression: [
-    '💡 Ghi lại số liệu mỗi buổi để thấy rõ khi nào đã sẵn sàng tăng tải.',
-    '💡 Lâu chưa phá kỷ lục? Thử tăng 1-2 reps mỗi buổi thay vì chờ "ngày sung sức".',
-    '💡 Đổi bài tập trong cùng nhóm cơ để phá plateau — cơ thể thích nghi rất nhanh.',
-  ],
-  balance: [
-    '💡 Đừng chỉ tập nhóm cơ quen tay — cân bằng giúp tránh chấn thương lâu dài.',
-    '💡 Ngồi nhiều? Ưu tiên nhóm cơ đối kháng (lưng, mông) để giữ tư thế đúng.',
-    '💡 Xoay vòng nhóm cơ theo tuần để cơ thể được nghỉ và phát triển đều.',
-  ],
-};
-
-export interface CoachReport {
-  level: string;
-  emoji: string;
-  score: number;
-  rankBasis: string;
-  benchmarks: string[];
-  weekLine: string;
-  focus: string;
-  focusTip: string;
-}
-
-interface TierEntry {
-  presetId: string;
-  name: string;
-  best: number;
-  unit: 'reps' | 'seconds';
-  tier: number;
-  tiers: number[];
-}
-
-// Builds ONE consolidated "HLV cá nhân" report: a 0-100 fitness score scored
-// against named benchmarks (WHO activity minutes + calisthenics standards),
-// 1-2 concrete "how far to the next tier" comparisons, the period trend line,
-// and a single most-urgent focus + a weekly-rotating tip. Returns null with
-// no history at all (callers hide the card in that case).
-export function buildCoachReport(
+// Builds ONE consolidated "Đánh giá thể lực" (0-100 composite + per-dimension
+// scale/position) from real logged data, scored against published/cited
+// standards wherever one exists. Returns null only when there's no history
+// at all (callers hide the card in that case).
+export function buildFitnessAssessment(
   allLogs: WorkoutLog[],
-  periodLogs: WorkoutLog[],
-  prevPeriodLogs: WorkoutLog[],
   profile: UserProfile | null,
-  periodLabel: string,
-  periodDays: number,
-  prevPeriodDays: number
-): CoachReport | null {
+  latestWeightKg?: number
+): FitnessAssessment | null {
   if (allLogs.length === 0) return null;
 
-  // --- Base rates -------------------------------------------------------
-  const cutoff56 = daysAgoString(56);
-  const sessionsLast56 = allLogs.filter((l) => l.date && l.date >= cutoff56).length;
-  const avgSessionsPerWeek = sessionsLast56 / 8;
+  const today = todayString();
+  const hasSex = !!profile?.sex;
+  const hasBirthYear = !!profile?.birthYear;
+  const hasHeight = !!profile?.heightCm;
+  const needsProfile = !hasSex || !hasBirthYear || !hasHeight;
 
-  const cutoff28 = daysAgoString(28);
-  const logs28 = allLogs.filter((l) => l.date && l.date >= cutoff28);
-  const avgMinutesPerWeek = logs28.reduce((s, l) => s + estimateLogMinutes(l), 0) / 4;
-
-  const strengthDates = new Set<string>();
-  for (const log of logs28) {
-    if (!log.date) continue;
-    const hasStrength = (log.exercises || []).some((ex) => ex.category === 'strength' || STRENGTH_STANDARDS[ex.presetId]);
-    if (hasStrength) strengthDates.add(log.date);
-  }
-  const strengthDaysPerWeek = strengthDates.size / 4;
-
-  // --- PRs ----------------------------------------------------------------
   const allPRs = computePRs(allLogs);
-  const prsLast8w = allPRs.filter((pr) => pr.achievedDate >= cutoff56).length;
+  const cutoff56 = daysAgoString(56); // 8 weeks
 
-  // --- Strength tiers: only presets the user has a PR for AND that have a
-  // named standard. ---------------------------------------------------
-  const tierEntries: TierEntry[] = [];
-  for (const pr of allPRs) {
-    const std = STRENGTH_STANDARDS[pr.presetId];
-    if (!std) continue;
-    const best = std.unit === 'reps' ? pr.bestReps : pr.bestDurationSeconds;
-    if (!best) continue;
-    tierEntries.push({ presetId: pr.presetId, name: pr.name, best, unit: std.unit, tier: tierOf(best, std.tiers), tiers: std.tiers });
-  }
-  const hasStrengthTiers = tierEntries.length > 0;
+  // --- strength ---------------------------------------------------------
+  const strengthBuild: DimBuild = (() => {
+    const label = DIMENSION_LABELS.strength;
+    if (!hasSex || !hasBirthYear) {
+      return {
+        hasData: false,
+        dimension: {
+          key: 'strength',
+          label,
+          valueText: 'Thiếu giới tính/năm sinh',
+          tierLabel: 'Cần hồ sơ',
+          bands: [],
+          value: 0,
+          unit: '',
+          source: 'Nguồn: ExRx/ACSM — cần giới tính + năm sinh để chấm theo đúng bảng chuẩn',
+          score: 0,
+        },
+        focusText: 'Nhập giới tính và năm sinh trong Cài đặt để chấm sức mạnh theo chuẩn.',
+      };
+    }
+    const age = ageFromBirthYear(profile!.birthYear!);
+    const sex = profile!.sex!;
 
-  // --- Sub-scores (0..100) -------------------------------------------
-  const strengthScore = hasStrengthTiers ? (tierEntries.reduce((s, e) => s + e.tier, 0) / tierEntries.length / 4) * 100 : 0;
-  const consistencyScore = Math.min(100, (avgSessionsPerWeek / 5) * 100);
-  let volumeScore = Math.min(100, (avgMinutesPerWeek / 150) * 100);
-  if (strengthDaysPerWeek >= 2) volumeScore = Math.min(100, volumeScore + 10);
-  const progressionScore = Math.min(100, (prsLast8w / 4) * 100);
+    // Frequency of each presetId across all logs, to pick the user's "main"
+    // (most-practiced) standardized lift as the headline value.
+    const freq = new Map<string, number>();
+    for (const log of allLogs) {
+      const presetsInLog = new Set((log.exercises || []).map((ex) => ex.presetId));
+      for (const pid of presetsInLog) freq.set(pid, (freq.get(pid) || 0) + 1);
+    }
 
-  const score = hasStrengthTiers
-    ? Math.round(0.4 * strengthScore + 0.3 * consistencyScore + 0.15 * volumeScore + 0.15 * progressionScore)
-    : Math.round(0.55 * consistencyScore + 0.25 * volumeScore + 0.2 * progressionScore);
+    const matched: { pr: PersonalRecord; std: NonNullable<ReturnType<typeof strengthStandard>>; freq: number }[] = [];
+    for (const pr of allPRs) {
+      const best = pr.unit === 'seconds' ? pr.bestDurationSeconds : pr.bestReps;
+      if (!best) continue;
+      const std = strengthStandard(pr.presetId, best, sex, age);
+      if (!std) continue;
+      matched.push({ pr, std, freq: freq.get(pr.presetId) || 0 });
+    }
 
-  // --- Level band -------------------------------------------------------
+    if (matched.length === 0) {
+      return {
+        hasData: false,
+        dimension: {
+          key: 'strength',
+          label,
+          valueText: 'Chưa có bài có chuẩn (hít đất, gập bụng, plank, squat)',
+          tierLabel: 'Chưa đủ dữ liệu',
+          bands: [],
+          value: 0,
+          unit: '',
+          source: 'Nguồn: ExRx/ACSM push-up/sit-up/plank/squat norms',
+          score: 0,
+        },
+        focusText: 'Tập thêm hít đất, gập bụng, plank hoặc squat để có chuẩn chấm sức mạnh.',
+      };
+    }
+
+    matched.sort((a, b) => b.freq - a.freq || b.std.tierIndex - a.std.tierIndex);
+    const primary = matched[0];
+    const score = matched.reduce((s, m) => s + (m.std.tierIndex / (m.std.bands.length - 1)) * 100, 0) / matched.length;
+    const nextText = primary.std.nextMilestone
+      ? `cần +${primary.std.nextMilestone.need} ${primary.std.unit} để đạt ${primary.std.nextMilestone.toLabel}`
+      : undefined;
+
+    return {
+      hasData: true,
+      dimension: {
+        key: 'strength',
+        label,
+        valueText: `${primary.pr.name} ${primary.std.value} ${primary.std.unit}`,
+        tierLabel: primary.std.bands[primary.std.tierIndex].label,
+        bands: primary.std.bands,
+        value: primary.std.value,
+        unit: primary.std.unit,
+        source: primary.std.source,
+        nextText,
+        score,
+      },
+      focusText: primary.std.nextMilestone
+        ? `Đẩy ${primary.pr.name} thêm ${primary.std.nextMilestone.need} ${primary.std.unit} để đạt mốc ${primary.std.nextMilestone.toLabel}.`
+        : `${primary.pr.name} đã đạt mốc cao nhất (${primary.std.bands[primary.std.tierIndex].label}) — thử thêm bài mới để mở rộng thế mạnh.`,
+    };
+  })();
+
+  // --- activity (WHO) -----------------------------------------------------
+  const activityBuild: DimBuild = (() => {
+    const cutoff28 = daysAgoString(28);
+    const logs28 = allLogs.filter((l) => l.date && l.date >= cutoff28);
+    const weeklyMinutes = logs28.reduce((s, l) => s + logMinutes(l), 0) / 4;
+
+    const strengthDates = new Set<string>();
+    for (const log of logs28) {
+      if (!log.date) continue;
+      const hasStrength = (log.exercises || []).some((ex) => ex.category === 'strength' || ex.category === 'dumbbell');
+      if (hasStrength) strengthDates.add(log.date);
+    }
+    const strengthDaysPerWeek = strengthDates.size / 4;
+
+    const std = whoActivityStandard(weeklyMinutes, strengthDaysPerWeek);
+    const score = (std.tierIndex / (std.bands.length - 1)) * 100;
+    const nextText = std.nextMilestone
+      ? `cần +${std.nextMilestone.need} ${std.unit} để đạt ${std.nextMilestone.toLabel}`
+      : undefined;
+
+    return {
+      hasData: true,
+      dimension: {
+        key: 'activity',
+        label: DIMENSION_LABELS.activity,
+        valueText: `${Math.round(weeklyMinutes)} phút/tuần`,
+        tierLabel: std.bands[std.tierIndex].label,
+        bands: std.bands,
+        value: std.value,
+        unit: std.unit,
+        source: std.source,
+        nextText,
+        score,
+      },
+      focusText: std.nextMilestone
+        ? `Thêm ${std.nextMilestone.need} phút vận động/tuần để đạt mốc ${std.nextMilestone.toLabel} của WHO.`
+        : `Đã đạt mức vận động tối ưu theo WHO (${Math.round(weeklyMinutes)} phút/tuần) — duy trì nhịp này.`,
+    };
+  })();
+
+  // --- consistency (in-app heuristic, not an external standard) -----------
+  const consistencyBuild: DimBuild = (() => {
+    const sessionsLast56 = allLogs.filter((l) => l.date && l.date >= cutoff56).length;
+    const avgSessionsPerWeek = sessionsLast56 / 8;
+    const bands: Band[] = [
+      { label: 'Thấp', min: 0 },
+      { label: 'Ổn', min: 3 },
+      { label: 'Tốt', min: 4 },
+      { label: 'Xuất sắc', min: 5 },
+    ];
+    const tierIndex = tierFor(avgSessionsPerWeek, bands);
+    const score = Math.min(100, (avgSessionsPerWeek / 5) * 100);
+    const nextText = nextMilestoneText(avgSessionsPerWeek, bands, 'buổi/tuần', tierIndex);
+
+    return {
+      hasData: true,
+      dimension: {
+        key: 'consistency',
+        label: DIMENSION_LABELS.consistency,
+        valueText: `${avgSessionsPerWeek.toFixed(1)} buổi/tuần`,
+        tierLabel: bands[tierIndex].label,
+        bands,
+        value: Math.round(avgSessionsPerWeek * 10) / 10,
+        unit: 'buổi/tuần',
+        source: 'Khuyến nghị tập luyện (3–5 buổi/tuần)',
+        nextText,
+        score,
+      },
+      focusText: nextText
+        ? `Nâng tần suất lên ${bands[tierIndex + 1].min} buổi/tuần (hiện ~${avgSessionsPerWeek.toFixed(1)}).`
+        : `Đang duy trì ${avgSessionsPerWeek.toFixed(1)} buổi/tuần — giữ nhịp này.`,
+    };
+  })();
+
+  // --- body (BMI, Asian/VN cutoffs) ---------------------------------------
+  const bodyBuild: DimBuild = (() => {
+    const label = DIMENSION_LABELS.body;
+    if (!hasHeight || !latestWeightKg || latestWeightKg <= 0) {
+      return {
+        hasData: false,
+        dimension: {
+          key: 'body',
+          label,
+          valueText: 'Thiếu chiều cao/cân nặng',
+          tierLabel: 'Cần hồ sơ',
+          bands: [],
+          value: 0,
+          unit: 'kg/m²',
+          source: 'Nguồn: WHO Western Pacific 2000 / Bộ Y tế VN — cần chiều cao + cân nặng để tính BMI',
+          score: 0,
+        },
+        focusText: 'Nhập chiều cao (Cài đặt) và cân nặng (mục Cơ thể) để chấm BMI.',
+      };
+    }
+    const std = bmiStandard(latestWeightKg, profile!.heightCm!);
+    const normalIndex = std.bands.findIndex((b) => b.label === 'Bình thường');
+
+    let score: number;
+    if (std.tierIndex === normalIndex) score = 100;
+    else score = Math.max(0, 100 - Math.abs(std.tierIndex - normalIndex) * 30);
+
+    let nextText: string | undefined;
+    let focusText: string;
+    if (std.tierIndex < normalIndex) {
+      const need = Math.round((std.bands[normalIndex].min - std.value) * 10) / 10;
+      nextText = `cần +${need} để đạt Bình thường`;
+      focusText = `Tăng cân nhẹ (~${need} đơn vị BMI) để về mức Bình thường.`;
+    } else if (std.tierIndex > normalIndex) {
+      const upperNormal = std.bands[normalIndex + 1]?.min ?? std.value;
+      const need = Math.max(0.1, Math.round((std.value - upperNormal + 0.1) * 10) / 10);
+      nextText = `cần giảm ~${need} để về Bình thường`;
+      focusText = `Giảm nhẹ cân nặng (~${need} đơn vị BMI) để về mức Bình thường.`;
+    } else {
+      focusText = `BMI ${std.value} đang ở mức Bình thường — duy trì tốt.`;
+    }
+
+    return {
+      hasData: true,
+      dimension: {
+        key: 'body',
+        label,
+        valueText: `BMI ${std.value}`,
+        tierLabel: std.bands[std.tierIndex].label,
+        bands: std.bands,
+        value: std.value,
+        unit: std.unit,
+        source: std.source,
+        nextText,
+        score,
+      },
+      focusText,
+    };
+  })();
+
+  // --- progression (in-app heuristic: PRs / 8 weeks) ----------------------
+  const progressionBuild: DimBuild = (() => {
+    const prs8w = allPRs.filter((pr) => pr.achievedDate >= cutoff56).length;
+    const bands: Band[] = [
+      { label: 'Chững', min: 0 },
+      { label: 'Tiến bộ', min: 1 },
+      { label: 'Bứt phá', min: 3 },
+    ];
+    const tierIndex = tierFor(prs8w, bands);
+    const score = Math.min(100, (prs8w / 4) * 100);
+    const nextText = nextMilestoneText(prs8w, bands, 'PR', tierIndex);
+
+    let focusText: string;
+    if (nextText) {
+      focusText = `Cần thêm ${bands[tierIndex + 1].min - prs8w} PR trong 8 tuần để đạt mốc ${bands[tierIndex + 1].label}.`;
+    } else if (allPRs.length === 0) {
+      focusText = 'Chưa có PR nào — chọn 1 bài để phá mốc.';
+    } else {
+      const mostRecent = allPRs.reduce((a, b) => (b.achievedDate > a.achievedDate ? b : a));
+      const weeksSince = Math.floor(daysBetween(mostRecent.achievedDate, today) / 7);
+      focusText = `${weeksSince} tuần chưa có PR mới — tăng nhẹ tải để phá mốc.`;
+    }
+
+    return {
+      hasData: true,
+      dimension: {
+        key: 'progression',
+        label: DIMENSION_LABELS.progression,
+        valueText: `${prs8w} PR/8 tuần`,
+        tierLabel: bands[tierIndex].label,
+        bands,
+        value: prs8w,
+        unit: 'PR/8 tuần',
+        source: 'Nhịp tiến bộ (progressive overload)',
+        nextText,
+        score,
+      },
+      focusText,
+    };
+  })();
+
+  // --- composite ------------------------------------------------------
+  const dimBuilds: DimBuild[] = [strengthBuild, activityBuild, consistencyBuild, bodyBuild, progressionBuild];
+  const totalWeight = dimBuilds.reduce((s, d) => s + (d.hasData ? BASE_WEIGHTS[d.dimension.key] : 0), 0);
+  const score =
+    totalWeight > 0
+      ? Math.round(
+          dimBuilds.reduce((s, d) => s + (d.hasData ? d.dimension.score * BASE_WEIGHTS[d.dimension.key] : 0), 0) / totalWeight
+        )
+      : 0;
+
+  const weights = dimBuilds
+    .filter((d) => d.hasData)
+    .map((d) => ({
+      key: d.dimension.key,
+      label: d.dimension.label,
+      pct: Math.round((BASE_WEIGHTS[d.dimension.key] / totalWeight) * 100),
+    }));
+
   let level: string;
   let emoji: string;
   if (score < 20) {
@@ -188,63 +388,36 @@ export function buildCoachReport(
     level = 'Trung cấp';
     emoji = '🔥';
   } else if (score < 80) {
-    level = 'Giỏi';
+    level = 'Tốt';
     emoji = '🏅';
   } else {
-    level = 'Chuyên nghiệp';
+    level = 'Xuất sắc';
     emoji = '🏆';
   }
 
-  // --- rankBasis: strongest true, objective statement -------------------
-  const topTier = hasStrengthTiers ? tierEntries.reduce((a, b) => (b.tier > a.tier ? b : a)).tier : 0;
-  let rankBasis: string;
-  if (avgMinutesPerWeek >= 150) {
-    rankBasis = `Trên chuẩn WHO (${Math.round(avgMinutesPerWeek)}/150 phút vận động/tuần)`;
-  } else if (topTier >= 2) {
-    rankBasis = `Nhóm sức mạnh đạt mốc ${TIER_NAMES[topTier]}`;
-  } else {
-    rankBasis = `~${avgSessionsPerWeek.toFixed(1)} buổi/tuần · chuỗi ${profile?.streak?.current || 0} ngày`;
-  }
+  // Weakest dimension among those with real data (consistency/activity/
+  // progression always have data, so this is never empty).
+  const scoredDims = dimBuilds.filter((d) => d.hasData);
+  const weakest = (scoredDims.length > 0 ? scoredDims : dimBuilds).reduce((a, b) => (b.dimension.score < a.dimension.score ? b : a));
+  const focus = `🎯 ${weakest.focusText}`;
 
-  // --- benchmarks: 1-2 most-frequently-logged strength exercises that have
-  // a named standard, each stated as "so mốc" (at-tier + gap to next). ----
-  const freq = new Map<string, number>();
-  for (const log of allLogs) {
-    const presetsInLog = new Set((log.exercises || []).map((ex) => ex.presetId));
-    for (const pid of presetsInLog) {
-      if (STRENGTH_STANDARDS[pid]) freq.set(pid, (freq.get(pid) || 0) + 1);
-    }
-  }
-  const topFrequentIds = Array.from(freq.entries())
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 2)
-    .map(([pid]) => pid);
-  const benchmarks: string[] = topFrequentIds
-    .map((pid) => tierEntries.find((e) => e.presetId === pid))
-    .filter((e): e is TierEntry => !!e)
-    .map((e) => {
-      const bestFmt = fmtBest(e.best, e.unit);
-      if (e.tier === 0) {
-        return `${e.name}: ${bestFmt} → chưa đạt mốc Cơ bản (${e.tiers[0]}), còn ${e.tiers[0] - e.best}.`;
-      }
-      if (e.tier === 4) {
-        return `${e.name}: ${bestFmt} → Chuyên nghiệp (mốc ${e.tiers[3]}) ✓ đỉnh bảng.`;
-      }
-      return `${e.name}: ${bestFmt} → ${TIER_NAMES[e.tier]} (mốc ${e.tiers[e.tier - 1]}); cách ${TIER_NAMES[e.tier + 1]} (${e.tiers[e.tier]}) còn ${e.tiers[e.tier] - e.best}.`;
-    });
+  // --- weekLine: self-contained 7-day-vs-previous-7-day trend, same
+  // prorate-free comparison logic as the old buildCoachReport period line
+  // (both windows are fixed-length here, so no prorating is needed). -------
+  const cutoff7 = daysAgoString(7);
+  const cutoff14 = daysAgoString(14);
+  const periodLogs = allLogs.filter((l) => l.date && l.date >= cutoff7);
+  const prevPeriodLogs = allLogs.filter((l) => l.date && l.date >= cutoff14 && l.date < cutoff7);
 
-  // --- weekLine: period trend vs previous period, prorated to the same
-  // elapsed-day count (unchanged logic from the old buildCoachInsights). ---
   let weekLine: string;
   {
-    const prorateRatio = prevPeriodDays > 0 ? periodDays / prevPeriodDays : 1;
     const sessions = periodLogs.length;
-    const minutes = periodLogs.reduce((s, l) => s + estimateLogMinutes(l), 0);
-    const prevSessions = Math.round(prevPeriodLogs.length * prorateRatio);
-    const prevMinutes = Math.round(prevPeriodLogs.reduce((s, l) => s + estimateLogMinutes(l), 0) * prorateRatio);
+    const minutes = periodLogs.reduce((s, l) => s + logMinutes(l), 0);
+    const prevSessions = prevPeriodLogs.length;
+    const prevMinutes = prevPeriodLogs.reduce((s, l) => s + logMinutes(l), 0);
 
     if (prevSessions === 0 && prevMinutes === 0) {
-      weekLine = `📈 ${periodLabel}: ${sessions} buổi · ${minutes} phút — kỳ trước chưa tập`;
+      weekLine = `📈 7 ngày qua: ${sessions} buổi · ${minutes} phút — kỳ trước chưa tập`;
     } else {
       const sessDelta = sessions - prevSessions;
       const minDelta = minutes - prevMinutes;
@@ -253,89 +426,21 @@ export function buildCoachReport(
       const verb = trendUp ? 'hơn' : 'kém';
       const sessPart = sessDelta === 0 ? 'bằng kỳ trước về số buổi' : `${verb} kỳ trước ${Math.abs(sessDelta)} buổi`;
       const minPart = `${minDelta >= 0 ? '+' : ''}${minDelta} phút`;
-      weekLine = `${trendEmoji} ${periodLabel}: ${sessions} buổi · ${minutes} phút — ${sessPart}, ${minPart}`;
+      weekLine = `${trendEmoji} 7 ngày qua: ${sessions} buổi · ${minutes} phút — ${sessPart}, ${minPart}`;
     }
   }
 
-  // --- Neglected muscle group over full history (used as a focus
-  // tie-break override when balance is clearly off). ---------------------
-  let neglected: { category: string; days: number } | null = null;
-  {
-    const lastSeen = new Map<string, string>();
-    for (const log of allLogs) {
-      if (!log.date) continue;
-      for (const ex of log.exercises || []) {
-        const cur = lastSeen.get(ex.category);
-        if (!cur || log.date > cur) lastSeen.set(ex.category, log.date);
-      }
-    }
-    const today = todayString();
-    for (const [category, lastDate] of lastSeen) {
-      const days = daysBetween(lastDate, today);
-      if (days > 14 && (!neglected || days > neglected.days)) neglected = { category, days };
-    }
-  }
+  const methodNote = `${ENERGY_METHOD_NOTE} · Chuẩn: ExRx/ACSM (sức mạnh), WHO 2020 (vận động), BMI châu Á – Bộ Y tế VN`;
 
-  // --- focus: directive tied to the weakest sub-score, falling through to
-  // the next-weakest if the top pick can't produce concrete text (e.g. all
-  // tracked lifts already maxed out). ------------------------------------
-  function focusForStrength(): string | null {
-    const nonMaxed = tierEntries.filter((e) => e.tier < 4);
-    if (nonMaxed.length === 0) return null;
-    const lowest = nonMaxed.reduce((a, b) => (b.tier < a.tier ? b : a));
-    const nextThreshold = lowest.tiers[lowest.tier];
-    return `Đẩy ${lowest.name} từ ${fmtBest(lowest.best, lowest.unit)} lên ${fmtBest(nextThreshold, lowest.unit)} để đạt mốc ${TIER_NAMES[lowest.tier + 1]}.`;
-  }
-  function focusForConsistency(): string {
-    const target = Math.min(6, Math.ceil(avgSessionsPerWeek) + 1);
-    return `Nâng tần suất lên ${target} buổi/tuần (hiện ~${avgSessionsPerWeek.toFixed(1)}).`;
-  }
-  function focusForVolume(): string {
-    const add = Math.max(10, Math.round(150 - avgMinutesPerWeek));
-    return `Thêm ~${add} phút vận động/tuần để chạm chuẩn WHO 150.`;
-  }
-  function focusForProgression(): string {
-    if (allPRs.length === 0) return 'Chưa có PR nào — chọn 1 bài để phá mốc.';
-    const mostRecent = allPRs.reduce((a, b) => (b.achievedDate > a.achievedDate ? b : a));
-    const weeksSince = Math.floor(daysBetween(mostRecent.achievedDate, todayString()) / 7);
-    return `${weeksSince} tuần chưa có PR — tăng nhẹ tải để phá mốc.`;
-  }
-
-  const subScores: { key: FocusDimension; score: number }[] = [];
-  if (hasStrengthTiers) subScores.push({ key: 'strength', score: strengthScore });
-  subScores.push({ key: 'consistency', score: consistencyScore });
-  subScores.push({ key: 'volume', score: volumeScore });
-  subScores.push({ key: 'progression', score: progressionScore });
-  subScores.sort((a, b) => a.score - b.score);
-
-  let focusCore: string | null = null;
-  let usedDimension: FocusDimension = 'consistency';
-  for (const s of subScores) {
-    const text =
-      s.key === 'strength' ? focusForStrength() : s.key === 'consistency' ? focusForConsistency() : s.key === 'volume' ? focusForVolume() : focusForProgression();
-    if (text) {
-      focusCore = text;
-      usedDimension = s.key;
-      break;
-    }
-  }
-  if (!focusCore) {
-    focusCore = focusForConsistency();
-    usedDimension = 'consistency';
-  }
-
-  const balanceOverride = !!neglected && neglected.days >= 21;
-  const focus = balanceOverride
-    ? `🎯 Đã ${neglected!.days} ngày chưa tập ${CATEGORY_LABELS[neglected!.category] || neglected!.category} — cân lại nhóm cơ.`
-    : `🎯 ${focusCore}`;
-  const tipDimension: FocusDimension = balanceOverride ? 'balance' : usedDimension;
-
-  // --- focusTip: rotates weekly, not daily — same hashSeed pattern used
-  // for other "pick 1 of N" spots in this app, keyed by ISO week so it
-  // stays constant within a week and changes the next. -------------------
-  const weekKey = isoWeekKey(todayString());
-  const pool = TIPS[tipDimension];
-  const focusTip = pool[hashSeed(weekKey) % pool.length];
-
-  return { level, emoji, score, rankBasis, benchmarks, weekLine, focus, focusTip };
+  return {
+    score,
+    level,
+    emoji,
+    weights,
+    dimensions: dimBuilds.map((d) => d.dimension),
+    weekLine,
+    focus,
+    needsProfile,
+    methodNote,
+  };
 }

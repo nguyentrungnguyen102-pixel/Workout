@@ -1,8 +1,10 @@
-import { pickQuote } from '../lib/quotes';
-import { todayString } from '../lib/date';
+import { useState } from 'react';
+import { pickRandomQuote } from '../lib/quotes';
 
 export default function QuoteBanner() {
-  const quote = pickQuote(todayString());
+  // Random on each mount/refresh (not seeded by date) so the quote changes
+  // every time the app is opened, instead of staying fixed all day.
+  const [quote] = useState(() => pickRandomQuote());
 
   return (
     <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-2xl p-4 mb-3">

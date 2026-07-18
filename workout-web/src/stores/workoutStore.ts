@@ -7,9 +7,11 @@ import {
 } from '../types/workout';
 import { logWorkout as saveLog, getLogsForHeatmap } from '../services/workoutService';
 import { updateStreakAfterLog, updateWeeklyMinutes } from '../services/userService';
+import { getLatestBodyMetric } from '../services/bodyService';
 import { computeNewPRs, PersonalRecord } from '../services/prService';
 import { todayString, yesterdayString } from '../lib/date';
 import { aggregateExercises } from '../lib/dayTimeline';
+import { exerciseMinutes } from '../lib/energy';
 
 interface WorkoutStore {
   draft: DraftWorkout;
@@ -132,14 +134,14 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
       // themselves. '2000-01-01' matches the full-history fetch StatsPage
       // uses for the same computePRs() call.
       const existingLogs = await getLogsForHeatmap(uid, '2000-01-01');
-      const savedLog = await saveLog(uid, draft);
+      // Latest recorded bodyweight drives the MET-based calorie estimate in
+      // logWorkout(); a missing body-metric record just means logWorkout()
+      // falls back to DEFAULT_WEIGHT_KG (see lib/energy.ts).
+      const latestMetric = await getLatestBodyMetric(uid).catch(() => null);
+      const savedLog = await saveLog(uid, draft, latestMetric?.weight);
       const newPRs = computeNewPRs(existingLogs, savedLog);
       await updateStreakAfterLog(uid);
-      await updateWeeklyMinutes(uid, draft.exercises.reduce((sum, e) => {
-        if (e.unit === 'minutes') return sum + (e.durationSeconds || 0) / 60;
-        if (e.unit === 'seconds') return sum + (e.durationSeconds || 0) / 60;
-        return sum + 3;
-      }, 0));
+      await updateWeeklyMinutes(uid, draft.exercises.reduce((sum, e) => sum + exerciseMinutes(e), 0));
       set({ draft: emptyDraft(), isLogging: false, newPRs });
       await get().loadRecentLogs(uid);
     } catch (err) {

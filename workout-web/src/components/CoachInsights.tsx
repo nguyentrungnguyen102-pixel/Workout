@@ -1,6 +1,8 @@
+import { Link } from 'react-router-dom';
 import { WorkoutLog } from '../types/workout';
 import { UserProfile } from '../types/user';
-import { buildCoachReport } from '../lib/coach';
+import { buildFitnessAssessment, AssessmentDimension } from '../lib/coach';
+import { useBodyStore } from '../stores/bodyStore';
 
 interface CoachInsightsProps {
   allLogs: WorkoutLog[];
@@ -12,51 +14,106 @@ interface CoachInsightsProps {
   prevPeriodDays: number;
 }
 
-export default function CoachInsights({ allLogs, periodLogs, prevPeriodLogs, profile, periodLabel, periodDays, prevPeriodDays }: CoachInsightsProps) {
-  const report = buildCoachReport(allLogs, periodLogs, prevPeriodLogs, profile, periodLabel, periodDays, prevPeriodDays);
+export default function CoachInsights({ allLogs, profile }: CoachInsightsProps) {
+  const latestWeightKg = useBodyStore((s) => s.latestMetric?.weight);
+  const assessment = buildFitnessAssessment(allLogs, profile, latestWeightKg);
 
-  if (!report) return null;
+  if (!assessment) return null;
 
   return (
     <div className="bg-card rounded-2xl border border-border p-4 mb-4 space-y-4">
-      <p className="text-sm font-black text-text-main">🎖️ HLV cá nhân</p>
-
-      {/* Xếp hạng */}
       <div className="space-y-1">
+        <p className="text-sm font-black text-text-main">📊 Đánh giá thể lực</p>
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-black text-text-main">
-            {report.emoji} {report.level}
-          </span>
           <span className="text-xs font-bold text-primary bg-primary-light border border-primary/20 rounded-full px-2.5 py-0.5">
-            Điểm thể lực {report.score}/100
+            Chỉ số thể lực {assessment.score}/100
+          </span>
+          <span className="text-sm font-black text-text-main">
+            {assessment.emoji} {assessment.level}
           </span>
         </div>
-        <p className="text-xs text-text-secondary">{report.rankBasis}</p>
+        <p className="text-[10px] text-text-secondary">
+          Trọng số: {assessment.weights.map((w) => `${w.label} ${w.pct}%`).join(' · ')}
+        </p>
       </div>
 
-      {/* Đối chuẩn */}
-      {report.benchmarks.length > 0 && (
-        <div className="pt-3 border-t border-border space-y-1">
-          <p className="text-xs font-bold text-text-main">📐 Đối chuẩn</p>
-          {report.benchmarks.map((line, i) => (
-            <p key={i} className="text-sm text-text-main">
-              {line}
-            </p>
-          ))}
-        </div>
+      {assessment.needsProfile && (
+        <Link
+          to="/settings"
+          className="block text-xs font-bold text-primary bg-primary-light border border-primary/20 rounded-2xl px-3 py-2"
+        >
+          Nhập giới tính, năm sinh, chiều cao để chấm theo chuẩn →
+        </Link>
       )}
 
-      {/* Tuần này */}
-      <div className="pt-3 border-t border-border space-y-1">
-        <p className="text-xs font-bold text-text-main">Tuần này</p>
-        <p className="text-sm text-text-main">{report.weekLine}</p>
+      <div className="space-y-3">
+        {assessment.dimensions.map((dim) => (
+          <div key={dim.key} className="pt-3 border-t border-border first:border-t-0 first:pt-0 space-y-0.5">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <span className="text-xs font-bold text-text-main">
+                {dim.label} · <span className="font-normal text-text-secondary">{dim.valueText}</span>
+              </span>
+              <span className="text-[11px] font-bold text-primary bg-primary-light border border-primary/20 rounded-full px-2 py-0.5">
+                {dim.tierLabel}
+              </span>
+            </div>
+            <ScaleBarSafe dim={dim} />
+            {dim.nextText && <p className="text-xs text-text-secondary">{dim.nextText}</p>}
+            <p className="text-[10px] text-text-secondary">Nguồn: {dim.source}</p>
+          </div>
+        ))}
       </div>
 
-      {/* Tiêu điểm */}
+      <div className="pt-3 border-t border-border space-y-1">
+        <p className="text-xs font-bold text-text-main">Tuần này</p>
+        <p className="text-sm text-text-main">{assessment.weekLine}</p>
+      </div>
+
       <div className="pt-3 border-t border-border space-y-1">
         <p className="text-xs font-bold text-text-main">Tiêu điểm</p>
-        <p className="text-sm font-bold text-text-main">{report.focus}</p>
-        <p className="text-xs text-text-secondary">{report.focusTip}</p>
+        <p className="text-sm font-bold text-text-main">{assessment.focus}</p>
+      </div>
+
+      <p className="pt-3 border-t border-border text-[10px] text-text-secondary">{assessment.methodNote}</p>
+    </div>
+  );
+}
+
+// Wrapper so a dimension with no bands (needsProfile / not-enough-data rows)
+// simply renders nothing instead of crashing on empty band math.
+function ScaleBarSafe({ dim }: { dim: AssessmentDimension }) {
+  if (dim.bands.length === 0) return null;
+  return <ScaleBarInner dim={dim} />;
+}
+
+function ScaleBarInner({ dim }: { dim: AssessmentDimension }) {
+  const lo = dim.bands[0].min;
+  const hi = dim.bands[dim.bands.length - 1].min;
+  const span = hi - lo;
+  const rawPct = span > 0 ? ((dim.value - lo) / span) * 100 : 100;
+  const markerPct = Math.min(100, Math.max(0, rawPct));
+
+  return (
+    <div className="pt-1.5">
+      <div className="relative h-2 rounded-full bg-border overflow-hidden flex">
+        {dim.bands.map((_, i) => (
+          <div
+            key={i}
+            className={`h-full flex-1 bg-primary/20 ${i > 0 ? 'border-l border-card' : ''}`}
+            style={{ opacity: 0.25 + (i / Math.max(1, dim.bands.length - 1)) * 0.55 }}
+          />
+        ))}
+        <div
+          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-primary border-2 border-card shadow"
+          style={{ left: `${markerPct}%` }}
+        />
+      </div>
+      <div className="flex mt-0.5">
+        {dim.bands.map((b, i) => (
+          <span key={i} className="text-[9px] text-text-secondary leading-none text-center" style={{ width: `${100 / dim.bands.length}%` }}>
+            {b.label}
+          </span>
+        ))}
       </div>
     </div>
   );

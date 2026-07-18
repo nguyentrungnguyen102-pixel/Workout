@@ -15,6 +15,7 @@ import {
 import { db } from './firebase';
 import { DraftWorkout, WorkoutLog, WorkoutPreset, Intensity } from '../types/workout';
 import { todayString, yesterdayString } from '../lib/date';
+import { exerciseMinutes, logKcal } from '../lib/energy';
 
 function deriveIntensity(exercises: WorkoutLog['exercises']): { intensity: Intensity; score: number } {
   const totalSets = exercises.reduce((s, e) => s + e.sets, 0);
@@ -23,7 +24,11 @@ function deriveIntensity(exercises: WorkoutLog['exercises']): { intensity: Inten
   return { intensity: 'light', score: 3 };
 }
 
-export async function logWorkout(uid: string, draft: DraftWorkout): Promise<WorkoutLog> {
+export async function logWorkout(
+  uid: string,
+  draft: DraftWorkout,
+  weightKg?: number
+): Promise<WorkoutLog> {
   if (draft.exercises.length === 0) throw new Error('No exercises');
 
   // Date is derived from the (possibly back-dated) startedAt so the log lands
@@ -33,14 +38,22 @@ export async function logWorkout(uid: string, draft: DraftWorkout): Promise<Work
   const date = `${when.getFullYear()}-${pad(when.getMonth() + 1)}-${pad(when.getDate())}`;
 
   // Always sum exercise times — elapsed-since-start is meaningless once the
-  // user can back-date startedAt.
-  const totalDurationMinutes = Math.max(1, Math.round(draft.exercises.reduce((sum, e) => {
-    if (e.unit === 'minutes' || e.unit === 'seconds') return sum + (e.durationSeconds || 0) / 60;
-    return sum + 3; // reps ≈ 3 min
-  }, 0)));
+  // user can back-date startedAt. Minutes/calories now come from the
+  // MET-based model in lib/energy.ts (see there for sourcing) instead of the
+  // old flat "reps = 3 min, kcal = minutes * 7" guesses.
+  const totalDurationMinutes = Math.max(
+    1,
+    Math.round(draft.exercises.reduce((sum, e) => sum + exerciseMinutes(e), 0))
+  );
 
   const { intensity, score } = deriveIntensity(draft.exercises);
-  const caloriesEstimate = Math.round(totalDurationMinutes * 7);
+  // weightKg may be unknown (undefined -> 0): logKcal() falls back to
+  // DEFAULT_WEIGHT_KG in that case since this is a brand-new log with no
+  // prior caloriesEstimate to fall back to instead.
+  const caloriesEstimate = logKcal(
+    { exercises: draft.exercises } as WorkoutLog,
+    weightKg ?? 0
+  );
 
   const cleanExercises = draft.exercises.map((e) => {
     const c: Record<string, any> = {
