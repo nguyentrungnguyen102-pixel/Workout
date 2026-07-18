@@ -5,7 +5,6 @@ import {
   getDocs,
   query,
   where,
-  limit,
   serverTimestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
@@ -26,11 +25,13 @@ export async function addBodyMetric(
   return ref.id;
 }
 
+// No limit()/orderBy() — see workoutService.ts for why: an unordered
+// limit() returns an arbitrary slice once a user's history exceeds the cap,
+// which can silently drop the most recent weigh-in.
 export async function getBodyMetrics(uid: string, count = 30): Promise<BodyMetric[]> {
   const q = query(
     collection(db, 'bodyMetrics'),
-    where('userId', '==', uid),
-    limit(100)
+    where('userId', '==', uid)
   );
   const snap = await getDocs(q);
   return snap.docs

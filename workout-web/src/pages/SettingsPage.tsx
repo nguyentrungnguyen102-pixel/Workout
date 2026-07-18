@@ -71,9 +71,13 @@ export default function SettingsPage() {
     return Math.round((latest - prev) * 10) / 10;
   }, [bodyMetrics]);
 
+  // Ref (not state) holds the pending timer so a fast second toast can clear
+  // the first toast's timeout before it fires and clears the newer message.
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const showToast = (msg: string) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToast(msg);
-    setTimeout(() => setToast(''), 2000);
+    toastTimerRef.current = setTimeout(() => setToast(''), 2000);
   };
 
   const handleSaveGoal = async () => {

@@ -197,6 +197,9 @@ interface WorkoutSummaryModalProps {
 function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
   const { draft, removeExercise, updateExercise, setNotes, setStartedAt, logWorkout, isLogging } = useWorkoutStore();
   const [toast, setToast] = useState('');
+  // Ref (not state) holds the pending timer so a fast second toast can clear
+  // the first toast's timeout before it fires and clears the newer message.
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
   // Default the workout time to "now" when the modal opens with no time set.
   useEffect(() => {
@@ -205,8 +208,9 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
   }, []);
 
   const showToast = (msg: string) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToast(msg);
-    setTimeout(() => setToast(''), 2500);
+    toastTimerRef.current = setTimeout(() => setToast(''), 2500);
   };
 
   const handleLog = async () => {

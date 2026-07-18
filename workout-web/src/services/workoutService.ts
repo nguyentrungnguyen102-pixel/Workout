@@ -6,7 +6,6 @@ import {
   getDocs,
   query,
   where,
-  limit,
   serverTimestamp,
   increment,
   updateDoc,
@@ -121,11 +120,19 @@ export async function logWorkout(
 // guaranteed to exist on the live project — both failure modes make the app
 // look like all data was lost. Only reintroduce after deploying
 // firestore.indexes.json AND verifying every historical log has `date`.
+//
+// ⚠️ No `limit()` either: a query with `where('userId'...)` but no `orderBy`
+// returns docs in Firestore's default (document-path) order, which has no
+// relation to `date`/recency. A hard `limit()` on top of that would hand back
+// an arbitrary slice of the user's whole history once their log count passed
+// the cap — possibly excluding today's just-saved log — then every client-side
+// date filter/sort below would silently operate on that incomplete slice.
+// Fetching the full per-user collection and filtering/sorting client-side is
+// the only way to keep results deterministic without reintroducing orderBy.
 export async function getRecentLogs(uid: string, count = 10): Promise<WorkoutLog[]> {
   const q = query(
     collection(db, 'logs'),
-    where('userId', '==', uid),
-    limit(500)
+    where('userId', '==', uid)
   );
   const snap = await getDocs(q);
   return snap.docs
@@ -140,8 +147,7 @@ export async function getRecentLogs(uid: string, count = 10): Promise<WorkoutLog
 export async function getLogsForHeatmap(uid: string, startDate: string): Promise<WorkoutLog[]> {
   const q = query(
     collection(db, 'logs'),
-    where('userId', '==', uid),
-    limit(1000)
+    where('userId', '==', uid)
   );
   const snap = await getDocs(q);
   return snap.docs
@@ -165,7 +171,7 @@ export async function getLogById(logId: string): Promise<WorkoutLog | null> {
 }
 
 export async function getLogsForExercise(uid: string, presetId: string): Promise<WorkoutLog[]> {
-  const q = query(collection(db, 'logs'), where('userId', '==', uid), limit(500));
+  const q = query(collection(db, 'logs'), where('userId', '==', uid));
   const snap = await getDocs(q);
   return snap.docs
     .map((d) => d.data() as WorkoutLog)
@@ -174,7 +180,7 @@ export async function getLogsForExercise(uid: string, presetId: string): Promise
 }
 
 export async function getLogsForDate(uid: string, date: string): Promise<WorkoutLog[]> {
-  const q = query(collection(db, 'logs'), where('userId', '==', uid), limit(500));
+  const q = query(collection(db, 'logs'), where('userId', '==', uid));
   const snap = await getDocs(q);
   return snap.docs
     .map((d) => d.data() as WorkoutLog)
