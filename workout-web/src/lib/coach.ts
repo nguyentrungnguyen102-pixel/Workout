@@ -36,6 +36,23 @@ export interface FitnessAssessment {
   focus: string;
   needsProfile: boolean;
   methodNote: string;
+  scopeNote: string;
+}
+
+// Selected Stats period (Tuần/Tháng/Quý). When provided, the window-based
+// dimensions (activity, consistency, progression) and the trend line are
+// computed over THIS period instead of fixed rolling windows, so the panel
+// responds to the period filter. Strength (accumulated capability vs the
+// published norm) and Body/BMI (current status) are point-in-time by nature
+// and stay the same across periods.
+export interface AssessmentPeriod {
+  logs: WorkoutLog[];
+  prevLogs: WorkoutLog[];
+  label: string;
+  days: number;
+  prevDays: number;
+  start: string;
+  end: string;
 }
 
 const BASE_WEIGHTS: Record<AssessmentDimension['key'], number> = {
@@ -85,11 +102,15 @@ function nextMilestoneText(value: number, bands: Band[], unit: string, tierIndex
 export function buildFitnessAssessment(
   allLogs: WorkoutLog[],
   profile: UserProfile | null,
-  latestWeightKg?: number
+  latestWeightKg?: number,
+  period?: AssessmentPeriod
 ): FitnessAssessment | null {
   if (allLogs.length === 0) return null;
 
   const today = todayString();
+  // Weeks covered by the selected period (for per-week normalization). Floored
+  // at 1/7 so a single-day "to date" window doesn't divide by ~0.
+  const periodWeeks = period ? Math.max(1, period.days) / 7 : 4;
   const hasSex = !!profile?.sex;
   const hasBirthYear = !!profile?.birthYear;
   const hasHeight = !!profile?.heightCm;
@@ -183,19 +204,19 @@ export function buildFitnessAssessment(
     };
   })();
 
-  // --- activity (WHO) -----------------------------------------------------
+  // --- activity (WHO) — over the selected period, normalized per week -----
   const activityBuild: DimBuild = (() => {
-    const cutoff28 = daysAgoString(28);
-    const logs28 = allLogs.filter((l) => l.date && l.date >= cutoff28);
-    const weeklyMinutes = logs28.reduce((s, l) => s + logMinutes(l), 0) / 4;
+    const aLogs = period ? period.logs : allLogs.filter((l) => l.date && l.date >= daysAgoString(28));
+    const aWeeks = period ? periodWeeks : 4;
+    const weeklyMinutes = aLogs.reduce((s, l) => s + logMinutes(l), 0) / aWeeks;
 
     const strengthDates = new Set<string>();
-    for (const log of logs28) {
+    for (const log of aLogs) {
       if (!log.date) continue;
       const hasStrength = (log.exercises || []).some((ex) => ex.category === 'strength' || ex.category === 'dumbbell');
       if (hasStrength) strengthDates.add(log.date);
     }
-    const strengthDaysPerWeek = strengthDates.size / 4;
+    const strengthDaysPerWeek = strengthDates.size / aWeeks;
 
     const std = whoActivityStandard(weeklyMinutes, strengthDaysPerWeek);
     const score = (std.tierIndex / (std.bands.length - 1)) * 100;
@@ -225,8 +246,9 @@ export function buildFitnessAssessment(
 
   // --- consistency (in-app heuristic, not an external standard) -----------
   const consistencyBuild: DimBuild = (() => {
-    const sessionsLast56 = allLogs.filter((l) => l.date && l.date >= cutoff56).length;
-    const avgSessionsPerWeek = sessionsLast56 / 8;
+    const cLogs = period ? period.logs : allLogs.filter((l) => l.date && l.date >= cutoff56);
+    const cWeeks = period ? periodWeeks : 8;
+    const avgSessionsPerWeek = cLogs.length / cWeeks;
     const bands: Band[] = [
       { label: 'Thấp', min: 0 },
       { label: 'Ổn', min: 3 },
@@ -317,21 +339,28 @@ export function buildFitnessAssessment(
     };
   })();
 
-  // --- progression (in-app heuristic: PRs / 8 weeks) ----------------------
+  // --- progression (in-app heuristic: PRs within the period) --------------
   const progressionBuild: DimBuild = (() => {
-    const prs8w = allPRs.filter((pr) => pr.achievedDate >= cutoff56).length;
+    const prCount = period
+      ? allPRs.filter((pr) => pr.achievedDate >= period.start && pr.achievedDate <= period.end).length
+      : allPRs.filter((pr) => pr.achievedDate >= cutoff56).length;
+    const wks = period ? periodWeeks : 8;
+    // Bands scale with the period length: ~1 PR = making progress, ~1 PR/2wk =
+    // breaking through. Keeps thresholds fair for a week vs a quarter.
+    const bandUnit = period ? `PR (${period.label})` : 'PR/8 tuần';
     const bands: Band[] = [
       { label: 'Chững', min: 0 },
       { label: 'Tiến bộ', min: 1 },
-      { label: 'Bứt phá', min: 3 },
+      { label: 'Bứt phá', min: Math.max(2, Math.round(wks / 2)) },
     ];
-    const tierIndex = tierFor(prs8w, bands);
-    const score = Math.min(100, (prs8w / 4) * 100);
-    const nextText = nextMilestoneText(prs8w, bands, 'PR', tierIndex);
+    const tierIndex = tierFor(prCount, bands);
+    // 1 PR per 2 weeks → 100.
+    const score = Math.min(100, (prCount / Math.max(1, wks / 2)) * 100);
+    const nextText = nextMilestoneText(prCount, bands, 'PR', tierIndex);
 
     let focusText: string;
     if (nextText) {
-      focusText = `Cần thêm ${bands[tierIndex + 1].min - prs8w} PR trong 8 tuần để đạt mốc ${bands[tierIndex + 1].label}.`;
+      focusText = `Cần thêm ${bands[tierIndex + 1].min - prCount} PR để đạt mốc ${bands[tierIndex + 1].label}.`;
     } else if (allPRs.length === 0) {
       focusText = 'Chưa có PR nào — chọn 1 bài để phá mốc.';
     } else {
@@ -345,11 +374,11 @@ export function buildFitnessAssessment(
       dimension: {
         key: 'progression',
         label: DIMENSION_LABELS.progression,
-        valueText: `${prs8w} PR/8 tuần`,
+        valueText: `${prCount} ${bandUnit}`,
         tierLabel: bands[tierIndex].label,
         bands,
-        value: prs8w,
-        unit: 'PR/8 tuần',
+        value: prCount,
+        unit: 'PR',
         source: 'Nhịp tiến bộ (progressive overload)',
         nextText,
         score,
@@ -401,23 +430,26 @@ export function buildFitnessAssessment(
   const weakest = (scoredDims.length > 0 ? scoredDims : dimBuilds).reduce((a, b) => (b.dimension.score < a.dimension.score ? b : a));
   const focus = `🎯 ${weakest.focusText}`;
 
-  // --- weekLine: self-contained 7-day-vs-previous-7-day trend, same
-  // prorate-free comparison logic as the old buildCoachReport period line
-  // (both windows are fixed-length here, so no prorating is needed). -------
-  const cutoff7 = daysAgoString(7);
-  const cutoff14 = daysAgoString(14);
-  const periodLogs = allLogs.filter((l) => l.date && l.date >= cutoff7);
-  const prevPeriodLogs = allLogs.filter((l) => l.date && l.date >= cutoff14 && l.date < cutoff7);
+  // --- trend line: selected period vs previous period (prorated to the same
+  // elapsed-day count so a period still in progress isn't compared against a
+  // full previous period). Falls back to a 7-day vs prior-7-day window when no
+  // period is supplied. -----------------------------------------------------
+  const trendLabel = period ? period.label : '7 ngày qua';
+  const curLogs = period ? period.logs : allLogs.filter((l) => l.date && l.date >= daysAgoString(7));
+  const prvLogs = period
+    ? period.prevLogs
+    : allLogs.filter((l) => l.date && l.date >= daysAgoString(14) && l.date < daysAgoString(7));
+  const prorate = period && period.prevDays > 0 ? period.days / period.prevDays : 1;
 
   let weekLine: string;
   {
-    const sessions = periodLogs.length;
-    const minutes = periodLogs.reduce((s, l) => s + logMinutes(l), 0);
-    const prevSessions = prevPeriodLogs.length;
-    const prevMinutes = prevPeriodLogs.reduce((s, l) => s + logMinutes(l), 0);
+    const sessions = curLogs.length;
+    const minutes = Math.round(curLogs.reduce((s, l) => s + logMinutes(l), 0));
+    const prevSessions = Math.round(prvLogs.length * prorate);
+    const prevMinutes = Math.round(prvLogs.reduce((s, l) => s + logMinutes(l), 0) * prorate);
 
     if (prevSessions === 0 && prevMinutes === 0) {
-      weekLine = `📈 7 ngày qua: ${sessions} buổi · ${minutes} phút — kỳ trước chưa tập`;
+      weekLine = `📈 ${trendLabel}: ${sessions} buổi · ${minutes} phút — kỳ trước chưa tập`;
     } else {
       const sessDelta = sessions - prevSessions;
       const minDelta = minutes - prevMinutes;
@@ -426,11 +458,14 @@ export function buildFitnessAssessment(
       const verb = trendUp ? 'hơn' : 'kém';
       const sessPart = sessDelta === 0 ? 'bằng kỳ trước về số buổi' : `${verb} kỳ trước ${Math.abs(sessDelta)} buổi`;
       const minPart = `${minDelta >= 0 ? '+' : ''}${minDelta} phút`;
-      weekLine = `${trendEmoji} 7 ngày qua: ${sessions} buổi · ${minutes} phút — ${sessPart}, ${minPart}`;
+      weekLine = `${trendEmoji} ${trendLabel}: ${sessions} buổi · ${minutes} phút — ${sessPart}, ${minPart}`;
     }
   }
 
   const methodNote = `${ENERGY_METHOD_NOTE} · Chuẩn: ExRx/ACSM (sức mạnh), WHO 2020 (vận động), BMI châu Á – Bộ Y tế VN`;
+  const scopeNote = period
+    ? `Vận động · Đều đặn · Tiến bộ tính theo kỳ "${period.label}". Sức mạnh (năng lực tích luỹ) và Vóc dáng (BMI hiện tại) là trạng thái hiện tại, không đổi theo kỳ.`
+    : 'Sức mạnh & Vóc dáng là trạng thái hiện tại; Vận động · Đều đặn · Tiến bộ theo cửa sổ gần đây.';
 
   return {
     score,
@@ -442,5 +477,6 @@ export function buildFitnessAssessment(
     focus,
     needsProfile,
     methodNote,
+    scopeNote,
   };
 }

@@ -400,7 +400,7 @@ export default function StatsPage() {
       </div>
 
       {/* Coach insights (C3) */}
-      <CoachInsights allLogs={logs} periodLogs={periodLogs} prevPeriodLogs={prevPeriodLogs} profile={profile} periodLabel={periodLabel} periodDays={periodDays} prevPeriodDays={prevPeriodDays} />
+      <CoachInsights allLogs={logs} periodLogs={periodLogs} prevPeriodLogs={prevPeriodLogs} profile={profile} periodLabel={periodLabel} periodDays={periodDays} prevPeriodDays={prevPeriodDays} periodStart={periodStart} periodEnd={periodEnd} />
 
       {/* Weekly plan card (W3) */}
       <WeeklyPlanCard logs={logs} profile={profile} />
