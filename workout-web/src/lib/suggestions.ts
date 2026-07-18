@@ -46,34 +46,43 @@ export function buildSuggestions(logs: WorkoutLog[], max = 5, excludeIds?: Set<s
 
   const recentLogs = logs.filter((l) => l.date >= cutoffStr);
 
-  // Group by presetId: frequency + best value
-  const statsMap = new Map<string, { frequency: number; bestValue: number; name: string; unit: string; category: string }>();
+  // Group by presetId: frequency + best value + most recent value
+  const statsMap = new Map<string, { frequency: number; bestValue: number; lastValue: number; lastDate: string; name: string; unit: string; category: string }>();
 
   for (const log of recentLogs) {
     for (const ex of log.exercises) {
       const existing = statsMap.get(ex.presetId);
-      let bestValue: number;
+      let value: number;
       if (ex.unit === 'reps') {
-        bestValue = ex.reps ?? 0;
+        value = ex.reps ?? 0;
       } else if (ex.unit === 'km') {
-        bestValue = ex.distance ?? 0;
+        value = ex.distance ?? 0;
       } else {
-        bestValue = ex.durationSeconds ?? 0;
+        value = ex.durationSeconds ?? 0;
       }
 
       if (!existing) {
         statsMap.set(ex.presetId, {
           frequency: 1,
-          bestValue,
+          bestValue: value,
+          lastValue: value,
+          lastDate: log.date,
           name: ex.name,
           unit: ex.unit,
           category: ex.category,
         });
       } else {
+        // "Most recent" is decided by log.date (string compare, YYYY-MM-DD sorts
+        // correctly); ties (same day, multiple sessions) keep whichever was
+        // encountered later in `recentLogs`, which is acceptable without
+        // createdAt millis on hand here.
+        const isNewer = log.date >= existing.lastDate;
         statsMap.set(ex.presetId, {
           ...existing,
           frequency: existing.frequency + 1,
-          bestValue: Math.max(existing.bestValue, bestValue),
+          bestValue: Math.max(existing.bestValue, value),
+          lastValue: isNewer ? value : existing.lastValue,
+          lastDate: isNewer ? log.date : existing.lastDate,
         });
       }
     }
@@ -88,7 +97,7 @@ export function buildSuggestions(logs: WorkoutLog[], max = 5, excludeIds?: Set<s
     if (excludeIds?.has(presetId)) continue;
     // Fallback baseline from SYSTEM_PRESETS
     const preset = SYSTEM_PRESETS.find((p) => p.id === presetId);
-    let baseline = stats.bestValue;
+    let baseline = stats.lastValue || stats.bestValue;
     if (baseline === 0 && preset) {
       if (preset.unit === 'minutes') {
         baseline = preset.defaultValue * 60;
@@ -98,10 +107,15 @@ export function buildSuggestions(logs: WorkoutLog[], max = 5, excludeIds?: Set<s
     }
     if (baseline === 0) continue;
 
+    // Progressive model: anchor on the user's CURRENT level (baseline) and
+    // grow from there, rather than a fixed ±% of the 30-day max — so the
+    // suggestion keeps climbing as the user's level climbs instead of
+    // plateauing at "0.9x/1.1x/1.2x of my best ever".
     const step = stepFor(stats.unit);
-    const light = roundNice(baseline * 0.9, stats.unit);
-    let moderate = roundNice(baseline * 1.1, stats.unit);
-    let high = roundNice(baseline * 1.2, stats.unit);
+    const inc = Math.max(step, roundNice(baseline * 0.1, stats.unit));
+    const light = roundNice(baseline, stats.unit);              // duy trì mức hiện tại
+    let moderate = roundNice(baseline + inc, stats.unit);       // tăng nhẹ
+    let high = roundNice(baseline + 2 * inc, stats.unit);       // thử thách
     // Guarantee visibly distinct light/moderate/high buttons — rounding alone
     // collapses these for common small baselines (e.g. baseline=10 or 12).
     if (moderate <= light) moderate = light + step;

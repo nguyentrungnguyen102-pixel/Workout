@@ -6,9 +6,8 @@ import { useWorkoutStore } from '../stores/workoutStore';
 import { useProgramStore } from '../stores/programStore';
 import { SYSTEM_PRESETS, CATEGORY_LABELS } from '../constants/exercises';
 import { PROGRAM_TEMPLATES } from '../constants/programTemplates';
-import { getTemplates, saveTemplate } from '../services/templateService';
 import { getCustomPresets, saveCustomPreset, deleteCustomPreset } from '../services/customExerciseService';
-import { WorkoutTemplate, ExerciseEntry, WorkoutLog, WorkoutPreset, ExerciseCategory, ExerciseUnit } from '../types/workout';
+import { ExerciseEntry, WorkoutLog, WorkoutPreset, ExerciseCategory, ExerciseUnit } from '../types/workout';
 import { WorkoutProgram } from '../types/program';
 import { ExerciseGoal } from '../types/user';
 import { formatAmount } from '../lib/format';
@@ -18,6 +17,7 @@ import { buildSuggestions, roundNice } from '../lib/suggestions';
 import { sumThisWeek } from '../lib/dayTimeline';
 import { todayString } from '../lib/date';
 import WeeklyPlanCard from '../components/WeeklyPlanCard';
+import QuoteBanner from '../components/QuoteBanner';
 
 function toLocalInput(d: Date): string {
   const p = (n: number) => String(n).padStart(2, '0');
@@ -197,9 +197,6 @@ interface WorkoutSummaryModalProps {
 function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
   const { draft, removeExercise, updateExercise, setNotes, setStartedAt, logWorkout, isLogging } = useWorkoutStore();
   const [toast, setToast] = useState('');
-  const [savingTemplate, setSavingTemplate] = useState(false);
-  const [templateName, setTemplateName] = useState('');
-  const [showTemplateInput, setShowTemplateInput] = useState(false);
 
   // Default the workout time to "now" when the modal opens with no time set.
   useEffect(() => {
@@ -220,21 +217,6 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
       setTimeout(onClose, 800);
     } catch {
       showToast('Lỗi lưu buổi tập');
-    }
-  };
-
-  const handleSaveTemplate = async () => {
-    if (!templateName.trim()) return;
-    setSavingTemplate(true);
-    try {
-      await saveTemplate(uid, templateName.trim(), draft.exercises);
-      showToast('Đã lưu template!');
-      setTemplateName('');
-      setShowTemplateInput(false);
-    } catch {
-      showToast('Lỗi lưu template');
-    } finally {
-      setSavingTemplate(false);
     }
   };
 
@@ -437,30 +419,6 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
           />
         </div>
 
-        {showTemplateInput ? (
-          <div className="flex gap-2 mt-2">
-            <input
-              className="flex-1 bg-card border border-border rounded-xl px-3 py-2 text-sm text-text-main focus:border-primary outline-none"
-              placeholder="Tên template..."
-              value={templateName}
-              onChange={(e) => setTemplateName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSaveTemplate()}
-            />
-            <button onClick={handleSaveTemplate} disabled={savingTemplate}
-              className="px-4 py-2 bg-primary text-white text-sm font-bold rounded-xl disabled:opacity-50">
-              Lưu
-            </button>
-            <button onClick={() => setShowTemplateInput(false)}
-              className="px-3 py-2 border border-border text-sm rounded-xl text-text-secondary">
-              Hủy
-            </button>
-          </div>
-        ) : (
-          <button onClick={() => setShowTemplateInput(true)}
-            className="w-full py-3 border border-border rounded-xl text-sm font-semibold text-text-secondary hover:border-primary hover:text-primary transition-colors mt-2">
-            💾 Lưu thành template
-          </button>
-        )}
       </div>
 
       <div className="px-4 py-4 border-t border-border bg-card">
@@ -861,7 +819,6 @@ export default function QuickAddPage() {
   const { activeState, loadActiveProgram, getTodayDay } = useProgramStore();
   const [activeCategory, setActiveCategory] = useState<Category>('all');
   const [showModal, setShowModal] = useState(false);
-  const [templates, setTemplates] = useState<WorkoutTemplate[]>([]);
   const [customPresets, setCustomPresets] = useState<WorkoutPreset[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [prToast, setPrToast] = useState('');
@@ -895,7 +852,6 @@ export default function QuickAddPage() {
     if (!uid) return;
     loadRecentLogs(uid);
     loadActiveProgram(uid);
-    getTemplates(uid).then(setTemplates).catch(() => {});
     getCustomPresets(uid).then(setCustomPresets).catch(() => {});
   }, [uid]);
 
@@ -1032,6 +988,8 @@ export default function QuickAddPage() {
 
   return (
     <div className="px-4 md:px-8 pt-4 md:pt-6 pb-24">
+      <QuoteBanner />
+
       {prToast && (
         <div className="fixed top-4 left-4 right-4 md:left-1/2 md:right-auto md:-translate-x-1/2 md:w-full md:max-w-md bg-primary text-white text-sm font-bold py-3 px-4 rounded-xl text-center z-[70] shadow-lg shadow-primary/30">
           {prToast}
@@ -1121,26 +1079,6 @@ export default function QuickAddPage() {
         presets={allPresets}
         onAddWithValue={handleAddWithValue}
       />
-
-      {/* Templates — horizontal scroll chips, only if exist */}
-      {templates.length > 0 && (
-        <div className="flex gap-2 overflow-x-auto pb-1 mb-3 scrollbar-hide">
-          <span className="flex-shrink-0 text-xs font-semibold text-text-secondary self-center">📋</span>
-          {templates.map((t) => (
-            <button key={t.id}
-              onClick={() => {
-                if (!uid) return;
-                t.exercises.forEach((ex) => {
-                  if (!draftIds.has(ex.presetId)) addExercise(ex);
-                });
-                setShowModal(true);
-              }}
-              className="flex-shrink-0 bg-card border border-border rounded-xl px-3 py-1.5 text-xs font-semibold text-text-main hover:border-primary hover:text-primary transition-colors whitespace-nowrap">
-              {t.name}
-            </button>
-          ))}
-        </div>
-      )}
 
       <div className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide -mx-1 px-1">
         {CATEGORY_TABS.map(({ key, label }) => (
