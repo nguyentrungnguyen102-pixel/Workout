@@ -1,8 +1,10 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { WorkoutLog } from '../types/workout';
 import { UserProfile } from '../types/user';
 import { buildFitnessAssessment, AssessmentDimension } from '../lib/coach';
 import { useBodyStore } from '../stores/bodyStore';
+import { useUserStore } from '../stores/userStore';
 
 interface CoachInsightsProps {
   allLogs: WorkoutLog[];
@@ -12,11 +14,42 @@ interface CoachInsightsProps {
   periodLabel: string;
   periodDays: number;
   prevPeriodDays: number;
+  periodStart: string;
+  periodEnd: string;
 }
 
-export default function CoachInsights({ allLogs, profile }: CoachInsightsProps) {
-  const latestWeightKg = useBodyStore((s) => s.latestMetric?.weight);
-  const assessment = buildFitnessAssessment(allLogs, profile, latestWeightKg);
+export default function CoachInsights({
+  allLogs,
+  periodLogs,
+  prevPeriodLogs,
+  profile,
+  periodLabel,
+  periodDays,
+  prevPeriodDays,
+  periodStart,
+  periodEnd,
+}: CoachInsightsProps) {
+  const uid = useUserStore((s) => s.firebaseUser?.uid);
+  const latestMetric = useBodyStore((s) => s.latestMetric);
+  const metricsLoaded = useBodyStore((s) => s.metrics.length > 0 || s.latestMetric !== null);
+  const loadMetrics = useBodyStore((s) => s.loadMetrics);
+
+  // The body store isn't loaded on the Stats route by default, so BMI ("Vóc
+  // dáng") would read no bodyweight even after the user entered it. Pull it in
+  // here the first time this panel mounts without metrics.
+  useEffect(() => {
+    if (uid && !metricsLoaded) loadMetrics(uid);
+  }, [uid, metricsLoaded, loadMetrics]);
+
+  const assessment = buildFitnessAssessment(allLogs, profile, latestMetric?.weight, {
+    logs: periodLogs,
+    prevLogs: prevPeriodLogs,
+    label: periodLabel,
+    days: periodDays,
+    prevDays: prevPeriodDays,
+    start: periodStart,
+    end: periodEnd,
+  });
 
   if (!assessment) return null;
 
@@ -35,6 +68,7 @@ export default function CoachInsights({ allLogs, profile }: CoachInsightsProps) 
         <p className="text-[10px] text-text-secondary">
           Trọng số: {assessment.weights.map((w) => `${w.label} ${w.pct}%`).join(' · ')}
         </p>
+        <p className="text-[10px] text-text-muted italic">{assessment.scopeNote}</p>
       </div>
 
       {assessment.needsProfile && (
