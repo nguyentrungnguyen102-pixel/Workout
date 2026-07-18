@@ -1,10 +1,8 @@
 // Published fitness-standard evaluators. Each function scores a raw
 // measurement against a full low->high scale (Band[]) so the UI can render
 // "you're here, this is what's next" rather than a single pass/fail.
-//
-// IMPORTANT: this module intentionally does NOT touch coach.ts /
-// CoachInsights.tsx — those are wired up in a later wave. This wave only
-// provides the evaluators + compiles cleanly.
+
+import { MET_TABLE, ENERGY_METHOD_NOTE } from './energy';
 
 export interface Band {
   label: string;
@@ -54,6 +52,35 @@ function buildTiered(value: number, unit: string, thresholds: number[], source: 
     nextMilestone = { toLabel: TIER_LABELS[tierIndex + 1], need: Math.max(0, need) };
   }
   return { value, unit, bands, tierIndex, source, nextMilestone };
+}
+
+// Positions a scale-bar marker WITHIN its own band proportionally, rather
+// than linearly across the whole low..high range. The UI (ScaleBarInner in
+// CoachInsights.tsx) renders each band as an equal-width flex-1 segment, so
+// for unevenly-spaced thresholds (e.g. BMI [0, 18.5, 23, 25] or WHO
+// [0, 150, 300]) a linear-interpolation marker would land outside its own
+// labeled segment. This instead finds the band the value falls in (ti), then
+// places the marker at (ti + fractionWithinBand) * (100 / bandCount) — i.e.
+// proportionally inside that band's equal-width slot. Always returns a value
+// in [0, 100]; pure and independent of any rendering concerns (display-only
+// clamping, e.g. keeping the dot visually inside the bar, is left to the
+// caller).
+export function scaleMarkerPercent(bands: Band[], value: number): number {
+  const n = bands.length;
+  if (n === 0) return 0;
+  let ti = 0;
+  for (let i = 0; i < n; i++) if (value >= bands[i].min) ti = i;
+  const seg = 100 / n;
+  let frac: number;
+  if (ti < n - 1) {
+    const lo = bands[ti].min;
+    const hi = bands[ti + 1].min;
+    frac = hi > lo ? (value - lo) / (hi - lo) : 0.5;
+  } else {
+    frac = 0.5;
+  }
+  frac = Math.min(1, Math.max(0, frac));
+  return Math.min(100, Math.max(0, (ti + frac) * seg));
 }
 
 // ---------------------------------------------------------------------
@@ -256,3 +283,134 @@ export function whoActivityStandard(
     nextMilestone,
   };
 }
+
+// ---------------------------------------------------------------------
+// STANDARD_REFERENCES — a serializable, display-only projection of the exact
+// tables used above to score "Đánh giá thể lực", assembled FROM those same
+// consts (single source of truth: the reference page shown in Settings
+// renders the very numbers used for scoring, not a hand-copied duplicate).
+
+export interface ReferenceTable {
+  key: string;
+  title: string;
+  unit: string;
+  tierLabels: string[]; // column headers, e.g. Kém..Xuất sắc
+  rows: { label: string; thresholds: (number | string)[] }[]; // e.g. "Nam 30–39" -> [0,12,25,40,55]
+  source: string;
+  note?: string;
+}
+
+const SEX_LABEL_VI: Record<SexKey, string> = { male: 'Nam', female: 'Nữ' };
+
+// Builds a sex×age-band ReferenceTable (10 rows: Nam/Nữ × 5 age bands) from
+// one of the private *_NORMS tables above.
+function buildSexAgeTable(
+  key: string,
+  title: string,
+  unit: string,
+  norms: Record<SexKey, Record<AgeBandKey, number[]>>,
+  source: string,
+  note?: string
+): ReferenceTable {
+  const rows: ReferenceTable['rows'] = [];
+  (['male', 'female'] as SexKey[]).forEach((sex) => {
+    AGE_BANDS.forEach((band) => {
+      rows.push({ label: `${SEX_LABEL_VI[sex]} ${band}`, thresholds: norms[sex][band] });
+    });
+  });
+  return { key, title, unit, tierLabels: TIER_LABELS, rows, source, note };
+}
+
+const PUSHUP_TABLE = buildSexAgeTable(
+  'pushup',
+  'Hít đất (số cái tối đa)',
+  'cái',
+  PUSHUP_NORMS,
+  'ACSM push-up test norms (dẫn theo ExRx.net/Topend Sports)',
+  'TODO verify cutoffs chính xác vs ACSM Guidelines for Exercise Testing and Prescription (bản hiện hành).'
+);
+
+const SITUP_TABLE = buildSexAgeTable(
+  'situp',
+  'Gập bụng / Crunch (số cái/60 giây)',
+  'cái',
+  SITUP_NORMS,
+  'Cooper Institute/ACSM 1-minute curl-up test norms (dẫn theo Topend Sports)',
+  'TODO verify cutoffs chính xác vs bảng gốc Cooper/ACSM.'
+);
+
+const PLANK_TABLE: ReferenceTable = {
+  key: 'plank',
+  title: 'Plank (giữ tư thế, giây)',
+  unit: 'giây',
+  tierLabels: TIER_LABELS,
+  rows: [{ label: 'Chung (không phân biệt giới tính/độ tuổi)', thresholds: PLANK_NORMS }],
+  source: 'Chuẩn plank hold phổ biến (kiểu ACE/Openfit)',
+  note: 'TODO verify nguồn gốc — test này không được chuẩn hoá chặt như hít đất/gập bụng.',
+};
+
+const SQUAT_TABLE = buildSexAgeTable(
+  'squat',
+  'Squat bodyweight (số cái/1 phút)',
+  'cái',
+  SQUAT_NORMS,
+  'Bodyweight squat test — chuẩn tham khảo phổ biến (Topend Sports)',
+  'TODO verify — độ tin cậy thấp hơn hít đất/gập bụng, đây là bảng ít chuẩn hoá nhất trong 4 bài.'
+);
+
+const BMI_TABLE: ReferenceTable = {
+  key: 'bmi',
+  title: 'BMI — ngưỡng châu Á',
+  unit: 'kg/m²',
+  tierLabels: ['Thiếu cân', 'Bình thường', 'Thừa cân', 'Béo phì'],
+  rows: [{ label: 'Ngưỡng dưới (kg/m²)', thresholds: [0, 18.5, 23, 25] }],
+  source:
+    'WHO Western Pacific Region (2000) "The Asia-Pacific Perspective: Redefining Obesity and its Treatment" / Bộ Y tế Việt Nam',
+  note: 'Ngưỡng châu Á thấp hơn ngưỡng WHO toàn cầu (25/30) — phản ánh tỉ lệ mỡ cơ thể cao hơn ở cùng mức BMI tại quần thể châu Á.',
+};
+
+const ACTIVITY_TABLE: ReferenceTable = {
+  key: 'activity',
+  title: 'Vận động — khuyến nghị WHO 2020',
+  unit: 'phút/tuần',
+  tierLabels: ['Dưới chuẩn', 'Đạt chuẩn', 'Tối ưu'],
+  rows: [{ label: 'Phút vận động cường độ vừa/tuần', thresholds: [0, 150, 300] }],
+  source: 'WHO Guidelines on Physical Activity and Sedentary Behaviour (2020)',
+  note: 'WHO còn khuyến nghị thêm ≥2 buổi tăng cơ/tuần — tiêu chí này không phải thang phút nên không thể hiện thành cột ở đây (xem trực tiếp trong Đánh giá thể lực).',
+};
+
+export const STANDARD_REFERENCES: {
+  strength: ReferenceTable[];
+  bmi: ReferenceTable;
+  activity: ReferenceTable;
+  metExamples: { name: string; met: number }[];
+  heuristics: { title: string; text: string; source: string }[];
+  methodNote: string;
+} = {
+  strength: [PUSHUP_TABLE, SITUP_TABLE, PLANK_TABLE, SQUAT_TABLE],
+  bmi: BMI_TABLE,
+  activity: ACTIVITY_TABLE,
+  metExamples: [
+    { name: 'Hít đất (pushup)', met: MET_TABLE.pushup },
+    { name: 'Squat', met: MET_TABLE.squat },
+    { name: 'Plank', met: MET_TABLE.plank },
+    { name: 'Chạy bộ (running)', met: MET_TABLE.running },
+    { name: 'Đạp xe (cycling)', met: MET_TABLE.cycling },
+    { name: 'Nhảy dây (jump rope)', met: MET_TABLE.jump_rope },
+    { name: 'Đi bộ (walking)', met: MET_TABLE.walking },
+    { name: 'Yoga', met: MET_TABLE.yoga },
+  ],
+  heuristics: [
+    {
+      title: 'Đều đặn',
+      text: 'Số buổi tập trung bình/tuần trong kỳ đang chọn: Thấp <3, Ổn ≥3, Tốt ≥4, Xuất sắc ≥5 buổi/tuần.',
+      source: 'Khuyến nghị tập luyện chung (3–5 buổi/tuần) — quy ước trong app, không phải trích dẫn từ một tổ chức y tế cụ thể.',
+    },
+    {
+      title: 'Tiến bộ',
+      text: 'Số kỷ lục cá nhân (PR) đạt được trong kỳ đang chọn: Chững 0 PR, Tiến bộ ≥1 PR, Bứt phá ~1 PR mỗi 2 tuần trong kỳ (ngưỡng co giãn theo độ dài kỳ đã chọn).',
+      source: 'Nhịp tiến bộ (progressive overload) — quy ước trong app dựa trên nguyên lý huấn luyện phổ biến, không phải bảng chuẩn công bố.',
+    },
+  ],
+  methodNote: ENERGY_METHOD_NOTE,
+};

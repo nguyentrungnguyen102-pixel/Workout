@@ -348,6 +348,15 @@ export default function SettingsPage() {
         <ChevronRight size={18} className="text-text-secondary" />
       </Link>
 
+      <Link to="/settings/criteria"
+        className="flex items-center justify-between bg-card rounded-2xl border border-border p-4 mb-4 hover:border-primary/40 transition-colors">
+        <div>
+          <p className="font-semibold text-text-main text-sm">Tiêu chí đánh giá thể lực</p>
+          <p className="text-xs text-text-secondary mt-0.5">Chuẩn & nguồn tham khảo (ExRx/ACSM, WHO, BMI châu Á)</p>
+        </div>
+        <ChevronRight size={18} className="text-text-secondary" />
+      </Link>
+
       {/* Physical profile — sex/birthYear/heightCm, used by fitness-assessment
           calorie & standards scoring (lib/energy.ts / lib/standards.ts) */}
       <div className="bg-card rounded-2xl border border-border p-4 mb-4">

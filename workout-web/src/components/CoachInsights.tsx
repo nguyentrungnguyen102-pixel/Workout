@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { WorkoutLog } from '../types/workout';
 import { UserProfile } from '../types/user';
 import { buildFitnessAssessment, AssessmentDimension } from '../lib/coach';
+import { scaleMarkerPercent } from '../lib/standards';
 import { useBodyStore } from '../stores/bodyStore';
 import { useUserStore } from '../stores/userStore';
 
@@ -93,7 +94,6 @@ export default function CoachInsights({
             </div>
             <ScaleBarSafe dim={dim} />
             {dim.nextText && <p className="text-xs text-text-secondary">{dim.nextText}</p>}
-            <p className="text-[10px] text-text-secondary">Nguồn: {dim.source}</p>
           </div>
         ))}
       </div>
@@ -108,7 +108,12 @@ export default function CoachInsights({
         <p className="text-sm font-bold text-text-main">{assessment.focus}</p>
       </div>
 
-      <p className="pt-3 border-t border-border text-[10px] text-text-secondary">{assessment.methodNote}</p>
+      <Link
+        to="/settings/criteria"
+        className="block pt-3 border-t border-border text-xs font-semibold text-primary hover:underline"
+      >
+        📚 Xem tiêu chí & nguồn tham khảo →
+      </Link>
     </div>
   );
 }
@@ -121,11 +126,15 @@ function ScaleBarSafe({ dim }: { dim: AssessmentDimension }) {
 }
 
 function ScaleBarInner({ dim }: { dim: AssessmentDimension }) {
-  const lo = dim.bands[0].min;
-  const hi = dim.bands[dim.bands.length - 1].min;
-  const span = hi - lo;
-  const rawPct = span > 0 ? ((dim.value - lo) / span) * 100 : 100;
-  const markerPct = Math.min(100, Math.max(0, rawPct));
+  // scaleMarkerPercent positions the marker WITHIN its own equal-width band
+  // segment (proportional to the value's position between that band's
+  // threshold and the next), rather than linearly across the whole
+  // low..high range — the bands below are rendered as equal-width flex-1
+  // segments, so unevenly-spaced thresholds (BMI, WHO) need this to line up.
+  const markerPct = scaleMarkerPercent(dim.bands, dim.value);
+  // Separate DISPLAY-only clamp so the dot never sits flush against the
+  // rounded ends of the bar; the returned markerPct itself stays 0-100.
+  const displayPct = Math.min(96, Math.max(4, markerPct));
 
   return (
     <div className="pt-1.5">
@@ -139,7 +148,7 @@ function ScaleBarInner({ dim }: { dim: AssessmentDimension }) {
         ))}
         <div
           className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-primary border-2 border-card shadow"
-          style={{ left: `${markerPct}%` }}
+          style={{ left: `${displayPct}%` }}
         />
       </div>
       <div className="flex mt-0.5">
