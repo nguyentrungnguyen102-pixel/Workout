@@ -95,3 +95,10 @@ function hashSeed(seed: string): number {
 export function pickQuote(seed: string): Quote {
   return QUOTES[hashSeed(seed) % QUOTES.length];
 }
+
+// Picks a genuinely random quote (not seeded) — used so the banner shows a
+// different quote each time the app is opened/refreshed, rather than the
+// same one all day.
+export function pickRandomQuote(): Quote {
+  return QUOTES[Math.floor(Math.random() * QUOTES.length)];
+}

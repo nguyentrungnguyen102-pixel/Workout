@@ -38,4 +38,11 @@ export interface UserProfile {
   weeklyStats: WeeklyStats;
   createdAt?: Timestamp;
   onboardingDone: boolean;
+  // Demographics — used by the fitness-assessment feature (energy.ts /
+  // standards.ts) to personalize MET-based calories and pick the right
+  // sex/age-band norm table. All optional: existing users may never fill
+  // these in, and callers must tolerate them being absent.
+  sex?: 'male' | 'female';
+  birthYear?: number;
+  heightCm?: number;
 }

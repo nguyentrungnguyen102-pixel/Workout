@@ -6,6 +6,7 @@ import { getRecentLogs, getLogsForHeatmap } from '../services/workoutService';
 import { computePRs, getPRLabel } from '../services/prService';
 import { WorkoutLog } from '../types/workout';
 import { getWeekLabel, formatTimeOfDay, formatDayOfWeekVi, formatDateVi, daysBetween } from '../lib/date';
+import { exerciseMinutes } from '../lib/energy';
 import { SYSTEM_PRESETS } from '../constants/exercises';
 import MonthCalendar from '../components/MonthCalendar';
 import HourHeatmap from '../components/HourHeatmap';
@@ -326,7 +327,7 @@ export default function StatsPage() {
   const categoryStats = new Map<string, { minutes: number; count: number }>();
   for (const log of periodLogs) {
     for (const ex of log.exercises || []) {
-      const mins = (ex.unit === 'minutes' || ex.unit === 'seconds') ? (ex.durationSeconds || 0) / 60 : 3;
+      const mins = exerciseMinutes(ex);
       const e = categoryStats.get(ex.category) || { minutes: 0, count: 0 };
       categoryStats.set(ex.category, { minutes: e.minutes + mins, count: e.count + 1 });
     }

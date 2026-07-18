@@ -1,5 +1,6 @@
 import { WorkoutLog } from '../types/workout';
 import { UserProfile, ExerciseGoal } from '../types/user';
+import { logMinutes } from './energy';
 
 export interface WeeklyPlanItem {
   presetId: string;
@@ -42,23 +43,14 @@ function logsInWeek(logs: WorkoutLog[], weekStartDate: string): WorkoutLog[] {
   return (logs || []).filter((l) => l && l.date && l.date >= weekStartDate && l.date <= weekEnd);
 }
 
-// Minutes for one log. Mirrors the estimate used at write time in
-// services/workoutService.ts's logWorkout() (read there, not modified here):
-// unit minutes/seconds exercises count durationSeconds/60, everything else
-// (reps-based exercises) counts as ~3 minutes. Old logs can be missing
-// totalDurationMinutes entirely, so that field is only trusted when it's a
-// positive number; otherwise this re-derives it from the exercises.
+// Minutes for one log. Kept as a thin re-export/wrapper so existing callers
+// (HourHeatmap.tsx, coach.ts) don't need to change their import — the actual
+// MET-consistent estimate now lives in lib/energy.ts's logMinutes(), which
+// mirrors the same "trust totalDurationMinutes when positive, else re-derive
+// from exercises" back-compat behavior this function used to implement
+// inline.
 export function estimateLogMinutes(log: WorkoutLog): number {
-  if (typeof log.totalDurationMinutes === 'number' && log.totalDurationMinutes > 0) {
-    return log.totalDurationMinutes;
-  }
-  const exercises = log.exercises || [];
-  if (exercises.length === 0) return 0;
-  const minutes = exercises.reduce((sum, e) => {
-    if (e.unit === 'minutes' || e.unit === 'seconds') return sum + (e.durationSeconds || 0) / 60;
-    return sum + 3;
-  }, 0);
-  return Math.max(1, Math.round(minutes));
+  return logMinutes(log);
 }
 
 // Counting convention matches GoalsStrip exactly (getGoalCurrent /

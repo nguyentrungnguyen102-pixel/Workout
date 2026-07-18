@@ -18,6 +18,15 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState('');
 
+  // Physical-profile fields (sex/birthYear/heightCm) — used by the
+  // fitness-assessment feature (lib/energy.ts + lib/standards.ts) for
+  // MET-based calories and sex/age-band norm tables. Optional; lets users
+  // who onboarded before these fields existed fill them in later.
+  const [sex, setSex] = useState<'male' | 'female' | undefined>(profile?.sex);
+  const [birthYear, setBirthYear] = useState(profile?.birthYear ? String(profile.birthYear) : '');
+  const [heightCm, setHeightCm] = useState(profile?.heightCm ? String(profile.heightCm) : '');
+  const [savingPhysical, setSavingPhysical] = useState(false);
+
   // Exercise goals state
   const [goals, setGoals] = useState<ExerciseGoal[]>(profile?.exerciseGoals || []);
   const [showAddGoal, setShowAddGoal] = useState(false);
@@ -36,6 +45,9 @@ export default function SettingsPage() {
       setWeeklyGoal(String(profile.weeklyGoalMinutes || 150));
       setSheetsId(profile.sheetsId || '');
       setGoals(profile.exerciseGoals || []);
+      setSex(profile.sex);
+      setBirthYear(profile.birthYear ? String(profile.birthYear) : '');
+      setHeightCm(profile.heightCm ? String(profile.heightCm) : '');
     }
   }, [profile]);
 
@@ -76,6 +88,25 @@ export default function SettingsPage() {
       showToast('Lỗi lưu');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSavePhysical = async () => {
+    if (!uid) return;
+    setSavingPhysical(true);
+    try {
+      const update: Record<string, any> = {};
+      if (sex) update.sex = sex;
+      const by = parseInt(birthYear, 10);
+      if (!isNaN(by) && by > 1900) update.birthYear = by;
+      const h = parseFloat(heightCm);
+      if (!isNaN(h) && h > 0) update.heightCm = h;
+      await updateProfile(uid, update);
+      showToast('Đã lưu hồ sơ thể chất! ✅');
+    } catch {
+      showToast('Lỗi lưu');
+    } finally {
+      setSavingPhysical(false);
     }
   };
 
@@ -316,6 +347,43 @@ export default function SettingsPage() {
         </div>
         <ChevronRight size={18} className="text-text-secondary" />
       </Link>
+
+      {/* Physical profile — sex/birthYear/heightCm, used by fitness-assessment
+          calorie & standards scoring (lib/energy.ts / lib/standards.ts) */}
+      <div className="bg-card rounded-2xl border border-border p-4 mb-4">
+        <p className="text-xs font-semibold text-text-secondary mb-3">HỒ SƠ THỂ CHẤT</p>
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs text-text-secondary mb-1.5 block">Giới tính</label>
+            <div className="flex gap-2">
+              {(['male', 'female'] as const).map(s => (
+                <button key={s} onClick={() => setSex(s)}
+                  className={`flex-1 py-2.5 rounded-xl border-2 font-bold text-sm transition-all ${sex === s ? 'border-primary bg-primary-light text-primary' : 'border-border bg-card-2 text-text-main'}`}>
+                  {s === 'male' ? 'Nam' : 'Nữ'}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-text-secondary mb-1.5 block">Năm sinh</label>
+              <input type="number" placeholder="VD: 1990" value={birthYear}
+                onChange={(e) => setBirthYear(e.target.value)}
+                className="w-full bg-card-2 border border-border rounded-xl px-3 py-2.5 text-text-main text-sm focus:border-primary outline-none transition-colors" />
+            </div>
+            <div>
+              <label className="text-xs text-text-secondary mb-1.5 block">Chiều cao (cm)</label>
+              <input type="number" placeholder="VD: 170" value={heightCm}
+                onChange={(e) => setHeightCm(e.target.value)}
+                className="w-full bg-card-2 border border-border rounded-xl px-3 py-2.5 text-text-main text-sm focus:border-primary outline-none transition-colors" />
+            </div>
+          </div>
+          <button onClick={handleSavePhysical} disabled={savingPhysical}
+            className="w-full py-3 bg-primary text-white text-sm font-bold rounded-xl disabled:opacity-50">
+            {savingPhysical ? 'Đang lưu...' : 'Lưu hồ sơ thể chất'}
+          </button>
+        </div>
+      </div>
 
       <div
         role="button"
