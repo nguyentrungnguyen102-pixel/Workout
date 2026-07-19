@@ -9,6 +9,7 @@ import { SYSTEM_PRESETS } from '../constants/exercises';
 import { APP_VERSION } from '../constants/version';
 import { getBodyMetrics } from '../services/bodyService';
 import { BodyMetric } from '../types/body';
+import ExerciseIcon from '../components/ExerciseIcon';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -292,10 +293,11 @@ export default function SettingsPage() {
             <div className="flex flex-wrap gap-1.5 mb-3 max-h-32 overflow-y-auto">
               {filteredPresets.map(p => (
                 <button key={p.id} onClick={() => { setNewGoalPresetId(p.id); setNewGoalValue(String(p.defaultValue)); }}
-                  className={`text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all ${
+                  className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all ${
                     newGoalPresetId === p.id ? 'bg-primary text-white border-primary' : 'bg-card-2 text-text-secondary border-border'
                   }`}>
-                  {p.icon} {p.nameVi}
+                  <ExerciseIcon presetId={p.id} category={p.category} size={14} />
+                  {p.nameVi}
                 </button>
               ))}
             </div>

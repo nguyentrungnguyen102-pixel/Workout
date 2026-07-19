@@ -50,38 +50,45 @@ export default function HourHeatmap({ logs }: HourHeatmapProps) {
     <div className="bg-card rounded-2xl border border-border p-4 mb-4">
       <p className="text-sm font-bold text-text-main mb-3">🕐 Khung giờ tập</p>
 
-      <div className="overflow-x-auto">
-        <div className="inline-block min-w-[380px]">
-          {/* Hour header row */}
-          <div className="flex gap-0.5 mb-1 pl-6">
-            {HOURS.map((h) => (
-              <div key={h} className="w-4 flex-shrink-0 text-center">
-                <span className="text-[8px] text-text-muted">{HOUR_LABEL_SET.has(h) ? h : ''}</span>
-              </div>
-            ))}
-          </div>
+      <div>
+        {/* Hour header row — same grid template as the day rows below so
+            the hour labels line up exactly with their columns. */}
+        <div
+          className="mb-1"
+          style={{ display: 'grid', gridTemplateColumns: 'auto repeat(18, minmax(0,1fr))', gap: '2px' }}
+        >
+          <div className="w-6" />
+          {HOURS.map((h) => (
+            <div key={h} className="text-center">
+              <span className="text-[8px] text-text-muted">{HOUR_LABEL_SET.has(h) ? h : ''}</span>
+            </div>
+          ))}
+        </div>
 
-          {/* Day rows */}
-          <div className="space-y-0.5">
-            {DOW_LABELS.map((label, dowIdx) => (
-              <div key={label} className="flex items-center gap-0.5">
-                <div className="w-6 flex-shrink-0 text-[9px] font-semibold text-text-muted">{label}</div>
-                {HOURS.map((h, colIdx) => {
-                  const v = grid[dowIdx][colIdx];
-                  const level = levelOf(v);
-                  const isMax = max > 0 && v === max;
-                  return (
-                    <div
-                      key={h}
-                      title={`${label} ${h}h — ${Math.round(v)} phút`}
-                      className={`w-4 h-4 flex-shrink-0 rounded-sm ${level === 0 ? 'bg-card-2' : ''} ${isMax ? 'ring-1 ring-primary' : ''}`}
-                      style={level > 0 ? { backgroundColor: LEVEL_HEX[level] } : undefined}
-                    />
-                  );
-                })}
-              </div>
-            ))}
-          </div>
+        {/* Day rows */}
+        <div className="space-y-0.5">
+          {DOW_LABELS.map((label, dowIdx) => (
+            <div
+              key={label}
+              style={{ display: 'grid', gridTemplateColumns: 'auto repeat(18, minmax(0,1fr))', gap: '2px' }}
+              className="items-center"
+            >
+              <div className="w-6 flex-shrink-0 text-[9px] font-semibold text-text-muted">{label}</div>
+              {HOURS.map((h, colIdx) => {
+                const v = grid[dowIdx][colIdx];
+                const level = levelOf(v);
+                const isMax = max > 0 && v === max;
+                return (
+                  <div
+                    key={h}
+                    title={`${label} ${h}h — ${Math.round(v)} phút`}
+                    className={`w-full aspect-square rounded-sm ${level === 0 ? 'bg-card-2' : ''} ${isMax ? 'ring-1 ring-primary' : ''}`}
+                    style={level > 0 ? { backgroundColor: LEVEL_HEX[level] } : undefined}
+                  />
+                );
+              })}
+            </div>
+          ))}
         </div>
       </div>
 

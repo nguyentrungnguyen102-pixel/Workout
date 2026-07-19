@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { WorkoutLog, WorkoutPreset } from '../types/workout';
 import { CATEGORY_LABELS, SYSTEM_PRESETS } from '../constants/exercises';
+import ExerciseIcon from './ExerciseIcon';
 
 interface ExercisePeriodTableProps {
   periodLogs: WorkoutLog[];
@@ -88,13 +89,12 @@ export default function ExercisePeriodTable({ periodLogs, prevPeriodLogs, preset
     const prorateRatio = prevPeriodDays > 0 ? periodDays / prevPeriodDays : 1;
 
     const byCategory = new Map<string, { sessions: number; rows: Array<{
-      presetId: string; icon: string; name: string; sessions: number; totalLabel: string;
+      presetId: string; category: string; name: string; sessions: number; totalLabel: string;
       bestLabel: string; deltaNode: 'new' | { positive: boolean; valueLabel: string; pctLabel: string };
     }> }>();
 
     for (const agg of current.values()) {
       const preset = presetById.get(agg.presetId);
-      const icon = preset?.icon || '🏋️';
       const name = preset?.nameVi || agg.name;
       const prevAgg = prev.get(agg.presetId);
       const prevTotalRaw = prevAgg?.total || 0;
@@ -106,7 +106,7 @@ export default function ExercisePeriodTable({ periodLogs, prevPeriodLogs, preset
       groupEntry.sessions += agg.sessions;
       groupEntry.rows.push({
         presetId: agg.presetId,
-        icon,
+        category: preset?.category || agg.category,
         name,
         sessions: agg.sessions,
         totalLabel: formatUnitValue(agg.unit, agg.total, false),
@@ -153,7 +153,7 @@ export default function ExercisePeriodTable({ periodLogs, prevPeriodLogs, preset
                     onClick={() => navigate(`/stats/exercise/${row.presetId}`)}
                     className="w-full flex flex-col gap-1 px-2 py-2 rounded-xl hover:bg-card-2 active:scale-[0.99] transition-all text-left">
                     <span className="flex items-center gap-2 min-w-0">
-                      <span className="text-base flex-shrink-0">{row.icon}</span>
+                      <ExerciseIcon presetId={row.presetId} category={row.category} size={18} className="text-text-secondary flex-shrink-0" />
                       <span className="text-sm font-semibold text-text-main truncate flex-1">{row.name}</span>
                       <span className="text-xs text-text-secondary flex-shrink-0">{row.sessions} buổi</span>
                     </span>
