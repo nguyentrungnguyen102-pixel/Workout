@@ -1,11 +1,12 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, ChevronRight, Flame, Target, ChevronDown, ChevronUp, Plus, Trash2, Search } from 'lucide-react';
+import { X, ChevronRight, Flame, Target, ChevronDown, ChevronUp, Plus, Trash2, Search, Info } from 'lucide-react';
 import { useUserStore } from '../stores/userStore';
 import { useWorkoutStore } from '../stores/workoutStore';
 import { useProgramStore } from '../stores/programStore';
 import { SYSTEM_PRESETS, CATEGORY_LABELS } from '../constants/exercises';
 import { PROGRAM_TEMPLATES } from '../constants/programTemplates';
+import { getGuide, ExerciseGuide } from '../constants/exerciseGuides';
 import { getCustomPresets, saveCustomPreset, deleteCustomPreset } from '../services/customExerciseService';
 import { ExerciseEntry, WorkoutLog, WorkoutPreset, ExerciseCategory, ExerciseUnit } from '../types/workout';
 import { WorkoutProgram } from '../types/program';
@@ -193,6 +194,68 @@ function CreateExerciseModal({ uid, onClose, onCreated }: CreateExerciseModalPro
             className="w-full py-4 bg-primary text-white font-black text-base rounded-2xl disabled:opacity-50 shadow-lg shadow-primary/30 transition-opacity">
             {saving ? 'Đang tạo...' : 'Tạo bài tập ✅'}
           </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface ExerciseGuideModalProps {
+  preset: WorkoutPreset;
+  guide: ExerciseGuide;
+  onClose: () => void;
+}
+
+// Lightweight "how to do it" modal shown from the info button on an exercise
+// card. Text-only (no images/video) — keeps the GitHub Pages bundle light.
+function ExerciseGuideModal({ preset, guide, onClose }: ExerciseGuideModalProps) {
+  return (
+    <div
+      className="fixed inset-0 z-[70] flex items-end md:items-center justify-center bg-black/40"
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full md:max-w-md bg-background rounded-t-3xl md:rounded-3xl md:shadow-2xl max-h-[85vh] overflow-hidden flex flex-col"
+      >
+        <div className="flex items-center justify-between px-4 py-4 border-b border-border bg-card flex-shrink-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <ExerciseIcon presetId={preset.id} category={preset.category} size={28} className="text-primary flex-shrink-0" />
+            <h2 className="text-lg font-black text-text-main truncate">{preset.nameVi}</h2>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-card-2 transition-colors flex-shrink-0">
+            <X size={20} className="text-text-secondary" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+          <div>
+            <p className="text-xs font-bold text-text-secondary mb-2 uppercase tracking-wide">Cách tập</p>
+            <ol className="space-y-2">
+              {guide.steps.map((step, i) => (
+                <li key={i} className="flex gap-2.5 text-sm text-text-main">
+                  <span className="flex-shrink-0 w-5 h-5 mt-0.5 rounded-full bg-primary-light text-primary text-xs font-black flex items-center justify-center">
+                    {i + 1}
+                  </span>
+                  <span>{step}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          {guide.tips && guide.tips.length > 0 && (
+            <div>
+              <p className="text-xs font-bold text-text-secondary mb-2 uppercase tracking-wide">Lưu ý</p>
+              <ul className="space-y-1.5">
+                {guide.tips.map((tip, i) => (
+                  <li key={i} className="flex gap-2 text-sm text-text-secondary">
+                    <span className="flex-shrink-0">⚠️</span>
+                    <span>{tip}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -837,6 +900,7 @@ export default function QuickAddPage() {
   const [customPresets, setCustomPresets] = useState<WorkoutPreset[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [prToast, setPrToast] = useState('');
+  const [guidePresetId, setGuidePresetId] = useState<string | null>(null);
 
   const uid = firebaseUser?.uid;
 
@@ -1032,6 +1096,19 @@ export default function QuickAddPage() {
         />
       )}
 
+      {guidePresetId && (() => {
+        const guidePreset = allPresets.find((p) => p.id === guidePresetId);
+        const guide = guidePreset ? getGuide(guidePreset.id) : undefined;
+        if (!guidePreset || !guide) return null;
+        return (
+          <ExerciseGuideModal
+            preset={guidePreset}
+            guide={guide}
+            onClose={() => setGuidePresetId(null)}
+          />
+        );
+      })()}
+
       {/* Compact header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
@@ -1163,6 +1240,15 @@ export default function QuickAddPage() {
                   className="absolute top-2 right-2 p-1 rounded-full text-text-muted hover:bg-danger-light hover:text-danger transition-colors"
                   aria-label={`Xoá ${preset.nameVi}`}>
                   <Trash2 size={14} />
+                </button>
+              )}
+              {!preset.isCustom && getGuide(preset.id) && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); setGuidePresetId(preset.id); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.stopPropagation(); }}
+                  className="absolute top-2 right-2 p-1 rounded-full text-text-muted hover:bg-primary-light hover:text-primary transition-colors"
+                  aria-label={`Cách tập ${preset.nameVi}`}>
+                  <Info size={14} />
                 </button>
               )}
               <div className="flex items-center gap-2 mb-1.5 pr-5">
