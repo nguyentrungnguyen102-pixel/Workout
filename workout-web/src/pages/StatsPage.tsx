@@ -1,18 +1,22 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Flame, Trophy, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Flame, Trophy, Clock, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { useUserStore } from '../stores/userStore';
 import { getRecentLogs, getLogsForHeatmap } from '../services/workoutService';
 import { computePRs, getPRLabel } from '../services/prService';
 import { WorkoutLog } from '../types/workout';
 import { getWeekLabel, formatTimeOfDay, formatDayOfWeekVi, formatDateVi, daysBetween } from '../lib/date';
 import { exerciseMinutes } from '../lib/energy';
-import { SYSTEM_PRESETS } from '../constants/exercises';
+import { SYSTEM_PRESETS, CATEGORY_COLORS_STATS } from '../constants/exercises';
 import MonthCalendar from '../components/MonthCalendar';
 import HourHeatmap from '../components/HourHeatmap';
 import WeeklyPlanCard from '../components/WeeklyPlanCard';
 import ExercisePeriodTable from '../components/ExercisePeriodTable';
 import CoachInsights from '../components/CoachInsights';
+import DailyExerciseChart from '../components/charts/DailyExerciseChart';
+import WeeklyVolumeChart from '../components/charts/WeeklyVolumeChart';
+import MuscleRadarChart from '../components/charts/MuscleRadarChart';
+import ActivityCalendar from '../components/charts/ActivityCalendar';
 
 type Period = 'week' | 'month' | 'quarter';
 
@@ -109,9 +113,6 @@ function getPeriodLabel(p: Period, offset: number): string {
 
 const CATEGORY_LABELS: Record<string, string> = {
   strength: 'Sức mạnh', core: 'Bụng & Core', cardio: 'Cardio', mobility: 'Linh hoạt', recovery: 'Phục hồi', dumbbell: 'Tạ đơn',
-};
-const CATEGORY_COLORS_STATS: Record<string, string> = {
-  strength: '#FF5400', core: '#BE185D', cardio: '#2563EB', mobility: '#059669', recovery: '#7C3AED', dumbbell: '#D97706',
 };
 const CATEGORY_COLORS: Record<string, { text: string; bg: string }> = {
   strength: { text: '#FF5400', bg: '#FFF0EC' },
@@ -264,6 +265,7 @@ export default function StatsPage() {
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<Period>('week');
   const [periodOffset, setPeriodOffset] = useState(0);
+  const [chartsOpen, setChartsOpen] = useState(true);
 
   const uid = firebaseUser?.uid;
 
@@ -413,6 +415,23 @@ export default function StatsPage() {
 
       {/* Exercise period table (C2.2) */}
       <ExercisePeriodTable periodLogs={periodLogs} prevPeriodLogs={prevPeriodLogs} presets={SYSTEM_PRESETS} periodDays={periodDays} prevPeriodDays={prevPeriodDays} />
+
+      {/* Charts section (v2.11.0) — collapsible so the page doesn't balloon */}
+      <div className="mb-1">
+        <button onClick={() => setChartsOpen((o) => !o)}
+          className="w-full flex items-center justify-between px-1 py-2 mb-1">
+          <span className="text-sm font-black text-text-main">📈 Biểu đồ</span>
+          {chartsOpen ? <ChevronUp size={16} className="text-text-secondary" /> : <ChevronDown size={16} className="text-text-secondary" />}
+        </button>
+        {chartsOpen && (
+          <>
+            <DailyExerciseChart periodLogs={periodLogs} />
+            <WeeklyVolumeChart logs={logs} />
+            <MuscleRadarChart periodLogs={periodLogs} />
+            <ActivityCalendar logs={logs} />
+          </>
+        )}
+      </div>
 
       {/* Category breakdown */}
       {categoryStats.size > 0 && (

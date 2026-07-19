@@ -69,3 +69,11 @@ export const CATEGORY_LABELS: Record<string, string> = {
   recovery: 'Phục hồi',
   dumbbell: 'Tạ đơn',
 };
+
+// Shared per-category hex colors for charts/stats (v2.11.0) — matches the
+// values StatsPage.tsx already used locally for its category breakdown bars,
+// centralized here so chart components (src/components/charts/*) can reuse
+// them without importing from a page module.
+export const CATEGORY_COLORS_STATS: Record<string, string> = {
+  strength: '#FF5400', core: '#BE185D', cardio: '#2563EB', mobility: '#059669', recovery: '#7C3AED', dumbbell: '#D97706',
+};
