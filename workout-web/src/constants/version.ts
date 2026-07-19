@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.9.3';
+export const APP_VERSION = '2.10.0';
 
 // Lich su phien ban chinh thuc (sau dot don nhanh 14/07/2026 — gop cac
 // nang cap tot nhat tu cac nhanh phien hang ngay vao mot ban duy nhat).
@@ -22,4 +22,5 @@ export const PHASE_HISTORY = [
   { version: '2.9.1', phase: 7, summary: 'Sửa lỗi: Đánh giá thể lực nay chạy theo bộ lọc Tuần/Tháng/Quý (Vận động/Đều đặn/Tiến bộ + đường xu hướng tính theo kỳ; Sức mạnh & Vóc dáng là trạng thái hiện tại); Vóc dáng/BMI nay hiện đúng khi đã nhập chiều cao + cân nặng (tự nạp số đo cơ thể ở trang Thống kê)' },
   { version: '2.9.2', phase: 7, summary: 'Sửa thanh trượt đánh giá thể lực khớp đúng bậc; đưa toàn bộ tiêu chí/nguồn tham khảo vào trang Cài đặt (Thống kê chỉ còn link dẫn sang); thêm test tự động (vitest)' },
   { version: '2.9.3', phase: 7, summary: 'Hotfix: bỏ limit() không có orderBy trong các truy vấn logs/bodyMetrics — có thể ẩn ngẫu nhiên buổi tập/cân nặng mới nhất khi lịch sử vượt quá giới hạn; toast lưu (Cài đặt/Chương trình/Tóm tắt buổi tập) không còn bị tắt sớm khi bấm lưu 2 lần liên tiếp' },
+  { version: '2.10.0', phase: 8, summary: 'Giao diện: menu desktop thu gọn (mini sidebar), icon bài tập vẽ SVG thay emoji + card chọn bài gọn hơn, heatmap khung giờ co giãn vừa khung, thêm ô tìm kiếm bài tập' },
 ] as const;

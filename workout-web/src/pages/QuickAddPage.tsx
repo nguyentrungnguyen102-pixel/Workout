@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, ChevronRight, Flame, Target, ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react';
+import { X, ChevronRight, Flame, Target, ChevronDown, ChevronUp, Plus, Trash2, Search } from 'lucide-react';
 import { useUserStore } from '../stores/userStore';
 import { useWorkoutStore } from '../stores/workoutStore';
 import { useProgramStore } from '../stores/programStore';
@@ -18,6 +18,16 @@ import { sumThisWeek } from '../lib/dayTimeline';
 import { todayString } from '../lib/date';
 import WeeklyPlanCard from '../components/WeeklyPlanCard';
 import QuoteBanner from '../components/QuoteBanner';
+import ExerciseIcon from '../components/ExerciseIcon';
+
+// Strips Vietnamese diacritics for accent-insensitive search matching
+// (e.g. "gap bung" should still find "Gập bụng").
+function normalize(s: string): string {
+  return s
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase();
+}
 
 function toLocalInput(d: Date): string {
   const p = (n: number) => String(n).padStart(2, '0');
@@ -764,7 +774,7 @@ function RecentSessionCard({ log, presets, onRepeat }: RecentSessionCardProps) {
           return (
             <span key={ex.presetId}
               className="inline-flex items-center gap-1 text-xs font-semibold text-text-main bg-card-2 border border-border rounded-full px-2.5 py-1">
-              <span>{preset?.icon ?? '🏋️'}</span>
+              <ExerciseIcon presetId={ex.presetId} category={preset?.category ?? ex.category} size={14} />
               {ex.name || preset?.nameVi || 'Bài tập'}
             </span>
           );
@@ -822,6 +832,7 @@ export default function QuickAddPage() {
   const { draft, todayLog, yesterdayLog, recentLogs, addExercise, updateExercise, setDraftFromLog, loadRecentLogs, newPRs, clearNewPRs } = useWorkoutStore();
   const { activeState, loadActiveProgram, getTodayDay } = useProgramStore();
   const [activeCategory, setActiveCategory] = useState<Category>('all');
+  const [q, setQ] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [customPresets, setCustomPresets] = useState<WorkoutPreset[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -908,9 +919,18 @@ export default function QuickAddPage() {
     return scored.sort((a, b) => b.score - a.score).slice(0, 2).map((s) => s.template);
   }, [activeState, recentLogs]);
 
-  const filteredPresets = activeCategory === 'all'
-    ? allPresets
-    : allPresets.filter((p) => p.category === activeCategory);
+  // Searching ignores the active category tab (search across everything);
+  // with no query, fall back to the current category-tab filtering.
+  const trimmedQ = q.trim();
+  const isSearching = trimmedQ.length > 0;
+  const filteredPresets = isSearching
+    ? allPresets.filter((p) => {
+        const nq = normalize(trimmedQ);
+        return normalize(p.nameVi).includes(nq) || normalize(p.name).includes(nq);
+      })
+    : activeCategory === 'all'
+      ? allPresets
+      : allPresets.filter((p) => p.category === activeCategory);
 
   const draftIds = new Set(draft.exercises.map((e) => e.presetId));
 
@@ -1084,25 +1104,44 @@ export default function QuickAddPage() {
         onAddWithValue={handleAddWithValue}
       />
 
-      <div className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide -mx-1 px-1">
-        {CATEGORY_TABS.map(({ key, label }) => (
-          <button key={key} onClick={() => setActiveCategory(key)}
-            className={`flex-shrink-0 px-3 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
-              activeCategory === key
-                ? 'bg-primary text-white'
-                : 'bg-card border border-border text-text-secondary'
-            }`}>
-            {label}
-          </button>
-        ))}
+      {/* Search — accent-insensitive, matches across all categories */}
+      <div className="relative mb-3">
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
+        <input
+          type="text"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Tìm bài tập…"
+          className="w-full bg-card border border-border rounded-xl pl-9 pr-3 py-2.5 text-sm text-text-main focus:border-primary outline-none transition-colors"
+        />
       </div>
+      {isSearching && (
+        <p className="text-xs text-text-secondary mb-2">Kết quả cho "{trimmedQ}" ({filteredPresets.length})</p>
+      )}
+
+      {!isSearching && (
+        <div className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide -mx-1 px-1">
+          {CATEGORY_TABS.map(({ key, label }) => (
+            <button key={key} onClick={() => setActiveCategory(key)}
+              className={`flex-shrink-0 px-3 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
+                activeCategory === key
+                  ? 'bg-primary text-white'
+                  : 'bg-card border border-border text-text-secondary'
+              }`}>
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-        <button onClick={() => setShowCreateModal(true)}
-          className="bg-card rounded-2xl p-4 border-2 border-dashed border-border hover:border-primary/60 text-text-secondary hover:text-primary transition-all active:scale-95 flex flex-col items-center justify-center gap-1.5 min-h-[112px]">
-          <Plus size={22} />
-          <span className="text-xs font-bold">Tạo bài tập</span>
-        </button>
+        {!isSearching && (
+          <button onClick={() => setShowCreateModal(true)}
+            className="bg-card rounded-2xl p-3 border-2 border-dashed border-border hover:border-primary/60 text-text-secondary hover:text-primary transition-all active:scale-95 flex flex-col items-center justify-center gap-1.5 min-h-[86px]">
+            <Plus size={20} />
+            <span className="text-xs font-bold">Tạo bài tập</span>
+          </button>
+        )}
         {filteredPresets.map((preset) => {
           const inDraft = draftIds.has(preset.id);
           const cc = CATEGORY_COLORS[preset.category] || CATEGORY_COLORS.strength;
@@ -1114,7 +1153,7 @@ export default function QuickAddPage() {
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleAddExercise(preset); }
               }}
-              className={`relative bg-card rounded-2xl p-4 border-2 text-left transition-all active:scale-95 cursor-pointer ${
+              className={`relative bg-card rounded-2xl p-3 border-2 text-left transition-all active:scale-95 cursor-pointer ${
                 inDraft ? 'border-primary' : 'border-border hover:border-primary/40'
               }`}>
               {preset.isCustom && (
@@ -1126,9 +1165,11 @@ export default function QuickAddPage() {
                   <Trash2 size={14} />
                 </button>
               )}
-              <div className="text-2xl mb-2">{preset.icon}</div>
-              <p className="font-bold text-text-main text-sm leading-tight mb-1 pr-5">{preset.nameVi}</p>
-              <p className="text-xs text-text-secondary mb-2">{getSuggestedValue(preset)}</p>
+              <div className="flex items-center gap-2 mb-1.5 pr-5">
+                <ExerciseIcon presetId={preset.id} category={preset.category} size={24} className="text-primary flex-shrink-0" />
+                <p className="font-bold text-text-main text-sm leading-tight">{preset.nameVi}</p>
+              </div>
+              <p className="text-xs text-text-secondary mb-1.5">{getSuggestedValue(preset)}</p>
               <div className="flex items-center justify-between gap-1">
                 <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
                   style={{ color: cc.text, backgroundColor: cc.bg }}>

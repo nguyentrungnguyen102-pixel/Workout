@@ -8,6 +8,7 @@ import { getCustomPresets } from '../services/customExerciseService';
 import { SYSTEM_PRESETS } from '../constants/exercises';
 import { WorkoutLog, WorkoutPreset } from '../types/workout';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
+import ExerciseIcon from '../components/ExerciseIcon';
 
 function formatDateShort(dateStr: string): string {
   const d = new Date(dateStr + 'T00:00:00');
@@ -95,8 +96,9 @@ export default function ExerciseProgressPage() {
           <ArrowLeft size={20} className="text-text-secondary" />
         </button>
         <div>
-          <h1 className="text-xl font-black text-text-main">
-            {preset?.icon} {preset?.nameVi || presetId}
+          <h1 className="text-xl font-black text-text-main flex items-center gap-2">
+            <ExerciseIcon presetId={presetId || ''} category={preset?.category} size={22} className="text-primary" />
+            {preset?.nameVi || presetId}
           </h1>
           <p className="text-xs text-text-secondary">{logs.length} buổi đã ghi nhận</p>
         </div>
@@ -118,7 +120,9 @@ export default function ExerciseProgressPage() {
         </div>
       ) : logs.length === 0 ? (
         <div className="text-center py-10">
-          <p className="text-3xl mb-3">{preset?.icon || '💪'}</p>
+          <div className="flex justify-center mb-3">
+            <ExerciseIcon presetId={presetId || ''} category={preset?.category} size={32} className="text-text-muted" />
+          </div>
           <p className="text-text-secondary text-sm">Chưa có dữ liệu cho bài này</p>
         </div>
       ) : (
