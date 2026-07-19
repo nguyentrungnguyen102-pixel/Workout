@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { CheckCircle, Play, StopCircle } from 'lucide-react';
 import { useUserStore } from '../stores/userStore';
@@ -24,9 +24,13 @@ export default function ProgramsPage() {
     if (uid) loadActiveProgram(uid);
   }, [uid]);
 
+  // Ref (not state) holds the pending timer so a fast second toast can clear
+  // the first toast's timeout before it fires and clears the newer message.
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const showToast = (msg: string) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToast(msg);
-    setTimeout(() => setToast(''), 2500);
+    toastTimerRef.current = setTimeout(() => setToast(''), 2500);
   };
 
   const handleActivate = async (programId: string) => {

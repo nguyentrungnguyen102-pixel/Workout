@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Play, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { useUserStore } from '../stores/userStore';
@@ -27,6 +27,9 @@ export default function ProgramDetailPage() {
   const [activating, setActivating] = useState(false);
   const [advancing, setAdvancing] = useState(false);
   const [toast, setToast] = useState('');
+  // Ref (not state) holds the pending timer so a fast second toast can clear
+  // the first toast's timeout before it fires and clears the newer message.
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
   const uid = firebaseUser?.uid;
   const program = PROGRAM_TEMPLATES.find((p) => p.id === id);
@@ -51,8 +54,9 @@ export default function ProgramDetailPage() {
   const dc = DIFFICULTY_COLORS[program.difficulty] || DIFFICULTY_COLORS.beginner;
 
   const showToast = (msg: string) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToast(msg);
-    setTimeout(() => setToast(''), 2500);
+    toastTimerRef.current = setTimeout(() => setToast(''), 2500);
   };
 
   const handleActivate = async () => {
