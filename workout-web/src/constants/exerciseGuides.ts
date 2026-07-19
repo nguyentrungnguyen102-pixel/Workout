@@ -396,6 +396,56 @@ export const EXERCISE_GUIDES: Record<string, ExerciseGuide> = {
     ],
     tips: ['Giữ khuỷu tay hơi gập cố định, không dùng đà hất tạ'],
   },
+
+  // Dumbbell (home training) — Phase 9
+  db_farmers_carry: {
+    steps: [
+      'Đứng thẳng, mỗi tay cầm một tạ nặng, vai thả lỏng xuống sau',
+      'Bước đi đều bước ngắn, siết bụng giữ thân người thẳng',
+      'Đi hết quãng đường/thời gian rồi hạ tạ xuống có kiểm soát',
+    ],
+    tips: ['Không để vai so lên tai hoặc thân người nghiêng sang một bên'],
+  },
+  db_renegade_row: {
+    steps: [
+      'Vào tư thế plank cao, mỗi tay chống trên một tạ, chân mở rộng bằng vai',
+      'Kéo một tạ lên sát hông, khuỷu tay ép sát thân, tay kia giữ chặt plank',
+      'Hạ tạ xuống có kiểm soát, đổi bên',
+    ],
+    tips: ['Giữ hông ổn định, không xoay hoặc võng người khi kéo tạ'],
+  },
+  db_pullover: {
+    steps: [
+      'Nằm ngửa trên sàn/ghế, hai tay cầm chung một tạ duỗi thẳng trên ngực',
+      'Hạ tạ ra sau đầu theo cung tay thẳng đến khi cảm nhận căng ở ngực/xô',
+      'Kéo tạ trở lại vị trí trên ngực bằng lực cơ, không dùng đà',
+    ],
+    tips: ['Giữ khuỷu tay hơi gập cố định suốt động tác', 'Siết bụng để lưng dưới không bị ưỡn quá mức'],
+  },
+  db_concentration_curl: {
+    steps: [
+      'Ngồi, chống khuỷu tay lên đùi trong, tay cầm tạ buông thẳng xuống',
+      'Cuộn tạ lên vai chỉ bằng chuyển động ở khuỷu tay, giữ vai bất động',
+      'Hạ tạ xuống từ từ về vị trí ban đầu, đổi bên sau khi hết hiệp',
+    ],
+    tips: ['Không dùng vai hoặc thân người để lấy đà nâng tạ'],
+  },
+  db_step_up: {
+    steps: [
+      'Đứng trước bục/ghế chắc chắn, mỗi tay cầm một tạ xuôi theo thân',
+      'Bước một chân lên bục, đẩy gót chân đó để đưa cả người lên trên',
+      'Bước chân còn lại lên theo, rồi bước xuống có kiểm soát, đổi chân bắt đầu',
+    ],
+    tips: ['Chọn bục vừa tầm gối để tránh dồn lực xấu lên khớp gối', 'Đẩy bằng gót chân trên bục, không đà bằng chân dưới']
+  },
+  db_thruster: {
+    steps: [
+      'Đứng chân rộng bằng vai, tạ cầm ngang vai, lòng bàn tay hướng vào trong',
+      'Hạ người xuống thành squat sâu, giữ lưng thẳng',
+      'Đứng lên dứt khoát, mượn đà đẩy thẳng tạ lên qua đầu',
+    ],
+    tips: ['Bắt đầu với tạ nhẹ vì đây là động tác toàn thân cường độ cao', 'Không khoá cứng khuỷu tay/gối ở điểm cuối'],
+  },
 };
 
 export function getGuide(presetId: string): ExerciseGuide | undefined {
