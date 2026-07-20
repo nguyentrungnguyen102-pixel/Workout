@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.11.0';
+export const APP_VERSION = '2.12.0';
 
 // Lich su phien ban chinh thuc (sau dot don nhanh 14/07/2026 — gop cac
 // nang cap tot nhat tu cac nhanh phien hang ngay vao mot ban duy nhat).
@@ -24,4 +24,5 @@ export const PHASE_HISTORY = [
   { version: '2.9.3', phase: 7, summary: 'Hotfix: bỏ limit() không có orderBy trong các truy vấn logs/bodyMetrics — có thể ẩn ngẫu nhiên buổi tập/cân nặng mới nhất khi lịch sử vượt quá giới hạn; toast lưu (Cài đặt/Chương trình/Tóm tắt buổi tập) không còn bị tắt sớm khi bấm lưu 2 lần liên tiếp' },
   { version: '2.10.0', phase: 8, summary: 'Giao diện: menu desktop thu gọn (mini sidebar), icon bài tập vẽ SVG thay emoji + card chọn bài gọn hơn, heatmap khung giờ co giãn vừa khung, thêm ô tìm kiếm bài tập' },
   { version: '2.11.0', phase: 8, summary: 'Trang Thống kê thêm 4 biểu đồ: gộp bài theo ngày (số lượng trái/số phút phải), cột khối lượng theo tuần (nhóm cơ), radar cân bằng nhóm cơ, lịch nhiệt hoạt động; thêm hướng dẫn cách tập (form cues) cho từng bài' },
+  { version: '2.12.0', phase: 8, summary: 'Thành tựu/huy hiệu (chuỗi ngày, tổng buổi/phút, kỷ lục, đều đặn, đa dạng nhóm cơ) trên Thống kê; nhập tạ (kg) cho nhóm Tạ đơn để theo dõi khối lượng & phá kỷ lục tạ' },
 ] as const;

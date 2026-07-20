@@ -305,6 +305,16 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
   const renderQuickChips = (ex: ExerciseEntry) => {
     type Chip = { key: string; label: string; active: boolean; onClick: () => void };
     let chips: Chip[] = [];
+    let weightChips: Chip[] = [];
+
+    if (ex.category === 'dumbbell') {
+      weightChips = [2.5, 5, 7.5, 10, 12.5, 15].map((v) => ({
+        key: `weight-${v}`,
+        label: `${v}kg`,
+        active: (ex.weight ?? 0) === v,
+        onClick: () => updateExercise(ex.presetId, { weight: v }),
+      }));
+    }
 
     if (ex.unit === 'reps') {
       if (!chipBaseRef.current.has(ex.presetId)) {
@@ -346,11 +356,11 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
       }));
     }
 
-    if (chips.length === 0) return null;
+    if (chips.length === 0 && weightChips.length === 0) return null;
 
-    return (
-      <div className="flex flex-wrap gap-1.5 mt-2">
-        {chips.map((c) => (
+    const renderRow = (row: Chip[], key: string) => (
+      <div key={key} className="flex flex-wrap gap-1.5 mt-2">
+        {row.map((c) => (
           <button
             key={c.key}
             type="button"
@@ -364,6 +374,13 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
           </button>
         ))}
       </div>
+    );
+
+    return (
+      <>
+        {chips.length > 0 && renderRow(chips, 'value-chips')}
+        {weightChips.length > 0 && renderRow(weightChips, 'weight-chips')}
+      </>
     );
   };
 
@@ -456,6 +473,26 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
                       <span className="text-xs text-text-secondary">
                         {ex.unit === 'minutes' ? 'phút' : 'giây'}
                       </span>
+                    </div>
+                  )}
+
+                  {ex.category === 'dumbbell' && (
+                    <div className="flex items-center gap-2 flex-1">
+                      <label className="text-xs text-text-secondary">Tạ:</label>
+                      <input
+                        type="number"
+                        step={0.5}
+                        min={0}
+                        className="w-20 text-center font-bold text-text-main text-sm bg-card-2 border border-border rounded-lg px-2 py-1 focus:border-primary outline-none"
+                        value={ex.weight ?? ''}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          updateExercise(ex.presetId, {
+                            weight: raw === '' ? undefined : Math.max(0, parseFloat(raw) || 0),
+                          });
+                        }}
+                      />
+                      <span className="text-xs text-text-secondary">kg</span>
                     </div>
                   )}
 
@@ -1034,6 +1071,7 @@ export default function QuickAddPage() {
 
   const handleAddWithValue = (preset: WorkoutPreset, value: number) => {
     // Remove existing entry for this preset if it exists so we can re-add with new value
+    const yesterday = yesterdayLog?.exercises.find((e) => e.presetId === preset.id);
     const entry: ExerciseEntry = {
       presetId: preset.id,
       name: preset.nameVi,
@@ -1042,12 +1080,16 @@ export default function QuickAddPage() {
       sets: 1,
       reps: preset.unit === 'reps' ? value : undefined,
       durationSeconds: (preset.unit === 'seconds' || preset.unit === 'minutes') ? value : undefined,
+      weight: preset.unit === 'reps' ? yesterday?.weight : undefined,
     };
     if (draftIds.has(preset.id)) {
-      // Update existing
+      // Update existing. Only touch `weight` when yesterday actually has one
+      // — omitting the key (rather than passing `weight: undefined`) avoids
+      // clobbering a weight the user already set on this draft entry.
       updateExercise(preset.id, {
         reps: preset.unit === 'reps' ? value : undefined,
         durationSeconds: (preset.unit === 'seconds' || preset.unit === 'minutes') ? value : undefined,
+        ...(preset.unit === 'reps' && yesterday?.weight !== undefined ? { weight: yesterday.weight } : {}),
       });
     } else {
       addExercise(entry);
