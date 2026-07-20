@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.14.0';
+export const APP_VERSION = '2.15.0';
 
 // Lich su phien ban chinh thuc (sau dot don nhanh 14/07/2026 — gop cac
 // nang cap tot nhat tu cac nhanh phien hang ngay vao mot ban duy nhat).
@@ -27,4 +27,5 @@ export const PHASE_HISTORY = [
   { version: '2.12.0', phase: 8, summary: 'Thành tựu/huy hiệu (chuỗi ngày, tổng buổi/phút, kỷ lục, đều đặn, đa dạng nhóm cơ) trên Thống kê; nhập tạ (kg) cho nhóm Tạ đơn để theo dõi khối lượng & phá kỷ lục tạ' },
   { version: '2.13.0', phase: 8, summary: 'Nhắc tập qua Telegram: cấu hình bật/tắt + giờ sáng/chiều + Chat ID trong Cài đặt; cron gửi tin sáng (lịch theo mục tiêu + bài gần đây + quote) và tối (còn thiếu gì + quote) qua 1 bot' },
   { version: '2.14.0', phase: 8, summary: 'Thống kê dễ nhìn: màu biểu đồ tương phản rõ (mỗi bài 1 màu), gộp 2 heatmap thành 1 card có toggle Theo ngày/Theo khung giờ, bố cục lại trang theo mục (Tổng quan/Biểu đồ/Chi tiết/Kỷ lục & Thành tựu/Lịch sử), danh sách log gọn 1 dòng kiểu bảng' },
+  { version: '2.15.0', phase: 9, summary: 'Bổ sung 6 bài tạ đơn đơn giản tại nhà (Farmer\'s Carry, Renegade Row, Pullover, Concentration Curl, Step Up, Thruster) kèm hướng dẫn/icon/MET đầy đủ; sửa lỗi thông báo "PR mới 🏆" không bao giờ ghi nhận cho bài tự tạo đơn vị km (chạy/đạp xe theo quãng đường) — prService thiếu nhánh tính theo khoảng cách' },
 ] as const;

@@ -8,6 +8,7 @@ export interface PersonalRecord {
   bestReps?: number;
   bestWeight?: number;
   bestDurationSeconds?: number;
+  bestDistance?: number;
   bestSets?: number;
   achievedDate: string;
   previousBest?: number;
@@ -32,6 +33,7 @@ export function computePRs(logs: WorkoutLog[]): PersonalRecord[] {
           bestReps: ex.reps,
           bestWeight: ex.weight,
           bestDurationSeconds: ex.durationSeconds,
+          bestDistance: ex.distance,
           bestSets: ex.sets,
           achievedDate: log.date,
         });
@@ -50,6 +52,15 @@ export function computePRs(logs: WorkoutLog[]): PersonalRecord[] {
           }
           if (ex.weight && (!existing.bestWeight || ex.weight > existing.bestWeight)) {
             next.bestWeight = ex.weight;
+            next.achievedDate = log.date;
+            updated = true;
+          }
+        } else if (ex.unit === 'km') {
+          const newDist = ex.distance ?? 0;
+          const curDist = existing.bestDistance ?? 0;
+          if (newDist > curDist) {
+            next.previousBest = curDist;
+            next.bestDistance = newDist;
             next.achievedDate = log.date;
             updated = true;
           }
@@ -101,6 +112,20 @@ export function computeNewPRs(existingLogs: WorkoutLog[], newLog: WorkoutLog): P
           achievedDate: newLog.date,
         });
       }
+    } else if (ex.unit === 'km') {
+      const newDist = ex.distance ?? 0;
+      const curDist = prev.bestDistance ?? 0;
+      if (newDist > curDist) {
+        newPRs.push({
+          presetId: ex.presetId,
+          name: ex.name,
+          category: ex.category,
+          unit: ex.unit,
+          bestDistance: newDist,
+          previousBest: curDist,
+          achievedDate: newLog.date,
+        });
+      }
     } else {
       const newDur = ex.durationSeconds ?? 0;
       const curDur = prev.bestDurationSeconds ?? 0;
@@ -133,6 +158,9 @@ export function getPRLabel(pr: PersonalRecord): string {
   }
   if (pr.unit === 'minutes' && pr.bestDurationSeconds) {
     return `${Math.round(pr.bestDurationSeconds / 60)} phút`;
+  }
+  if (pr.unit === 'km' && pr.bestDistance) {
+    return `${pr.bestDistance} km`;
   }
   return '--';
 }
