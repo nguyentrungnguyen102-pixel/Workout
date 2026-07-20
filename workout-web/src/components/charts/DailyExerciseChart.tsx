@@ -4,15 +4,11 @@ import {
 } from 'recharts';
 import { WorkoutLog } from '../../types/workout';
 import { exerciseMinutes } from '../../lib/energy';
-import { CATEGORY_COLORS_STATS } from '../../constants/exercises';
+import { seriesColor } from '../../constants/chartColors';
 
 // Cap on overlaid lines so the chart doesn't turn into spaghetti (dataviz
 // guidance: avoid more than ~6 overlaid series).
 const MAX_EXERCISES = 6;
-const FALLBACK_COLOR = '#8A8A8A';
-// Repeated categories (e.g. two core exercises) share a hex color but get a
-// distinct dash pattern so they're still visually distinguishable.
-const DASH_PATTERNS = [undefined, '6 3', '2 3', '8 3 2 3'];
 
 function formatDateShort(dateStr: string): string {
   const d = new Date(dateStr + 'T00:00:00');
@@ -28,7 +24,6 @@ interface SeriesMeta {
   presetId: string;
   name: string;
   color: string;
-  dash?: string;
 }
 
 export default function DailyExerciseChart({ periodLogs }: DailyExerciseChartProps) {
@@ -62,17 +57,14 @@ export default function DailyExerciseChart({ periodLogs }: DailyExerciseChartPro
     const topPresets = ranked.slice(0, MAX_EXERCISES);
     const truncated = ranked.length > MAX_EXERCISES;
 
-    const catCounter = new Map<string, number>();
-    const series: SeriesMeta[] = topPresets.map(([presetId, meta]) => {
-      const idx = catCounter.get(meta.category) ?? 0;
-      catCounter.set(meta.category, idx + 1);
-      return {
-        presetId,
-        name: meta.name,
-        color: CATEGORY_COLORS_STATS[meta.category] || FALLBACK_COLOR,
-        dash: DASH_PATTERNS[idx % DASH_PATTERNS.length],
-      };
-    });
+    // Each exercise gets its own distinct high-contrast color (not grouped
+    // by category) — with only ≤6 lines on screen, per-exercise color reads
+    // far more clearly than same-category lines sharing a hue + dash pattern.
+    const series: SeriesMeta[] = topPresets.map(([presetId, meta], idx) => ({
+      presetId,
+      name: meta.name,
+      color: seriesColor(idx),
+    }));
 
     const chartData = Array.from(dayMap.entries())
       .sort((a, b) => a[0].localeCompare(b[0]))
@@ -129,7 +121,7 @@ export default function DailyExerciseChart({ periodLogs }: DailyExerciseChartPro
               yAxisId="right"
               dataKey="totalMinutes"
               name="Tổng số phút"
-              fill="#FFD9C2"
+              fill="#DEDCD5"
               radius={[4, 4, 0, 0]}
               barSize={14}
               hide={hidden.has('totalMinutes')}
@@ -143,7 +135,6 @@ export default function DailyExerciseChart({ periodLogs }: DailyExerciseChartPro
                 name={s.name}
                 stroke={s.color}
                 strokeWidth={2.2}
-                strokeDasharray={s.dash}
                 dot={{ r: 2.5 }}
                 connectNulls
                 hide={hidden.has(s.presetId)}

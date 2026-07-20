@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Flame, Trophy, Clock, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
+import { Flame, Trophy, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { useUserStore } from '../stores/userStore';
 import { getRecentLogs, getLogsForHeatmap } from '../services/workoutService';
 import { computePRs, getPRLabel } from '../services/prService';
@@ -9,14 +9,13 @@ import { getWeekLabel, formatTimeOfDay, formatDayOfWeekVi, formatDateVi, daysBet
 import { exerciseMinutes } from '../lib/energy';
 import { SYSTEM_PRESETS, CATEGORY_COLORS_STATS } from '../constants/exercises';
 import MonthCalendar from '../components/MonthCalendar';
-import HourHeatmap from '../components/HourHeatmap';
+import ActivityHeatmap from '../components/ActivityHeatmap';
 import WeeklyPlanCard from '../components/WeeklyPlanCard';
 import ExercisePeriodTable from '../components/ExercisePeriodTable';
 import CoachInsights from '../components/CoachInsights';
 import DailyExerciseChart from '../components/charts/DailyExerciseChart';
 import WeeklyVolumeChart from '../components/charts/WeeklyVolumeChart';
 import MuscleRadarChart from '../components/charts/MuscleRadarChart';
-import ActivityCalendar from '../components/charts/ActivityCalendar';
 import AchievementsCard from '../components/AchievementsCard';
 
 type Period = 'week' | 'month' | 'quarter';
@@ -115,14 +114,6 @@ function getPeriodLabel(p: Period, offset: number): string {
 const CATEGORY_LABELS: Record<string, string> = {
   strength: 'Sức mạnh', core: 'Bụng & Core', cardio: 'Cardio', mobility: 'Linh hoạt', recovery: 'Phục hồi', dumbbell: 'Tạ đơn',
 };
-const CATEGORY_COLORS: Record<string, { text: string; bg: string }> = {
-  strength: { text: '#FF5400', bg: '#FFF0EC' },
-  core:     { text: '#BE185D', bg: '#FCE7F3' },
-  cardio:   { text: '#2563EB', bg: '#EFF6FF' },
-  mobility: { text: '#059669', bg: '#ECFDF5' },
-  recovery: { text: '#7C3AED', bg: '#F5F3FF' },
-  dumbbell: { text: '#D97706', bg: '#FEF3C7' },
-};
 
 function getTopExercise(logs: WorkoutLog[]): string | null {
   const map = new Map<string, number>();
@@ -198,64 +189,55 @@ function groupByWeek(logs: WorkoutLog[]): Array<{ label: string; logs: WorkoutLo
   return Array.from(map.entries()).map(([label, logs]) => ({ label, logs }));
 }
 
-interface SessionCardProps {
+// Short "d/m" date, no year — keeps the datasheet row on one line (same
+// trimmed format DailyExerciseChart uses for its X axis). formatDateVi's
+// dd/mm/yyyy is too wide for a compact single-line log row.
+function formatDateShort(dateStr: string): string {
+  const d = new Date(dateStr + 'T00:00:00');
+  if (Number.isNaN(d.getTime())) return dateStr;
+  return `${d.getDate()}/${d.getMonth() + 1}`;
+}
+
+// First ~2 exercise names + "…" when there are more — e.g. "4 bài: Hít đất, Plank…"
+function summarizeExercises(log: WorkoutLog): string {
+  const exs = log.exercises || [];
+  if (exs.length === 0) return 'Chưa có bài tập';
+  const names = exs.slice(0, 2).map((e) => e.name).join(', ');
+  return `${exs.length} bài: ${names}${exs.length > 2 ? '…' : ''}`;
+}
+
+interface LogRowProps {
   log: WorkoutLog;
   onClick: () => void;
 }
 
-function SessionCard({ log, onClick }: SessionCardProps) {
+// Compact datasheet-style row (v2.14.0) — replaces the old multi-line
+// SessionCard so the history list scans like a table: one row per log.
+function LogRow({ log, onClick }: LogRowProps) {
   const timeStr = formatTimeOfDay(log.startedAt ?? log.createdAt);
-  const isStarted = !!log.startedAt;
-
   return (
-    <button onClick={onClick}
-      className="w-full bg-card rounded-2xl border border-border text-left hover:border-primary/40 active:scale-[0.99] transition-all overflow-hidden flex">
-      <div className="w-1 self-stretch flex-shrink-0 bg-primary/30" />
-
-      <div className="flex-1 p-4 min-w-0">
-        {/* Row 1: date + time pill */}
-        <div className="flex items-start justify-between mb-2">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-black text-text-main">{log.date ? formatDayOfWeekVi(log.date) : '—'}</span>
-            <span className="text-sm text-text-secondary">{log.date ? formatDateVi(log.date) : 'Không rõ ngày'}</span>
-          </div>
-          {timeStr && (
-            <span className="text-xs font-semibold text-text-secondary bg-card-2 px-2 py-0.5 rounded-full flex-shrink-0 ml-2 whitespace-nowrap">
-              {isStarted ? '' : 'Lưu '}{timeStr}
-            </span>
-          )}
-        </div>
-
-        {/* Row 2: exercise tags with category colors */}
-        <div className="flex flex-wrap gap-1.5 mb-3">
-          {(log.exercises || []).slice(0, 4).map((ex) => {
-            const cc = CATEGORY_COLORS[ex.category] || { text: '#8A8A8A', bg: '#F3F2EE' };
-            return (
-              <span key={ex.presetId}
-                className="text-xs font-bold px-2 py-0.5 rounded-full"
-                style={{ color: cc.text, backgroundColor: cc.bg }}>
-                {ex.name}
-              </span>
-            );
-          })}
-          {(log.exercises || []).length > 4 && (
-            <span className="text-xs font-semibold text-text-muted px-1">
-              +{log.exercises.length - 4}
-            </span>
-          )}
-        </div>
-
-        {/* Row 3: stats */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1">
-            <Clock size={11} className="text-text-secondary" />
-            <span className="text-xs font-semibold text-text-secondary">{log.totalDurationMinutes ?? 0} phút</span>
-          </div>
-          <span className="text-xs font-semibold text-text-secondary">{log.caloriesEstimate ?? 0} kcal</span>
-        </div>
-      </div>
+    <button
+      onClick={onClick}
+      className="w-full flex items-center justify-between gap-2 py-2 px-1 border-b border-border text-sm text-left hover:bg-card-2 active:scale-[0.99] transition-all"
+    >
+      <span className="flex-shrink-0 text-xs font-bold text-text-secondary whitespace-nowrap">
+        {log.date ? `${formatDayOfWeekVi(log.date)} ${formatDateShort(log.date)}` : '—'}
+        {timeStr ? ` · ${timeStr}` : ''}
+      </span>
+      <span className="flex-1 min-w-0 truncate text-text-main">{summarizeExercises(log)}</span>
+      <span className="flex-shrink-0 text-xs text-text-secondary whitespace-nowrap">
+        {log.totalDurationMinutes ?? 0}′ · {log.caloriesEstimate ?? 0} kcal
+      </span>
     </button>
   );
+}
+
+interface SectionHeaderProps {
+  title: string;
+}
+
+function SectionHeader({ title }: SectionHeaderProps) {
+  return <h2 className="text-base font-black text-text-main mt-6 mb-2 px-1">{title}</h2>;
 }
 
 export default function StatsPage() {
@@ -351,7 +333,10 @@ export default function StatsPage() {
     <div className="px-4 md:px-8 pt-6 md:pt-8 pb-8">
       <h1 className="text-2xl font-black text-text-main mb-4">Thống kê</h1>
 
-      {/* Period selector — drives KPI strip, HourHeatmap and category breakdown */}
+      {/* ═══════════════════════ Tổng quan ═══════════════════════ */}
+      <SectionHeader title="Tổng quan" />
+
+      {/* Period selector — drives KPI strip, ActivityHeatmap (hour view) and category breakdown */}
       <div className="flex gap-1 p-1 bg-card-2 rounded-xl mb-3">
         {(['week', 'month', 'quarter'] as const).map(p => (
           <button key={p} onClick={() => { setPeriod(p); setPeriodOffset(0); }}
@@ -402,26 +387,85 @@ export default function StatsPage() {
         </div>
       </div>
 
-      {/* Coach insights (C3) */}
+      {/* Streak card */}
+      <div className="bg-primary rounded-2xl p-5 mb-4 text-white">
+        <div className="flex items-center gap-2 mb-3">
+          <Flame size={24} className="text-white" />
+          <div>
+            <p className="text-4xl font-black">{streak}</p>
+            <p className="text-sm opacity-80">ngày liên tiếp</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3 mt-3">
+          <div className="bg-white/20 rounded-xl p-3">
+            <p className="text-xl font-black">{monthLogs.length}</p>
+            <p className="text-xs opacity-80">buổi tháng này</p>
+          </div>
+          <div className="bg-white/20 rounded-xl p-3">
+            <p className="text-xl font-black">{totalKcal.toLocaleString()}</p>
+            <p className="text-xs opacity-80">kcal tổng</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Weekly goal */}
+      <div className="bg-card rounded-2xl border border-border p-4 mb-4">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-sm font-semibold text-text-main">Mục tiêu tuần</span>
+          <span className="text-sm font-bold text-primary">{weeklyDone}/{weeklyGoal} phút</span>
+        </div>
+        <div className="h-2.5 bg-border rounded-full overflow-hidden">
+          <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${weeklyPct}%` }} />
+        </div>
+        <p className="text-xs text-text-secondary mt-1">{weeklyPct}% hoàn thành</p>
+      </div>
+
+      {/* Totals grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+        <div className="bg-card border border-border rounded-2xl p-4">
+          <p className="text-2xl font-black text-primary">{totalTime}</p>
+          <p className="text-xs text-text-secondary mt-1">tổng phút tập</p>
+        </div>
+        <div className="bg-card border border-border rounded-2xl p-4">
+          <p className="text-2xl font-black text-text-main">{totalKcal.toLocaleString()}</p>
+          <p className="text-xs text-text-secondary mt-1">tổng kcal</p>
+        </div>
+        <div className="bg-card border border-border rounded-2xl p-4">
+          <p className="text-2xl font-black text-text-main">{logs.length}</p>
+          <p className="text-xs text-text-secondary mt-1">tổng buổi tập</p>
+        </div>
+        <div className="bg-card border border-border rounded-2xl p-4">
+          <p className="text-2xl font-black text-text-main">{profile?.streak?.longest || 0}</p>
+          <p className="text-xs text-text-secondary mt-1">chuỗi dài nhất</p>
+        </div>
+      </div>
+
+      {/* Consistency */}
+      <div className="bg-card rounded-2xl border border-border p-4 mb-4">
+        <div className="flex items-center justify-between mb-1">
+          <p className="text-sm font-bold text-text-main">Điểm kiên trì (30 ngày)</p>
+          <p className="text-sm font-black text-primary">{consistencyScore}/100</p>
+        </div>
+        <div className="h-2.5 bg-border rounded-full overflow-hidden">
+          <div className="h-full rounded-full transition-all"
+            style={{ width: `${consistencyScore}%`, backgroundColor: consistencyScore >= 70 ? '#1DAA60' : consistencyScore >= 40 ? '#D97706' : '#FF5400' }} />
+        </div>
+        <p className="text-xs text-text-secondary mt-1">{uniqueDays30} ngày tập trong 30 ngày qua</p>
+      </div>
+
+      {/* Fitness assessment (coach insights) */}
       <CoachInsights allLogs={logs} periodLogs={periodLogs} prevPeriodLogs={prevPeriodLogs} profile={profile} periodLabel={periodLabel} periodDays={periodDays} prevPeriodDays={prevPeriodDays} periodStart={periodStart} periodEnd={periodEnd} />
 
-      {/* Weekly plan card (W3) */}
+      {/* Weekly plan card */}
       <WeeklyPlanCard logs={logs} profile={profile} />
 
-      {/* Month calendar */}
-      <MonthCalendar logs={heatmapLogs} onDayClick={(dateStr) => navigate(`/history/day/${dateStr}`)} />
+      {/* ═══════════════════════ Biểu đồ ═══════════════════════ */}
+      <SectionHeader title="Biểu đồ" />
 
-      {/* Hour-of-day heatmap */}
-      <HourHeatmap logs={periodLogs} />
-
-      {/* Exercise period table (C2.2) */}
-      <ExercisePeriodTable periodLogs={periodLogs} prevPeriodLogs={prevPeriodLogs} presets={SYSTEM_PRESETS} periodDays={periodDays} prevPeriodDays={prevPeriodDays} />
-
-      {/* Charts section (v2.11.0) — collapsible so the page doesn't balloon */}
       <div className="mb-1">
         <button onClick={() => setChartsOpen((o) => !o)}
           className="w-full flex items-center justify-between px-1 py-2 mb-1">
-          <span className="text-sm font-black text-text-main">📈 Biểu đồ</span>
+          <span className="text-sm font-black text-text-main">📈 Xu hướng & phân bổ</span>
           {chartsOpen ? <ChevronUp size={16} className="text-text-secondary" /> : <ChevronDown size={16} className="text-text-secondary" />}
         </button>
         {chartsOpen && (
@@ -429,10 +473,21 @@ export default function StatsPage() {
             <DailyExerciseChart periodLogs={periodLogs} />
             <WeeklyVolumeChart logs={logs} />
             <MuscleRadarChart periodLogs={periodLogs} />
-            <ActivityCalendar logs={logs} />
           </>
         )}
       </div>
+
+      {/* Merged heatmap card (Theo ngày / Theo khung giờ toggle) */}
+      <ActivityHeatmap allLogs={heatmapLogs} periodLogs={periodLogs} />
+
+      {/* Month calendar */}
+      <MonthCalendar logs={heatmapLogs} onDayClick={(dateStr) => navigate(`/history/day/${dateStr}`)} />
+
+      {/* ═══════════════════════ Chi tiết bài tập ═══════════════════════ */}
+      <SectionHeader title="Chi tiết bài tập" />
+
+      {/* Exercise period table */}
+      <ExercisePeriodTable periodLogs={periodLogs} prevPeriodLogs={prevPeriodLogs} presets={SYSTEM_PRESETS} periodDays={periodDays} prevPeriodDays={prevPeriodDays} />
 
       {/* Category breakdown */}
       {categoryStats.size > 0 && (
@@ -459,97 +514,7 @@ export default function StatsPage() {
         </div>
       )}
 
-      <div className="bg-primary rounded-2xl p-5 mb-4 text-white">
-        <div className="flex items-center gap-2 mb-3">
-          <Flame size={24} className="text-white" />
-          <div>
-            <p className="text-4xl font-black">{streak}</p>
-            <p className="text-sm opacity-80">ngày liên tiếp</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-3 mt-3">
-          <div className="bg-white/20 rounded-xl p-3">
-            <p className="text-xl font-black">{monthLogs.length}</p>
-            <p className="text-xs opacity-80">buổi tháng này</p>
-          </div>
-          <div className="bg-white/20 rounded-xl p-3">
-            <p className="text-xl font-black">{totalKcal.toLocaleString()}</p>
-            <p className="text-xs opacity-80">kcal tổng</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-card rounded-2xl border border-border p-4 mb-4">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-sm font-semibold text-text-main">Mục tiêu tuần</span>
-          <span className="text-sm font-bold text-primary">{weeklyDone}/{weeklyGoal} phút</span>
-        </div>
-        <div className="h-2.5 bg-border rounded-full overflow-hidden">
-          <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${weeklyPct}%` }} />
-        </div>
-        <p className="text-xs text-text-secondary mt-1">{weeklyPct}% hoàn thành</p>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-        <div className="bg-card border border-border rounded-2xl p-4">
-          <p className="text-2xl font-black text-primary">{totalTime}</p>
-          <p className="text-xs text-text-secondary mt-1">tổng phút tập</p>
-        </div>
-        <div className="bg-card border border-border rounded-2xl p-4">
-          <p className="text-2xl font-black text-text-main">{totalKcal.toLocaleString()}</p>
-          <p className="text-xs text-text-secondary mt-1">tổng kcal</p>
-        </div>
-        <div className="bg-card border border-border rounded-2xl p-4">
-          <p className="text-2xl font-black text-text-main">{logs.length}</p>
-          <p className="text-xs text-text-secondary mt-1">tổng buổi tập</p>
-        </div>
-        <div className="bg-card border border-border rounded-2xl p-4">
-          <p className="text-2xl font-black text-text-main">{profile?.streak?.longest || 0}</p>
-          <p className="text-xs text-text-secondary mt-1">chuỗi dài nhất</p>
-        </div>
-      </div>
-
-      <div className="bg-card rounded-2xl border border-border p-4 mb-4">
-        <div className="flex items-center justify-between mb-1">
-          <p className="text-sm font-bold text-text-main">Điểm kiên trì (30 ngày)</p>
-          <p className="text-sm font-black text-primary">{consistencyScore}/100</p>
-        </div>
-        <div className="h-2.5 bg-border rounded-full overflow-hidden">
-          <div className="h-full rounded-full transition-all"
-            style={{ width: `${consistencyScore}%`, backgroundColor: consistencyScore >= 70 ? '#1DAA60' : consistencyScore >= 40 ? '#D97706' : '#FF5400' }} />
-        </div>
-        <p className="text-xs text-text-secondary mt-1">{uniqueDays30} ngày tập trong 30 ngày qua</p>
-      </div>
-
-      {topExercise && (
-        <div className="bg-primary-light border border-primary/20 rounded-2xl p-4 mb-4 flex items-center gap-3">
-          <Trophy size={20} className="text-primary flex-shrink-0" />
-          <div>
-            <p className="text-xs text-text-secondary">Bài tập yêu thích</p>
-            <p className="font-bold text-text-main text-sm">{topExercise}</p>
-          </div>
-        </div>
-      )}
-
-      {prs.length > 0 && (
-        <div className="bg-card rounded-2xl border border-border p-4 mb-4">
-          <p className="text-sm font-bold text-text-main mb-3">Kỷ lục cá nhân 🏆</p>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-            {prs.map((pr) => (
-              <button key={pr.presetId}
-                onClick={() => navigate(`/stats/exercise/${pr.presetId}`)}
-                className="bg-card-2 rounded-xl p-3 text-left hover:bg-primary-light transition-colors">
-                <p className="text-xs text-text-secondary mb-0.5 truncate">{pr.name}</p>
-                <p className="font-black text-text-main text-sm">{getPRLabel(pr)}</p>
-                <p className="text-xs text-text-secondary mt-0.5">{pr.achievedDate}</p>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <AchievementsCard logs={logs} profile={profile} />
-
+      {/* Volume/tonnage progress */}
       {volumeProgress.length > 0 && (
         <div className="bg-card rounded-2xl border border-border p-4 mb-4">
           <p className="text-sm font-bold text-text-main mb-3">Khối lượng tạ tuần này vs tuần trước (kg)</p>
@@ -589,24 +554,59 @@ export default function StatsPage() {
         </div>
       )}
 
-      {/* Week-grouped session list (from HistoryPage) */}
+      {/* Bài tập yêu thích */}
+      {topExercise && (
+        <div className="bg-primary-light border border-primary/20 rounded-2xl p-4 mb-4 flex items-center gap-3">
+          <Trophy size={20} className="text-primary flex-shrink-0" />
+          <div>
+            <p className="text-xs text-text-secondary">Bài tập yêu thích</p>
+            <p className="font-bold text-text-main text-sm">{topExercise}</p>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════ Kỷ lục & Thành tựu ═══════════════════════ */}
+      <SectionHeader title="Kỷ lục & Thành tựu" />
+
+      {prs.length > 0 && (
+        <div className="bg-card rounded-2xl border border-border p-4 mb-4">
+          <p className="text-sm font-bold text-text-main mb-3">Kỷ lục cá nhân 🏆</p>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            {prs.map((pr) => (
+              <button key={pr.presetId}
+                onClick={() => navigate(`/stats/exercise/${pr.presetId}`)}
+                className="bg-card-2 rounded-xl p-3 text-left hover:bg-primary-light transition-colors">
+                <p className="text-xs text-text-secondary mb-0.5 truncate">{pr.name}</p>
+                <p className="font-black text-text-main text-sm">{getPRLabel(pr)}</p>
+                <p className="text-xs text-text-secondary mt-0.5">{pr.achievedDate}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <AchievementsCard logs={logs} profile={profile} />
+
+      {/* ═══════════════════════ Lịch sử ═══════════════════════ */}
+      <SectionHeader title="Lịch sử" />
+
       {recentLogs.length === 0 ? (
         <div className="text-center py-10">
           <p className="text-4xl mb-3">📋</p>
           <p className="text-text-secondary text-sm">Chưa có buổi tập nào được ghi lại</p>
         </div>
       ) : (
-        <div className="space-y-6 mb-4">
+        <div className="bg-card rounded-2xl border border-border px-3 pt-1 mb-4">
           {weekGroups.map(({ label, logs: wLogs }) => (
             <div key={label}>
-              <div className="flex items-center gap-3 mb-3">
+              <div className="flex items-center gap-3 pt-3 pb-1">
                 <p className="text-xs font-black text-text-secondary tracking-wide uppercase">{label}</p>
                 <div className="flex-1 h-px bg-border" />
                 <p className="text-xs text-text-muted">{wLogs.length} buổi</p>
               </div>
-              <div className="space-y-2 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
+              <div>
                 {wLogs.map((log) => (
-                  <SessionCard key={log.id} log={log} onClick={() => navigate(`/history/${log.id}`)} />
+                  <LogRow key={log.id} log={log} onClick={() => navigate(`/history/day/${log.date}`)} />
                 ))}
               </div>
             </div>
