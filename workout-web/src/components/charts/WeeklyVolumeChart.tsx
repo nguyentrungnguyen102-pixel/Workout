@@ -3,7 +3,8 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { WorkoutLog } from '../../types/workout';
 import { exerciseMinutes } from '../../lib/energy';
 import { getWeekLabel, todayString } from '../../lib/date';
-import { CATEGORY_LABELS, CATEGORY_COLORS_STATS } from '../../constants/exercises';
+import { CATEGORY_LABELS } from '../../constants/exercises';
+import { CATEGORY_CHART_COLORS } from '../../constants/chartColors';
 
 // Trend window — last N weeks, computed from the full log history (not the
 // Tuần/Tháng/Quý period filter) so the weekly trend stays visible even when
@@ -76,7 +77,7 @@ export default function WeeklyVolumeChart({ logs }: WeeklyVolumeChartProps) {
             <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #E8E7E2' }} />
             <Legend wrapperStyle={{ fontSize: 11 }} />
             {CATEGORY_KEYS.map((cat) => (
-              <Bar key={cat} dataKey={cat} stackId="v" name={CATEGORY_LABELS[cat] || cat} fill={CATEGORY_COLORS_STATS[cat] || '#8A8A8A'} />
+              <Bar key={cat} dataKey={cat} stackId="v" name={CATEGORY_LABELS[cat] || cat} fill={CATEGORY_CHART_COLORS[cat] || '#8A8A8A'} />
             ))}
           </BarChart>
         </ResponsiveContainer>
