@@ -17,6 +17,7 @@ import DailyExerciseChart from '../components/charts/DailyExerciseChart';
 import WeeklyVolumeChart from '../components/charts/WeeklyVolumeChart';
 import MuscleRadarChart from '../components/charts/MuscleRadarChart';
 import ActivityCalendar from '../components/charts/ActivityCalendar';
+import AchievementsCard from '../components/AchievementsCard';
 
 type Period = 'week' | 'month' | 'quarter';
 
@@ -546,6 +547,8 @@ export default function StatsPage() {
           </div>
         </div>
       )}
+
+      <AchievementsCard logs={logs} profile={profile} />
 
       {volumeProgress.length > 0 && (
         <div className="bg-card rounded-2xl border border-border p-4 mb-4">
