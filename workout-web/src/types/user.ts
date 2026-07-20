@@ -45,4 +45,14 @@ export interface UserProfile {
   sex?: 'male' | 'female';
   birthYear?: number;
   heightCm?: number;
+  // Telegram reminder settings — read by the GitHub Actions cron script
+  // (scripts/telegram-reminder.mjs) via the Firebase Admin SDK. All optional
+  // so existing users default to reminders off until they opt in via
+  // Settings. lastReminderSent tracks the local date each slot last fired,
+  // so the every-30-min cron doesn't double-send within the same window.
+  reminderEnabled?: boolean;
+  reminderMorning?: string; // 'HH:MM', default '06:30'
+  reminderEvening?: string; // 'HH:MM', default '19:00'
+  telegramChatId?: string;
+  lastReminderSent?: { morning?: string; evening?: string };
 }

@@ -28,6 +28,14 @@ export default function SettingsPage() {
   const [heightCm, setHeightCm] = useState(profile?.heightCm ? String(profile.heightCm) : '');
   const [savingPhysical, setSavingPhysical] = useState(false);
 
+  // Telegram reminder settings
+  const [reminderEnabled, setReminderEnabled] = useState(profile?.reminderEnabled || false);
+  const [reminderMorning, setReminderMorning] = useState(profile?.reminderMorning || '06:30');
+  const [reminderEvening, setReminderEvening] = useState(profile?.reminderEvening || '19:00');
+  const [telegramChatId, setTelegramChatId] = useState(profile?.telegramChatId || '');
+  const [savingReminder, setSavingReminder] = useState(false);
+  const [showReminderHelp, setShowReminderHelp] = useState(false);
+
   // Exercise goals state
   const [goals, setGoals] = useState<ExerciseGoal[]>(profile?.exerciseGoals || []);
   const [showAddGoal, setShowAddGoal] = useState(false);
@@ -49,6 +57,10 @@ export default function SettingsPage() {
       setSex(profile.sex);
       setBirthYear(profile.birthYear ? String(profile.birthYear) : '');
       setHeightCm(profile.heightCm ? String(profile.heightCm) : '');
+      setReminderEnabled(profile.reminderEnabled || false);
+      setReminderMorning(profile.reminderMorning || '06:30');
+      setReminderEvening(profile.reminderEvening || '19:00');
+      setTelegramChatId(profile.telegramChatId || '');
     }
   }, [profile]);
 
@@ -112,6 +124,24 @@ export default function SettingsPage() {
       showToast('Lỗi lưu');
     } finally {
       setSavingPhysical(false);
+    }
+  };
+
+  const handleSaveReminder = async () => {
+    if (!uid) return;
+    setSavingReminder(true);
+    try {
+      await updateProfile(uid, {
+        reminderEnabled,
+        reminderMorning,
+        reminderEvening,
+        telegramChatId: telegramChatId.trim(),
+      });
+      showToast('Đã lưu cài đặt nhắc tập! 🔔');
+    } catch {
+      showToast('Lỗi lưu');
+    } finally {
+      setSavingReminder(false);
     }
   };
 
@@ -343,6 +373,68 @@ export default function SettingsPage() {
             Lưu
           </button>
         </div>
+      </div>
+
+      {/* Telegram reminders — cron in .github/workflows/telegram-reminder.yml
+          reads reminderEnabled/reminderMorning/reminderEvening/telegramChatId
+          via the Firebase Admin SDK every 30 min and sends via one bot. */}
+      <div className="bg-card rounded-2xl border border-border p-4 mb-4">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-xs font-semibold text-text-secondary">🔔 NHẮC TẬP QUA TELEGRAM</p>
+          <button onClick={() => setReminderEnabled((v) => !v)}
+            className={`w-9 h-5 rounded-full transition-colors flex-shrink-0 relative ${reminderEnabled ? 'bg-primary' : 'bg-border'}`}>
+            <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all ${reminderEnabled ? 'left-4' : 'left-0.5'}`} />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <label className="text-xs text-text-secondary mb-1.5 block">Giờ sáng</label>
+            <input
+              type="time"
+              value={reminderMorning}
+              onChange={(e) => setReminderMorning(e.target.value)}
+              className="w-full bg-card-2 border border-border rounded-xl px-3 py-2.5 text-text-main text-sm focus:border-primary outline-none transition-colors"
+            />
+          </div>
+          <div>
+            <label className="text-xs text-text-secondary mb-1.5 block">Giờ chiều</label>
+            <input
+              type="time"
+              value={reminderEvening}
+              onChange={(e) => setReminderEvening(e.target.value)}
+              className="w-full bg-card-2 border border-border rounded-xl px-3 py-2.5 text-text-main text-sm focus:border-primary outline-none transition-colors"
+            />
+          </div>
+        </div>
+
+        <div className="mb-3">
+          <label className="text-xs text-text-secondary mb-1.5 block">Telegram Chat ID</label>
+          <input
+            value={telegramChatId}
+            onChange={(e) => setTelegramChatId(e.target.value)}
+            placeholder="VD: 123456789"
+            className="w-full bg-card-2 border border-border rounded-xl px-3 py-2.5 text-text-main text-sm focus:border-primary outline-none transition-colors"
+          />
+        </div>
+
+        <button onClick={() => setShowReminderHelp((v) => !v)}
+          className="text-xs font-semibold text-primary mb-2">
+          {showReminderHelp ? 'Ẩn hướng dẫn ▲' : 'Cách lấy Chat ID? ▼'}
+        </button>
+        {showReminderHelp && (
+          <p className="text-xs text-text-secondary mb-3 leading-relaxed">
+            1. Tạo bot với <span className="font-semibold">@BotFather</span> trên Telegram.<br />
+            2. Nhắn <span className="font-mono">/start</span> cho bot vừa tạo.<br />
+            3. Mở <span className="font-mono break-all">https://api.telegram.org/bot&lt;token&gt;/getUpdates</span> để lấy <span className="font-semibold">chat_id</span> rồi dán vào ô trên.<br />
+            Lưu ý: token của bot là bí mật, cấu hình ở GitHub Secrets của repo — KHÔNG nhập ở đây.
+          </p>
+        )}
+
+        <button onClick={handleSaveReminder} disabled={savingReminder}
+          className="w-full py-3 bg-primary text-white text-sm font-bold rounded-xl disabled:opacity-50">
+          {savingReminder ? 'Đang lưu...' : 'Lưu cài đặt nhắc tập'}
+        </button>
       </div>
 
       <Link to="/programs"
