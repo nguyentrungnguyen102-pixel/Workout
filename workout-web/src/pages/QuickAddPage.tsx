@@ -850,6 +850,19 @@ function getMostRecentLog(recentLogs: WorkoutLog[], yesterdayLog: WorkoutLog | n
   return { ...sameDate[0], exercises: merged };
 }
 
+// "Last logged" value for a specific exercise — scans recentLogs (ascending
+// by date) from the end backward so it finds the most recent session that
+// actually included this exercise, not just literally-yesterday's session
+// (yesterdayLog is null whenever the user skipped a day, which silently
+// fell back to the exercise's static default instead of its real history).
+function findLastExerciseEntry(recentLogs: WorkoutLog[], presetId: string): ExerciseEntry | undefined {
+  for (let i = recentLogs.length - 1; i >= 0; i--) {
+    const e = recentLogs[i].exercises?.find((ex) => ex.presetId === presetId);
+    if (e) return e;
+  }
+  return undefined;
+}
+
 interface RecentSessionCardProps {
   log: WorkoutLog;
   presets: WorkoutPreset[];
@@ -1053,7 +1066,7 @@ export default function QuickAddPage() {
 
   const handleAddExercise = (preset: WorkoutPreset) => {
     if (draftIds.has(preset.id)) return;
-    const yesterday = yesterdayLog?.exercises.find((e) => e.presetId === preset.id);
+    const yesterday = findLastExerciseEntry(recentLogs, preset.id);
     const entry: ExerciseEntry = {
       presetId: preset.id,
       name: preset.nameVi,
@@ -1071,7 +1084,7 @@ export default function QuickAddPage() {
 
   const handleAddWithValue = (preset: WorkoutPreset, value: number) => {
     // Remove existing entry for this preset if it exists so we can re-add with new value
-    const yesterday = yesterdayLog?.exercises.find((e) => e.presetId === preset.id);
+    const yesterday = findLastExerciseEntry(recentLogs, preset.id);
     const entry: ExerciseEntry = {
       presetId: preset.id,
       name: preset.nameVi,
@@ -1098,7 +1111,7 @@ export default function QuickAddPage() {
   };
 
   const getSuggestedValue = (preset: WorkoutPreset) => {
-    const y = yesterdayLog?.exercises.find((e) => e.presetId === preset.id);
+    const y = findLastExerciseEntry(recentLogs, preset.id);
     if (preset.unit === 'reps') {
       const reps = y?.reps ?? preset.defaultValue;
       return formatAmount({ unit: 'reps', reps });
@@ -1203,7 +1216,7 @@ export default function QuickAddPage() {
         onAddExercise={(presetId) => {
           const preset = SYSTEM_PRESETS.find(p => p.id === presetId);
           if (!preset) return;
-          const yesterday = yesterdayLog?.exercises.find(e => e.presetId === presetId);
+          const yesterday = findLastExerciseEntry(recentLogs, presetId);
           const value = preset.unit === 'reps'
             ? (yesterday?.reps ?? preset.defaultValue)
             : (yesterday?.durationSeconds ?? (preset.unit === 'seconds' ? preset.defaultValue : preset.defaultValue * 60));
