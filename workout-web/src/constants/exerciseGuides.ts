@@ -396,6 +396,14 @@ export const EXERCISE_GUIDES: Record<string, ExerciseGuide> = {
     ],
     tips: ['Giữ khuỷu tay hơi gập cố định, không dùng đà hất tạ'],
   },
+  db_farmers_carry: {
+    steps: [
+      'Cầm 1 tạ mỗi tay, đứng thẳng, vai kéo về sau và xuống',
+      'Đi bộ những bước ngắn, đều, giữ thân người thẳng không nghiêng',
+      'Siết chặt tay cầm và bụng trong suốt thời gian đi',
+    ],
+    tips: ['Không đi nhanh — ưu tiên giữ dáng thẳng và tay cầm chắc hơn tốc độ'],
+  },
 };
 
 export function getGuide(presetId: string): ExerciseGuide | undefined {

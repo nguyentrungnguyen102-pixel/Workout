@@ -108,6 +108,7 @@ export const MET_TABLE: Record<string, number> = {
   db_arnold_press: 4.0, // TODO verify
   db_upright_row: 4.0, // TODO verify
   db_reverse_fly: 3.5, // TODO verify
+  db_farmers_carry: 4.5, // TODO verify — approximated from Compendium "walking, carrying load"
 };
 
 // Category-level fallback MET for any presetId not in MET_TABLE (e.g.
