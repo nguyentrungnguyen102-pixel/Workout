@@ -179,6 +179,17 @@ export async function getLogsForExercise(uid: string, presetId: string): Promise
     .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 }
 
+// Full unfiltered history for a user (data export/backup) — same
+// no-orderBy/no-limit pattern as the rest of this file so a large history
+// can't get silently truncated (see the getRecentLogs comment above).
+export async function getAllLogs(uid: string): Promise<WorkoutLog[]> {
+  const q = query(collection(db, 'logs'), where('userId', '==', uid));
+  const snap = await getDocs(q);
+  return snap.docs
+    .map((d) => d.data() as WorkoutLog)
+    .sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+}
+
 export async function getLogsForDate(uid: string, date: string): Promise<WorkoutLog[]> {
   const q = query(collection(db, 'logs'), where('userId', '==', uid));
   const snap = await getDocs(q);
