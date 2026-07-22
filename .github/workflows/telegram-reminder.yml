@@ -4,6 +4,12 @@ on:
   schedule:
     - cron: '*/30 * * * *'
   workflow_dispatch:
+    inputs:
+      test_all_variants:
+        description: 'Gửi thử cả 4 mẫu tin ngay (bỏ qua giờ/thứ/chống trùng)'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   remind:
@@ -39,4 +45,5 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          TEST_ALL_VARIANTS: ${{ inputs.test_all_variants }}
         run: node telegram-reminder.mjs
