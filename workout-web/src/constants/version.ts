@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.15.2';
+export const APP_VERSION = '2.16.0';
 
 // Lich su phien ban chinh thuc (sau dot don nhanh 14/07/2026 — gop cac
 // nang cap tot nhat tu cac nhanh phien hang ngay vao mot ban duy nhat).
@@ -31,4 +31,5 @@ export const PHASE_HISTORY = [
   { version: '2.15.0', phase: 9, summary: 'Gộp nhánh cũ: 6 bài tạ đơn tại nhà mới (Farmer\'s Carry, Renegade Row, Pullover, Concentration Curl, Step Up, Thruster) + chương trình "Tạ Đơn Tại Nhà - Người Mới 2x"; fix lỗi PR không bao giờ ghi nhận cho bài đo quãng đường (km); fix workflow Telegram nội suy secret trực tiếp vào bash gây lỗi ngầm. Nhắc tập Telegram nay đổi nội dung theo thứ trong tuần: T2-6 sáng (hôm qua thiếu + hôm nay cần tập + tuần này còn thiếu), T2-6 chiều (hôm nay còn thiếu), T7 chỉ sáng (tuần này còn thiếu), Chủ nhật chỉ chiều (tổng kết tuần so tuần trước + nhận xét); quote chuyển lên đầu tin' },
   { version: '2.15.1', phase: 9, summary: 'Mở rộng kho câu quote động lực từ 15 lên 100 câu song ngữ Anh–Việt kèm tác giả (banner app + tin nhắc Telegram) để đỡ lặp lại' },
   { version: '2.15.2', phase: 9, summary: 'Thêm chế độ test cho workflow nhắc tập Telegram: tick "Gửi thử cả 4 mẫu tin" khi Run workflow thủ công sẽ gửi ngay cả 4 loại tin (sáng/chiều T2-6, sáng T7, tối CN) bằng dữ liệu thật, không đợi đúng ngày và không ảnh hưởng lịch gửi tự động' },
+  { version: '2.16.0', phase: 10, summary: 'Xuất dữ liệu (Cài đặt): tải Xuất CSV (mỗi dòng 1 bài tập, mở được trên Excel/Sheets, có BOM cho tiếng Việt) hoặc Sao lưu JSON đầy đủ (toàn bộ buổi tập + số đo cơ thể) về máy — chuẩn tính năng backup của các app tập luyện phổ biến (Strong, Hevy)' },
 ] as const;
