@@ -17,8 +17,11 @@ jobs:
 
       - name: Guard secrets
         id: guard
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: |
-          if [ -z "${{ secrets.TELEGRAM_BOT_TOKEN }}" ] || [ -z "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" ]; then
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
             echo "Reminder secrets not configured yet — skipping."
             echo "ok=false" >> "$GITHUB_OUTPUT"
           else
