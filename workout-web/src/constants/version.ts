@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.15.0';
+export const APP_VERSION = '2.15.1';
 
 // Lich su phien ban chinh thuc (sau dot don nhanh 14/07/2026 — gop cac
 // nang cap tot nhat tu cac nhanh phien hang ngay vao mot ban duy nhat).
@@ -29,4 +29,5 @@ export const PHASE_HISTORY = [
   { version: '2.14.0', phase: 8, summary: 'Thống kê dễ nhìn: màu biểu đồ tương phản rõ (mỗi bài 1 màu), gộp 2 heatmap thành 1 card có toggle Theo ngày/Theo khung giờ, bố cục lại trang theo mục (Tổng quan/Biểu đồ/Chi tiết/Kỷ lục & Thành tựu/Lịch sử), danh sách log gọn 1 dòng kiểu bảng' },
   { version: '2.14.1', phase: 8, summary: 'Hotfix: tự điền số lượng/phút khi thêm bài tập nay lấy đúng lần tập gần nhất của bài đó (quét 35 ngày gần đây) thay vì chỉ khớp khi tập đúng hôm qua; quote nhắc tập Telegram nay song ngữ Anh–Việt kèm tác giả, khớp giao diện banner trong app' },
   { version: '2.15.0', phase: 9, summary: 'Gộp nhánh cũ: 6 bài tạ đơn tại nhà mới (Farmer\'s Carry, Renegade Row, Pullover, Concentration Curl, Step Up, Thruster) + chương trình "Tạ Đơn Tại Nhà - Người Mới 2x"; fix lỗi PR không bao giờ ghi nhận cho bài đo quãng đường (km); fix workflow Telegram nội suy secret trực tiếp vào bash gây lỗi ngầm. Nhắc tập Telegram nay đổi nội dung theo thứ trong tuần: T2-6 sáng (hôm qua thiếu + hôm nay cần tập + tuần này còn thiếu), T2-6 chiều (hôm nay còn thiếu), T7 chỉ sáng (tuần này còn thiếu), Chủ nhật chỉ chiều (tổng kết tuần so tuần trước + nhận xét); quote chuyển lên đầu tin' },
+  { version: '2.15.1', phase: 9, summary: 'Mở rộng kho câu quote động lực từ 15 lên 100 câu song ngữ Anh–Việt kèm tác giả (banner app + tin nhắc Telegram) để đỡ lặp lại' },
 ] as const;
