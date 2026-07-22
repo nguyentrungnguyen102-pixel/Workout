@@ -25,6 +25,12 @@ import admin from 'firebase-admin';
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const FIREBASE_SERVICE_ACCOUNT = process.env.FIREBASE_SERVICE_ACCOUNT;
+// Manual test mode (workflow_dispatch input `test_all_variants`) — bypasses
+// slot/day-of-week gating and the lastReminderSent dedupe entirely, sending
+// all 4 real message variants (built from the user's actual logs/goals) so
+// they can review the Sat-morning/Sun-evening variants without waiting for
+// an actual Saturday/Sunday.
+const TEST_ALL_VARIANTS = process.env.TEST_ALL_VARIANTS === 'true';
 
 // Mirrors src/lib/quotes.ts QUOTES — bilingual (en/vi) + author, same set
 // shown in the app's QuoteBanner so the Telegram message matches the app.
@@ -487,6 +493,34 @@ async function processUser(db, uid, profile) {
   }
 }
 
+// Test mode: sends all 4 real message variants back-to-back (labeled) using
+// the user's actual logs/goals, ignoring time-of-day, day-of-week, and the
+// dedupe. Does NOT touch lastReminderSent — this must never interfere with
+// the real scheduled sends.
+async function sendTestAllVariants(db, uid, profile) {
+  const tz = profile.timezone || 'Asia/Ho_Chi_Minh';
+  const now = new Date();
+  const localToday = new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(now); // YYYY-MM-DD
+
+  const goals = profile.exerciseGoals || [];
+  const logsSnap = await db.collection('logs').where('userId', '==', uid).get();
+  const allLogs = logsSnap.docs.map((d) => d.data());
+
+  const variants = [
+    { label: 'Thứ 2–6 · Sáng', build: buildWeekdayMorningMessage },
+    { label: 'Thứ 2–6 · Chiều', build: buildWeekdayEveningMessage },
+    { label: 'Thứ 7 · Sáng', build: buildSaturdayMorningMessage },
+    { label: 'Chủ nhật · Tối', build: buildSundayEveningMessage },
+  ];
+
+  for (const v of variants) {
+    const body = v.build(profile, goals, allLogs, localToday);
+    const message = `🧪 <b>[TEST] ${escapeHtml(v.label)}</b>\n\n${body}`;
+    const ok = await sendTelegramMessage(profile.telegramChatId, message);
+    console.log(ok ? `  Đã gửi thử (${v.label}) cho user ${uid}` : `  Gửi thử thất bại (${v.label}) cho user ${uid}`);
+  }
+}
+
 async function runLive() {
   const serviceAccount = JSON.parse(FIREBASE_SERVICE_ACCOUNT);
   admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
@@ -494,13 +528,18 @@ async function runLive() {
 
   const usersSnap = await db.collection('users').where('reminderEnabled', '==', true).get();
   console.log(`Tìm thấy ${usersSnap.size} user bật nhắc tập.`);
+  if (TEST_ALL_VARIANTS) console.log('=== TEST MODE — gửi cả 4 mẫu tin, bỏ qua giờ/thứ/chống trùng ===');
 
   for (const userDoc of usersSnap.docs) {
     const uid = userDoc.id;
     const profile = userDoc.data();
     if (!profile.telegramChatId) continue;
     try {
-      await processUser(db, uid, profile);
+      if (TEST_ALL_VARIANTS) {
+        await sendTestAllVariants(db, uid, profile);
+      } else {
+        await processUser(db, uid, profile);
+      }
     } catch (err) {
       console.error(`Lỗi xử lý user ${uid}: ${err.message}`);
     }
