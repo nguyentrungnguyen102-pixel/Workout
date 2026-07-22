@@ -108,6 +108,14 @@ export const MET_TABLE: Record<string, number> = {
   db_arnold_press: 4.0, // TODO verify
   db_upright_row: 4.0, // TODO verify
   db_reverse_fly: 3.5, // TODO verify
+
+  // Dumbbell (home training) — Phase 9
+  db_farmers_carry: 4.5, // TODO verify — loaded carry, similar family to walking with load
+  db_renegade_row: 5.0, // TODO verify — plank hold + row, more demanding than a standing row
+  db_pullover: 4.0, // TODO verify
+  db_concentration_curl: 3.5, // TODO verify
+  db_step_up: 5.0, // TODO verify — Compendium "step training" ballpark
+  db_thruster: 6.0, // TODO verify — compound squat+press, treated like db_deadlift
 };
 
 // Category-level fallback MET for any presetId not in MET_TABLE (e.g.

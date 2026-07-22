@@ -403,6 +403,14 @@ const PRESET_ICON: Record<string, JSX.Element> = {
   db_arnold_press: gDbOverheadPress,
   db_upright_row: gDbLateral,
   db_reverse_fly: gDbLateral,
+
+  // Dumbbell (home training) — Phase 9
+  db_farmers_carry: gDbHinge,
+  db_renegade_row: gDbRow,
+  db_pullover: gDbChestPress,
+  db_concentration_curl: gDbCurl,
+  db_step_up: gLunge,
+  db_thruster: gDbOverheadPress,
 };
 
 // Category fallback — used for custom exercises (or any id not in the map above).

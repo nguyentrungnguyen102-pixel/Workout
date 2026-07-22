@@ -59,6 +59,14 @@ export const SYSTEM_PRESETS: WorkoutPreset[] = [
   { id: 'db_arnold_press',     name: 'Arnold Press',       nameVi: 'Arnold press (vai)',    category: 'dumbbell', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '🌀', isCustom: false, usageCount: 0 },
   { id: 'db_upright_row',      name: 'Upright Row',        nameVi: 'Kéo tạ đứng (vai/thang)', category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🔝', isCustom: false, usageCount: 0 },
   { id: 'db_reverse_fly',      name: 'Reverse Fly',        nameVi: 'Bay tạ ngược (vai sau)', category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🔄', isCustom: false, usageCount: 0 },
+
+  // Dumbbell (home training) — Phase 9, bổ sung thêm bài tạ đơn giản tại nhà
+  { id: 'db_farmers_carry',    name: "Farmer's Carry",     nameVi: 'Đi bộ mang tạ (toàn thân/cầm nắm)', category: 'dumbbell', unit: 'seconds', defaultValue: 40, defaultSets: 3, icon: '🚶', isCustom: false, usageCount: 0 },
+  { id: 'db_renegade_row',     name: 'Renegade Row',       nameVi: 'Chèo tạ plank (lưng + core)', category: 'dumbbell', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '🧗', isCustom: false, usageCount: 0 },
+  { id: 'db_pullover',         name: 'Dumbbell Pullover',  nameVi: 'Kéo tạ qua đầu (ngực/xô)', category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🔃', isCustom: false, usageCount: 0 },
+  { id: 'db_concentration_curl', name: 'Concentration Curl', nameVi: 'Curl tập trung (bắp tay)', category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '💪', isCustom: false, usageCount: 0 },
+  { id: 'db_step_up',          name: 'Dumbbell Step Up',   nameVi: 'Bước lên bục có tạ (đùi mông)', category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🪜', isCustom: false, usageCount: 0 },
+  { id: 'db_thruster',         name: 'Dumbbell Thruster',  nameVi: 'Thruster tạ (toàn thân)', category: 'dumbbell', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '🚀', isCustom: false, usageCount: 0 },
 ];
 
 export const CATEGORY_LABELS: Record<string, string> = {

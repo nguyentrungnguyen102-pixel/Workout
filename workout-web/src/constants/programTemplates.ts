@@ -366,6 +366,43 @@ export const PROGRAM_TEMPLATES: WorkoutProgram[] = [
       },
     ],
   },
+
+  {
+    id: 'dumbbell_home_beginner_2x',
+    nameVi: 'Tạ Đơn Tại Nhà - Người Mới 2x',
+    descriptionVi: 'Bắt đầu với tạ đơn tại nhà. Toàn thân mỗi buổi, ít bài + số hiệp thấp, 2 buổi/tuần.',
+    emoji: '🔰',
+    daysPerWeek: 2,
+    difficulty: 'beginner',
+    focus: 'strength',
+    estimatedMinutes: 25,
+    days: [
+      {
+        id: 'dbb_day1',
+        order: 1,
+        nameVi: 'Buổi A',
+        focusVi: 'Toàn thân · Làm quen tạ',
+        emoji: '🔰',
+        exercises: [
+          { presetId: 'db_goblet_squat',  nameVi: 'Squat ôm tạ (đùi)',       sets: 2, reps: 12, unit: 'reps' },
+          { presetId: 'db_bicep_curl',    nameVi: 'Curl tạ đơn (bắp tay)',   sets: 2, reps: 10, unit: 'reps' },
+          { presetId: 'db_shoulder_press',nameVi: 'Đẩy tạ đôi (vai)',        sets: 2, reps: 10, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'dbb_day2',
+        order: 2,
+        nameVi: 'Buổi B',
+        focusVi: 'Toàn thân · Làm quen tạ',
+        emoji: '🔰',
+        exercises: [
+          { presetId: 'db_bent_row',        nameVi: 'Kéo tạ cúi người (lưng)', sets: 2, reps: 10, unit: 'reps' },
+          { presetId: 'db_lunge',           nameVi: 'Lunge tạ (đùi mông)',     sets: 2, reps: 10, unit: 'reps' },
+          { presetId: 'db_farmers_carry',   nameVi: 'Đi bộ mang tạ (toàn thân)', sets: 2, durationSeconds: 30, unit: 'seconds' },
+        ],
+      },
+    ],
+  },
 ];
 
 export const DIFFICULTY_LABELS: Record<string, string> = {

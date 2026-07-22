@@ -1,0 +1,26 @@
+import { describe, it, expect } from 'vitest';
+import { SYSTEM_PRESETS, CATEGORY_LABELS, CATEGORY_COLORS_STATS } from '../constants/exercises';
+import { EXERCISE_GUIDES } from '../constants/exerciseGuides';
+
+// Guards against a preset being added without the supporting data every
+// other preset has — a silent gap here means a picker card with a missing
+// guide, or a category with no chart color, rather than a build error.
+describe('SYSTEM_PRESETS data completeness', () => {
+  it('every preset id is unique', () => {
+    const ids = SYSTEM_PRESETS.map((p) => p.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('every preset has a form-cue guide with at least one step', () => {
+    const missing = SYSTEM_PRESETS.filter((p) => !EXERCISE_GUIDES[p.id]?.steps?.length).map((p) => p.id);
+    expect(missing).toEqual([]);
+  });
+
+  it('every preset category has a label and a chart color', () => {
+    const categories = new Set(SYSTEM_PRESETS.map((p) => p.category));
+    categories.forEach((c) => {
+      expect(CATEGORY_LABELS[c]).toBeTruthy();
+      expect(CATEGORY_COLORS_STATS[c]).toBeTruthy();
+    });
+  });
+});
