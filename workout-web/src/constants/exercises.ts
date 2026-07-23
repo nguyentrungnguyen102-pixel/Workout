@@ -67,6 +67,16 @@ export const SYSTEM_PRESETS: WorkoutPreset[] = [
   { id: 'db_concentration_curl', name: 'Concentration Curl', nameVi: 'Curl tập trung (bắp tay)', category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '💪', isCustom: false, usageCount: 0 },
   { id: 'db_step_up',          name: 'Dumbbell Step Up',   nameVi: 'Bước lên bục có tạ (đùi mông)', category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🪜', isCustom: false, usageCount: 0 },
   { id: 'db_thruster',         name: 'Dumbbell Thruster',  nameVi: 'Thruster tạ (toàn thân)', category: 'dumbbell', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '🚀', isCustom: false, usageCount: 0 },
+
+  // Sport (outdoor/team sports) — tracked separately from indoor cardio so
+  // "sport frequency" stats/PRs/charts don't blend with treadmill running,
+  // jump rope etc. Existing running/cycling stay in cardio (unchanged) —
+  // location is a session-level field so those two are taggable too.
+  { id: 'sport_football',   name: 'Football',   nameVi: 'Bóng đá',    category: 'sport', unit: 'minutes', defaultValue: 60,  defaultSets: 1, icon: '⚽', isCustom: false, usageCount: 0 },
+  { id: 'sport_swimming',   name: 'Swimming',    nameVi: 'Bơi',        category: 'sport', unit: 'minutes', defaultValue: 30,  defaultSets: 1, icon: '🏊', isCustom: false, usageCount: 0 },
+  { id: 'sport_golf',       name: 'Golf',        nameVi: 'Golf',       category: 'sport', unit: 'minutes', defaultValue: 120, defaultSets: 1, icon: '⛳', isCustom: false, usageCount: 0 },
+  { id: 'sport_volleyball', name: 'Volleyball',  nameVi: 'Bóng chuyền',category: 'sport', unit: 'minutes', defaultValue: 60,  defaultSets: 1, icon: '🏐', isCustom: false, usageCount: 0 },
+  { id: 'sport_basketball', name: 'Basketball',  nameVi: 'Bóng rổ',    category: 'sport', unit: 'minutes', defaultValue: 60,  defaultSets: 1, icon: '🏀', isCustom: false, usageCount: 0 },
 ];
 
 export const CATEGORY_LABELS: Record<string, string> = {
@@ -76,6 +86,7 @@ export const CATEGORY_LABELS: Record<string, string> = {
   mobility: 'Linh hoạt',
   recovery: 'Phục hồi',
   dumbbell: 'Tạ đơn',
+  sport: 'Thể thao',
 };
 
 // Shared per-category hex colors for charts/stats (v2.11.0) — matches the
@@ -83,5 +94,5 @@ export const CATEGORY_LABELS: Record<string, string> = {
 // centralized here so chart components (src/components/charts/*) can reuse
 // them without importing from a page module.
 export const CATEGORY_COLORS_STATS: Record<string, string> = {
-  strength: '#FF5400', core: '#BE185D', cardio: '#2563EB', mobility: '#059669', recovery: '#7C3AED', dumbbell: '#D97706',
+  strength: '#FF5400', core: '#BE185D', cardio: '#2563EB', mobility: '#059669', recovery: '#7C3AED', dumbbell: '#D97706', sport: '#CA8A04',
 };

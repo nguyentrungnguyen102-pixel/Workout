@@ -29,6 +29,7 @@ interface WorkoutStore {
   setDraftFromLog: (log: WorkoutLog) => void;
   setIntensity: (intensity: Intensity) => void;
   setNotes: (notes: string) => void;
+  setLocation: (location: string) => void;
   setStartedAt: (date: Date) => void;
   resetDraft: () => void;
 
@@ -45,6 +46,7 @@ const emptyDraft = (): DraftWorkout => ({
   startedAt: null,
   intensity: 'moderate',
   notes: '',
+  location: '',
 });
 
 // Merge exercises from multiple logs (deduplicated by presetId, keep most recent)
@@ -111,6 +113,7 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
         startedAt: new Date(),
         intensity: log.intensity,
         notes: '',
+        location: '',
       },
     }),
 
@@ -119,6 +122,9 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
 
   setNotes: (notes) =>
     set((s) => ({ draft: { ...s.draft, notes } })),
+
+  setLocation: (location) =>
+    set((s) => ({ draft: { ...s.draft, location } })),
 
   setStartedAt: (date) =>
     set((s) => ({ draft: { ...s.draft, startedAt: date } })),
@@ -161,6 +167,7 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
         startedAt: new Date(),
         intensity: yesterdayLog.intensity,
         notes: '',
+        location: '',
       },
     });
   },

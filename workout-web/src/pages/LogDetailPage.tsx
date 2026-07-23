@@ -103,6 +103,13 @@ export default function LogDetailPage() {
         </div>
       </div>
 
+      {log.location && (
+        <div className="bg-card rounded-2xl border border-border p-4 mb-5">
+          <p className="text-xs font-semibold text-text-secondary mb-1">📍 ĐỊA ĐIỂM</p>
+          <p className="text-sm text-text-main">{log.location}</p>
+        </div>
+      )}
+
       {log.notes && (
         <div className="bg-card rounded-2xl border border-border p-4 mb-5">
           <p className="text-xs font-semibold text-text-secondary mb-1">GHI CHÚ</p>

@@ -34,4 +34,5 @@ export const CATEGORY_CHART_COLORS: Record<string, string> = {
   mobility: '#059669',
   recovery: '#7C3AED',
   dumbbell: '#0891B2',
+  sport: '#CA8A04',
 };

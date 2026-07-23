@@ -446,6 +446,48 @@ export const EXERCISE_GUIDES: Record<string, ExerciseGuide> = {
     ],
     tips: ['Bắt đầu với tạ nhẹ vì đây là động tác toàn thân cường độ cao', 'Không khoá cứng khuỷu tay/gối ở điểm cuối'],
   },
+
+  // Sport (outdoor/team sports)
+  sport_football: {
+    steps: [
+      'Khởi động kỹ khớp cổ chân, gối, háng trước khi vào sân',
+      'Chơi hết hiệp/buổi theo cường độ trận đấu hoặc giao lưu',
+      'Giãn cơ nhẹ (chân, đùi sau, bắp chuối) sau khi kết thúc',
+    ],
+    tips: ['Uống đủ nước giữa hiệp', 'Mang giày phù hợp mặt sân (cỏ nhân tạo/sân đất) để tránh trơn trượt'],
+  },
+  sport_swimming: {
+    steps: [
+      'Khởi động vai và làm quen nước trước khi bơi tốc độ',
+      'Bơi liên tục theo quãng/thời gian đã định, nghỉ ngắn giữa các set nếu cần',
+      'Bơi thả lỏng vài vòng cuối để hạ nhịp tim',
+    ],
+    tips: ['Chú ý kỹ thuật thở đều để không bị hụt hơi giữa hồ', 'Khởi động vai kỹ tránh chấn thương vai khi bơi sải'],
+  },
+  sport_golf: {
+    steps: [
+      'Khởi động vai, lưng, hông trước khi đánh bóng',
+      'Chơi hết vòng/số hố đã định, đi bộ giữa các hố (không dùng xe điện) để tăng vận động',
+      'Giãn cơ lưng và vai sau khi kết thúc vòng',
+    ],
+    tips: ['Giữ tư thế lưng thẳng khi swing để tránh đau lưng dưới', 'Đội mũ, dùng kem chống nắng khi chơi ngoài trời lâu'],
+  },
+  sport_volleyball: {
+    steps: [
+      'Khởi động cổ tay, vai, gối trước khi vào trận',
+      'Chơi hết hiệp/buổi giao lưu theo cường độ mong muốn',
+      'Giãn cơ vai và bắp chân sau khi kết thúc',
+    ],
+    tips: ['Băng cổ tay nếu hay đập bóng mạnh để giảm chấn thương', 'Khởi động vai kỹ trước khi đập/chuyền bóng nhiều'],
+  },
+  sport_basketball: {
+    steps: [
+      'Khởi động cổ chân, gối kỹ trước khi vào sân (môn có nhiều bật nhảy/đổi hướng)',
+      'Chơi hết hiệp/trận giao lưu theo cường độ mong muốn',
+      'Giãn cơ đùi trước/sau và bắp chân sau khi kết thúc',
+    ],
+    tips: ['Mang giày bóng rổ có độ ôm cổ chân tốt để giảm nguy cơ lật cổ chân', 'Uống nước đều đặn giữa các hiệp'],
+  },
 };
 
 export function getGuide(presetId: string): ExerciseGuide | undefined {

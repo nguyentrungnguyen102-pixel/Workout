@@ -1,6 +1,6 @@
 import { Timestamp } from 'firebase/firestore';
 
-export type ExerciseCategory = 'strength' | 'cardio' | 'mobility' | 'recovery' | 'dumbbell' | 'core';
+export type ExerciseCategory = 'strength' | 'cardio' | 'mobility' | 'recovery' | 'dumbbell' | 'core' | 'sport';
 export type ExerciseUnit = 'reps' | 'seconds' | 'minutes' | 'km';
 export type Intensity = 'light' | 'moderate' | 'heavy';
 export type LogSource = 'manual' | 'voice' | 'repeat_yesterday';
@@ -42,6 +42,7 @@ export interface WorkoutLog {
   intensity: Intensity;
   caloriesEstimate: number;
   notes?: string;
+  location?: string;
   source: LogSource;
   syncedToSheets: boolean;
   createdAt?: Timestamp;
@@ -54,6 +55,7 @@ export interface DraftWorkout {
   startedAt: Date | null;
   intensity: Intensity;
   notes: string;
+  location: string;
 }
 
 // Saved workout template (named routine)

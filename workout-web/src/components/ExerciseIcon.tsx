@@ -343,6 +343,58 @@ const gDbHinge = (
   </>
 );
 
+const gFootball = (
+  <>
+    <circle cx="12" cy="12" r="8" />
+    <path d="M12 6 L9 10 L10.5 14 L13.5 14 L15 10 Z" />
+    <path d="M12 4 L12 6" />
+    <path d="M9 10 L5 9" />
+    <path d="M15 10 L19 9" />
+    <path d="M10.5 14 L9 19" />
+    <path d="M13.5 14 L15 19" />
+  </>
+);
+
+const gSwimming = (
+  <>
+    <circle cx="5" cy="8" r="1.6" />
+    <path d="M6.5 8.5 L14 8 L19 6" />
+    <path d="M9 8.3 L11 12" />
+    <path d="M14 8 L17 11" />
+    <path d="M3 16 Q5 14.5 7 16 T11 16 T15 16 T19 16" />
+  </>
+);
+
+const gGolf = (
+  <>
+    <circle cx="9" cy="4.5" r="1.6" />
+    <path d="M9 6 L10 12" />
+    <path d="M10 12 L8 18" />
+    <path d="M10 12 L13 17" />
+    <path d="M9 7.5 L15 3 L19 15" />
+    <circle cx="19" cy="16.3" r="1" />
+  </>
+);
+
+const gVolleyball = (
+  <>
+    <circle cx="12" cy="12" r="8" />
+    <path d="M4 12 Q12 8 20 12" />
+    <path d="M4 12 Q12 16 20 12" />
+    <path d="M12 4 Q10 12 12 20" />
+  </>
+);
+
+const gBasketball = (
+  <>
+    <circle cx="12" cy="12" r="8" />
+    <path d="M12 4 L12 20" />
+    <path d="M4 12 L20 12" />
+    <path d="M5.5 6.5 Q12 12 5.5 17.5" />
+    <path d="M18.5 6.5 Q12 12 18.5 17.5" />
+  </>
+);
+
 // -- Preset id -> glyph map (every SYSTEM_PRESETS id is listed explicitly) --
 const PRESET_ICON: Record<string, JSX.Element> = {
   // Strength (bodyweight)
@@ -411,6 +463,13 @@ const PRESET_ICON: Record<string, JSX.Element> = {
   db_concentration_curl: gDbCurl,
   db_step_up: gLunge,
   db_thruster: gDbOverheadPress,
+
+  // Sport (outdoor/team sports)
+  sport_football: gFootball,
+  sport_swimming: gSwimming,
+  sport_golf: gGolf,
+  sport_volleyball: gVolleyball,
+  sport_basketball: gBasketball,
 };
 
 // Category fallback — used for custom exercises (or any id not in the map above).
@@ -421,6 +480,7 @@ const CATEGORY_ICON: Record<string, JSX.Element> = {
   mobility: gYoga,
   recovery: gWalking,
   dumbbell: gDbCurl,
+  sport: gFootball,
 };
 
 interface ExerciseIconProps {
