@@ -116,6 +116,13 @@ export const MET_TABLE: Record<string, number> = {
   db_concentration_curl: 3.5, // TODO verify
   db_step_up: 5.0, // TODO verify — Compendium "step training" ballpark
   db_thruster: 6.0, // TODO verify — compound squat+press, treated like db_deadlift
+
+  // Sport (outdoor/team sports) — TODO verify against Compendium sport codes
+  sport_football: 7.0, // soccer, casual/competitive
+  sport_swimming: 6.0, // laps, moderate effort
+  sport_golf: 4.5, // walking course, carrying clubs
+  sport_volleyball: 4.0, // recreational/non-competitive
+  sport_basketball: 6.5, // playing a game, general
 };
 
 // Category-level fallback MET for any presetId not in MET_TABLE (e.g.
@@ -129,6 +136,7 @@ export const CATEGORY_MET: Record<ExerciseCategory, number> = {
   mobility: 2.5,
   recovery: 3,
   dumbbell: 5,
+  sport: 6,
 };
 
 // Running MET scales with pace when both distance (km) and duration are

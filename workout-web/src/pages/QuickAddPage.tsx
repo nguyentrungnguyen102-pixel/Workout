@@ -35,7 +35,7 @@ function toLocalInput(d: Date): string {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
-type Category = 'all' | 'strength' | 'core' | 'dumbbell' | 'cardio' | 'mobility' | 'recovery';
+type Category = 'all' | 'strength' | 'core' | 'dumbbell' | 'cardio' | 'mobility' | 'recovery' | 'sport';
 
 const CATEGORY_TABS: { key: Category; label: string }[] = [
   { key: 'all', label: 'Tất cả ⚡' },
@@ -45,6 +45,7 @@ const CATEGORY_TABS: { key: Category; label: string }[] = [
   { key: 'cardio', label: 'Cardio 🏃' },
   { key: 'mobility', label: 'Linh hoạt 🧘' },
   { key: 'recovery', label: 'Phục hồi 🌿' },
+  { key: 'sport', label: 'Thể thao ⚽' },
 ];
 
 const CATEGORY_COLORS: Record<string, { text: string; bg: string }> = {
@@ -54,10 +55,11 @@ const CATEGORY_COLORS: Record<string, { text: string; bg: string }> = {
   mobility: { text: '#059669', bg: '#ECFDF5' },
   recovery: { text: '#7C3AED', bg: '#F5F3FF' },
   dumbbell: { text: '#B45309', bg: '#FEF3C7' },
+  sport: { text: '#CA8A04', bg: '#FEFCE8' },
 };
 
 const ICON_OPTIONS = ['🏋️', '💪', '🤸', '🏃', '🚴', '🧘', '🤼', '🥊', '⚽', '🏊', '🎯', '🔥', '⭐', '🌟', '💥'];
-const CREATE_CATEGORIES: ExerciseCategory[] = ['strength', 'core', 'dumbbell', 'cardio', 'mobility', 'recovery'];
+const CREATE_CATEGORIES: ExerciseCategory[] = ['strength', 'core', 'dumbbell', 'cardio', 'mobility', 'recovery', 'sport'];
 const UNIT_OPTIONS: { label: string; value: ExerciseUnit }[] = [
   { label: 'Reps', value: 'reps' },
   { label: 'Giây', value: 'seconds' },
@@ -268,7 +270,7 @@ interface WorkoutSummaryModalProps {
 }
 
 function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
-  const { draft, removeExercise, updateExercise, setNotes, setStartedAt, logWorkout, isLogging } = useWorkoutStore();
+  const { draft, removeExercise, updateExercise, setNotes, setLocation, setStartedAt, logWorkout, isLogging } = useWorkoutStore();
   const [toast, setToast] = useState('');
   // Ref (not state) holds the pending timer so a fast second toast can clear
   // the first toast's timeout before it fires and clears the newer message.
@@ -521,6 +523,17 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
             );
           })
         )}
+
+        <div className="mt-4">
+          <p className="text-xs font-semibold text-text-secondary mb-2">📍 Địa điểm</p>
+          <input
+            type="text"
+            className="w-full bg-card border border-border rounded-xl px-3 py-3 text-sm text-text-main focus:border-primary outline-none transition-colors"
+            placeholder="Sân bóng ABC, hồ bơi XYZ..."
+            value={draft.location}
+            onChange={(e) => setLocation(e.target.value)}
+          />
+        </div>
 
         <div className="mt-4">
           <p className="text-xs font-semibold text-text-secondary mb-2">Ghi chú</p>

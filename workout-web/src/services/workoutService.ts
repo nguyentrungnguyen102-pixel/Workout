@@ -86,6 +86,7 @@ export async function logWorkout(
     updatedAt: serverTimestamp(),
   };
   if (draft.notes) logData.notes = draft.notes;
+  if (draft.location) logData.location = draft.location;
   if (draft.startedAt) logData.startedAt = Timestamp.fromDate(draft.startedAt);
 
   await setDoc(logRef, logData);
@@ -162,6 +163,7 @@ export function buildDraftFromLog(log: WorkoutLog): DraftWorkout {
     startedAt: new Date(),
     intensity: log.intensity,
     notes: '',
+    location: '',
   };
 }
 

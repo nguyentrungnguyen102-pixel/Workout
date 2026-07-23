@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.15.3';
+export const APP_VERSION = '2.16.0';
 
 // Lich su phien ban chinh thuc (sau dot don nhanh 14/07/2026 — gop cac
 // nang cap tot nhat tu cac nhanh phien hang ngay vao mot ban duy nhat).
@@ -32,4 +32,5 @@ export const PHASE_HISTORY = [
   { version: '2.15.1', phase: 9, summary: 'Mở rộng kho câu quote động lực từ 15 lên 100 câu song ngữ Anh–Việt kèm tác giả (banner app + tin nhắc Telegram) để đỡ lặp lại' },
   { version: '2.15.2', phase: 9, summary: 'Thêm chế độ test cho workflow nhắc tập Telegram: tick "Gửi thử cả 4 mẫu tin" khi Run workflow thủ công sẽ gửi ngay cả 4 loại tin (sáng/chiều T2-6, sáng T7, tối CN) bằng dữ liệu thật, không đợi đúng ngày và không ảnh hưởng lịch gửi tự động' },
   { version: '2.15.3', phase: 9, summary: 'Hotfix: tin nhắc tối bị bỏ lỡ khi lịch cron GitHub Actions chạy trễ (quan sát thực tế trễ 1-2 tiếng giữa các lần chạy) khiến khung 30 phút bị lướt qua hoàn toàn; nay khung giờ mở đến hết ngày thay vì cứng 30 phút — lần chạy đầu tiên sau giờ hẹn sẽ gửi dù trễ bao lâu, vẫn chỉ 1 lần/ngày' },
+  { version: '2.16.0', phase: 10, summary: 'Thêm nhóm "Thể thao ⚽" (bóng đá, bơi, golf, bóng chuyền, bóng rổ) với icon/hướng dẫn/MET riêng, chọn được làm mục tiêu tuần như bài tập khác; thêm ghi chú địa điểm cho mọi buổi tập (kể cả chạy bộ/đạp xe có sẵn) + ô tìm kiếm theo địa điểm trong Lịch sử' },
 ] as const;

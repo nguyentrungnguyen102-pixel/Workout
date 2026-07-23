@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Flame, Trophy, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
+import { Flame, Trophy, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Search } from 'lucide-react';
 import { useUserStore } from '../stores/userStore';
 import { getRecentLogs, getLogsForHeatmap } from '../services/workoutService';
 import { computePRs, getPRLabel } from '../services/prService';
@@ -178,6 +178,15 @@ function getVolumeProgress(logs: WorkoutLog[]): VolumeEntry[] {
     .slice(0, 5);
 }
 
+// Diacritics-insensitive match for the location search box — mirrors the
+// normalize() helper in QuickAddPage.tsx used for its exercise-name search.
+function normalizeSearch(s: string): string {
+  return s
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase();
+}
+
 function groupByWeek(logs: WorkoutLog[]): Array<{ label: string; logs: WorkoutLog[] }> {
   const map = new Map<string, WorkoutLog[]>();
   for (const log of logs) {
@@ -224,7 +233,9 @@ function LogRow({ log, onClick }: LogRowProps) {
         {log.date ? `${formatDayOfWeekVi(log.date)} ${formatDateShort(log.date)}` : '—'}
         {timeStr ? ` · ${timeStr}` : ''}
       </span>
-      <span className="flex-1 min-w-0 truncate text-text-main">{summarizeExercises(log)}</span>
+      <span className="flex-1 min-w-0 truncate text-text-main">
+        {summarizeExercises(log)}{log.location ? ` · 📍 ${log.location}` : ''}
+      </span>
       <span className="flex-shrink-0 text-xs text-text-secondary whitespace-nowrap">
         {log.totalDurationMinutes ?? 0}′ · {log.caloriesEstimate ?? 0} kcal
       </span>
@@ -249,6 +260,7 @@ export default function StatsPage() {
   const [period, setPeriod] = useState<Period>('week');
   const [periodOffset, setPeriodOffset] = useState(0);
   const [chartsOpen, setChartsOpen] = useState(true);
+  const [historySearch, setHistorySearch] = useState('');
 
   const uid = firebaseUser?.uid;
 
@@ -319,7 +331,10 @@ export default function StatsPage() {
   }
   const maxCatMinutes = Math.max(...Array.from(categoryStats.values()).map(v => v.minutes), 1);
 
-  const weekGroups = groupByWeek(recentLogs);
+  const historyLogs = historySearch.trim()
+    ? recentLogs.filter((l) => l.location && normalizeSearch(l.location).includes(normalizeSearch(historySearch)))
+    : recentLogs;
+  const weekGroups = groupByWeek(historyLogs);
 
   if (loading) {
     return (
@@ -590,10 +605,28 @@ export default function StatsPage() {
       {/* ═══════════════════════ Lịch sử ═══════════════════════ */}
       <SectionHeader title="Lịch sử" />
 
+      {recentLogs.length > 0 && (
+        <div className="relative mb-3">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
+          <input
+            type="text"
+            value={historySearch}
+            onChange={(e) => setHistorySearch(e.target.value)}
+            placeholder="Tìm theo địa điểm..."
+            className="w-full bg-card border border-border rounded-xl pl-9 pr-3 py-2.5 text-sm text-text-main focus:border-primary outline-none transition-colors"
+          />
+        </div>
+      )}
+
       {recentLogs.length === 0 ? (
         <div className="text-center py-10">
           <p className="text-4xl mb-3">📋</p>
           <p className="text-text-secondary text-sm">Chưa có buổi tập nào được ghi lại</p>
+        </div>
+      ) : historyLogs.length === 0 ? (
+        <div className="text-center py-10">
+          <p className="text-4xl mb-3">🔍</p>
+          <p className="text-text-secondary text-sm">Không tìm thấy buổi tập nào ở địa điểm này</p>
         </div>
       ) : (
         <div className="bg-card rounded-2xl border border-border px-3 pt-1 mb-4">
