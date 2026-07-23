@@ -1,6 +1,16 @@
 import { WorkoutLog } from '../types/workout';
 import { UserProfile, ExerciseGoal } from '../types/user';
 import { logMinutes } from './energy';
+import { SYSTEM_PRESETS } from '../constants/exercises';
+
+// Sport-category goals (bóng đá/bơi/golf/...) are excluded from the weekly
+// score — they're tracked as frequency stats elsewhere (StatsPage), not as
+// a %-completion target, so a lagging sport goal shouldn't drag down the
+// gym "Kế hoạch tuần" score. ExerciseGoal doesn't persist category, so this
+// looks it up from SYSTEM_PRESETS by presetId.
+function isSportGoal(presetId: string): boolean {
+  return SYSTEM_PRESETS.find((p) => p.id === presetId)?.category === 'sport';
+}
 
 export interface WeeklyPlanItem {
   presetId: string;
@@ -97,7 +107,7 @@ export function computeWeeklyPlan(
   weekStartDate: string
 ): WeeklyPlanScore | null {
   const weekLogs = logsInWeek(logs, weekStartDate);
-  const goals = (profile?.exerciseGoals || []).filter((g) => g.enabled);
+  const goals = (profile?.exerciseGoals || []).filter((g) => g.enabled && !isSportGoal(g.presetId));
   const sessionsPerWeek = Math.max(1, profile?.weeklyGoalSessions || 5);
 
   const items: WeeklyPlanItem[] = goals.map((g) => computeGoalItem(g, weekLogs, sessionsPerWeek));

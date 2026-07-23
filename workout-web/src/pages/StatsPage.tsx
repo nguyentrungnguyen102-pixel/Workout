@@ -331,6 +331,19 @@ export default function StatsPage() {
   }
   const maxCatMinutes = Math.max(...Array.from(categoryStats.values()).map(v => v.minutes), 1);
 
+  // Sport frequency — pure counts (how many times played in the period),
+  // no % / target math. Sport is deliberately NOT part of the goal/weekly-
+  // plan scoring system (see weeklyPlan.ts's isSportGoal), just tracked as
+  // a lightweight stat here.
+  const sportStats = new Map<string, { name: string; count: number }>();
+  for (const log of periodLogs) {
+    for (const ex of log.exercises || []) {
+      if (ex.category !== 'sport') continue;
+      const e = sportStats.get(ex.presetId) || { name: ex.name, count: 0 };
+      sportStats.set(ex.presetId, { name: e.name, count: e.count + 1 });
+    }
+  }
+
   const historyLogs = historySearch.trim()
     ? recentLogs.filter((l) => l.location && normalizeSearch(l.location).includes(normalizeSearch(historySearch)))
     : recentLogs;
@@ -525,6 +538,23 @@ export default function StatsPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Sport frequency — counts only, not a goal */}
+      {sportStats.size > 0 && (
+        <div className="bg-card rounded-2xl border border-border p-4 mb-4">
+          <p className="text-sm font-bold text-text-main mb-3">Tần suất thể thao</p>
+          <div className="space-y-2">
+            {Array.from(sportStats.values())
+              .sort((a, b) => b.count - a.count)
+              .map((s) => (
+                <div key={s.name} className="flex items-center justify-between text-sm">
+                  <span className="text-text-main">{s.name}</span>
+                  <span className="text-text-secondary font-semibold">{s.count} lần</span>
+                </div>
+              ))}
           </div>
         </div>
       )}

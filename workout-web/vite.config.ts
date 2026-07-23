@@ -1,7 +1,30 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      injectRegister: 'auto',
+      includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
+      manifest: {
+        name: 'WorkoutTracker',
+        short_name: 'Workout',
+        description: 'Theo dõi buổi tập, mục tiêu và tiến bộ hằng ngày',
+        start_url: '/Workout/',
+        scope: '/Workout/',
+        display: 'standalone',
+        background_color: '#FAF9F6',
+        theme_color: '#FF5400',
+        icons: [
+          { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'icon-512-maskable.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+        ],
+      },
+    }),
+  ],
   base: '/Workout/',
 });
