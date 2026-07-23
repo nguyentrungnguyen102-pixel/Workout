@@ -204,12 +204,16 @@ export default function SettingsPage() {
     navigate('/login');
   };
 
+  // Sport presets (bóng đá/bơi/golf/...) are tracked as frequency stats only
+  // (StatsPage), not as weekly goals/targets — excluded from this picker so
+  // they can't be added as a goal at all.
+  const goalablePresets = SYSTEM_PRESETS.filter(p => p.category !== 'sport');
   const filteredPresets = goalSearch.trim()
-    ? SYSTEM_PRESETS.filter(p =>
+    ? goalablePresets.filter(p =>
         p.nameVi.toLowerCase().includes(goalSearch.toLowerCase()) ||
         p.name.toLowerCase().includes(goalSearch.toLowerCase())
       )
-    : SYSTEM_PRESETS.slice(0, 8);
+    : goalablePresets.slice(0, 8);
 
   const selectedPreset = SYSTEM_PRESETS.find(p => p.id === newGoalPresetId);
 
