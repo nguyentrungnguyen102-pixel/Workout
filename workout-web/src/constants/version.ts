@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.17.0';
+export const APP_VERSION = '2.18.0';
 
 // Lich su phien ban chinh thuc (sau dot don nhanh 14/07/2026 — gop cac
 // nang cap tot nhat tu cac nhanh phien hang ngay vao mot ban duy nhat).
@@ -34,4 +34,5 @@ export const PHASE_HISTORY = [
   { version: '2.15.3', phase: 9, summary: 'Hotfix: tin nhắc tối bị bỏ lỡ khi lịch cron GitHub Actions chạy trễ (quan sát thực tế trễ 1-2 tiếng giữa các lần chạy) khiến khung 30 phút bị lướt qua hoàn toàn; nay khung giờ mở đến hết ngày thay vì cứng 30 phút — lần chạy đầu tiên sau giờ hẹn sẽ gửi dù trễ bao lâu, vẫn chỉ 1 lần/ngày' },
   { version: '2.16.0', phase: 10, summary: 'Thêm nhóm "Thể thao ⚽" (bóng đá, bơi, golf, bóng chuyền, bóng rổ) với icon/hướng dẫn/MET riêng, chọn được làm mục tiêu tuần như bài tập khác; thêm ghi chú địa điểm cho mọi buổi tập (kể cả chạy bộ/đạp xe có sẵn) + ô tìm kiếm theo địa điểm trong Lịch sử' },
   { version: '2.17.0', phase: 10, summary: 'Bỏ mục tiêu thể thao khỏi điểm Kế hoạch tuần (không cộng chung với bài gym nữa) — thay bằng card "Tần suất thể thao" thuần thống kê (không %/target) ở Thống kê; thêm PWA — cài app lên màn hình chính điện thoại (Android/iOS), chạy full màn hình không thanh địa chỉ' },
+  { version: '2.18.0', phase: 11, summary: 'Xuất dữ liệu (Cài đặt): tải Xuất CSV (mỗi dòng 1 bài tập kèm địa điểm, mở được trên Excel/Sheets, có BOM cho tiếng Việt) hoặc Sao lưu JSON đầy đủ (toàn bộ buổi tập + số đo cơ thể) về máy — chuẩn tính năng backup của các app tập luyện phổ biến (Strong, Hevy)' },
 ] as const;

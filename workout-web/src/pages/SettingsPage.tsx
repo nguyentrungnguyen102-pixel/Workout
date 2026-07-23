@@ -8,8 +8,11 @@ import { ExerciseGoal } from '../types/user';
 import { SYSTEM_PRESETS } from '../constants/exercises';
 import { APP_VERSION } from '../constants/version';
 import { getBodyMetrics } from '../services/bodyService';
+import { getAllLogs } from '../services/workoutService';
 import { BodyMetric } from '../types/body';
 import ExerciseIcon from '../components/ExerciseIcon';
+import { logsToCSV, buildBackupPayload, downloadTextFile } from '../lib/exportData';
+import { todayString } from '../lib/date';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -196,6 +199,40 @@ export default function SettingsPage() {
     setGoalSearch('');
     setNewGoalValue('');
     showToast('Đã thêm mục tiêu! 🎯');
+  };
+
+  const [exportingCsv, setExportingCsv] = useState(false);
+  const [exportingJson, setExportingJson] = useState(false);
+
+  const handleExportCSV = async () => {
+    if (!uid) return;
+    setExportingCsv(true);
+    try {
+      const logs = await getAllLogs(uid);
+      if (logs.length === 0) { showToast('Chưa có buổi tập nào để xuất'); return; }
+      downloadTextFile(`workout-logs-${todayString()}.csv`, logsToCSV(logs), 'text/csv;charset=utf-8');
+      showToast('Đã xuất CSV! 📄');
+    } catch {
+      showToast('Lỗi xuất dữ liệu');
+    } finally {
+      setExportingCsv(false);
+    }
+  };
+
+  const handleExportJSON = async () => {
+    if (!uid) return;
+    setExportingJson(true);
+    try {
+      const [logs, bodyHistory] = await Promise.all([getAllLogs(uid), getBodyMetrics(uid, Number.MAX_SAFE_INTEGER)]);
+      if (logs.length === 0 && bodyHistory.length === 0) { showToast('Chưa có dữ liệu để xuất'); return; }
+      const payload = buildBackupPayload(logs, bodyHistory);
+      downloadTextFile(`workout-backup-${todayString()}.json`, JSON.stringify(payload, null, 2), 'application/json');
+      showToast('Đã xuất bản sao lưu! 💾');
+    } catch {
+      showToast('Lỗi xuất dữ liệu');
+    } finally {
+      setExportingJson(false);
+    }
   };
 
   const handleSignOut = async () => {
@@ -548,6 +585,22 @@ export default function SettingsPage() {
             <span className="text-text-secondary flex-shrink-0">Mã người dùng</span>
             <span className="text-text-main font-mono text-xs break-all text-right">{firebaseUser?.uid || '--'}</span>
           </div>
+        </div>
+      </div>
+
+      {/* Data export/backup — local file download, no Firestore writes. */}
+      <div className="bg-card rounded-2xl border border-border p-4 mb-4">
+        <p className="text-xs font-semibold text-text-secondary mb-1">XUẤT DỮ LIỆU</p>
+        <p className="text-xs text-text-secondary mb-3">Tải dữ liệu tập luyện & cơ thể về máy để sao lưu hoặc xem trên Excel/Sheets</p>
+        <div className="grid grid-cols-2 gap-2">
+          <button onClick={handleExportCSV} disabled={exportingCsv}
+            className="py-3 border border-border text-text-main text-sm font-bold rounded-xl disabled:opacity-50">
+            {exportingCsv ? 'Đang xuất...' : 'Xuất CSV'}
+          </button>
+          <button onClick={handleExportJSON} disabled={exportingJson}
+            className="py-3 border border-border text-text-main text-sm font-bold rounded-xl disabled:opacity-50">
+            {exportingJson ? 'Đang xuất...' : 'Sao lưu JSON'}
+          </button>
         </div>
       </div>
 
