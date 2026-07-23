@@ -407,13 +407,22 @@ function toMinutes(hhmm) {
   return (h || 0) * 60 + (m || 0);
 }
 
-// Every-30-min cron: a slot "fires" for the 30-minute window starting at its
-// configured time, e.g. reminderMorning='06:30' fires for now in [06:30,06:59].
+// GitHub Actions' */30 schedule is NOT reliable — under load it silently
+// delays or skips ticks (observed gaps of 1-2h between runs in production),
+// so a strict "fires only in [t, t+29]" window can miss the tick that would
+// have hit it entirely, silently skipping that reminder for the whole day.
+// Instead, a slot is "open" from its configured time until the next slot's
+// time (or midnight for the last slot of the day) — the first run that
+// lands anywhere in that open period sends it, however late; the existing
+// lastReminderSent dedupe still caps it to once per day. If evening has
+// already passed by the time the first run of the day happens, evening
+// wins over a not-yet-sent morning (better to send the most current one
+// than both back-to-back).
 function resolveSlot(nowMinutes, morningStr, eveningStr) {
   const morning = toMinutes(morningStr || '06:30');
   const evening = toMinutes(eveningStr || '19:00');
-  if (nowMinutes >= morning && nowMinutes <= morning + 29) return 'morning';
-  if (nowMinutes >= evening && nowMinutes <= evening + 29) return 'evening';
+  if (nowMinutes >= evening) return 'evening';
+  if (nowMinutes >= morning) return 'morning';
   return null;
 }
 
