@@ -6,6 +6,7 @@ import { getLogsForExercise } from '../services/workoutService';
 import { computePRs, getPRLabel } from '../services/prService';
 import { getCustomPresets } from '../services/customExerciseService';
 import { SYSTEM_PRESETS } from '../constants/exercises';
+import { bestOneRepMax } from '../lib/oneRepMax';
 import { WorkoutLog, WorkoutPreset } from '../types/workout';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import ExerciseIcon from '../components/ExerciseIcon';
@@ -64,6 +65,15 @@ export default function ExerciseProgressPage() {
 
   const hasWeight = logs.some((log) => log.exercises.find((e) => e.presetId === presetId)?.weight);
 
+  const oneRepMax = hasWeight
+    ? bestOneRepMax(
+        logs.map((log) => {
+          const ex = log.exercises.find((e) => e.presetId === presetId);
+          return { date: log.date, weight: ex?.weight, reps: ex?.reps };
+        })
+      )
+    : null;
+
   const chartData = [...logs]
     .reverse()
     .slice(-20)
@@ -111,6 +121,17 @@ export default function ExerciseProgressPage() {
             <p className="text-2xl font-black text-primary mt-0.5">{getPRLabel(pr)}</p>
           </div>
           <p className="text-xs text-text-secondary">{pr.achievedDate}</p>
+        </div>
+      )}
+
+      {oneRepMax && (
+        <div className="bg-card rounded-2xl border border-border p-4 mb-4 flex items-center justify-between">
+          <div>
+            <p className="text-xs text-text-secondary font-semibold">ƯỚC TÍNH 1RM (EPLEY)</p>
+            <p className="text-2xl font-black text-text-main mt-0.5">{oneRepMax.oneRepMax} kg</p>
+            <p className="text-xs text-text-secondary mt-0.5">Từ {oneRepMax.weight}kg × {oneRepMax.reps} reps</p>
+          </div>
+          <p className="text-xs text-text-secondary">{oneRepMax.date}</p>
         </div>
       )}
 
