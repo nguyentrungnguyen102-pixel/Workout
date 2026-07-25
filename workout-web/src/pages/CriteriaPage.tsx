@@ -78,6 +78,9 @@ export default function CriteriaPage() {
       <p className="text-xs font-bold text-text-secondary mb-2 uppercase mt-2">Vóc dáng (BMI)</p>
       <RefTableBlock table={refs.bmi} />
 
+      <p className="text-xs font-bold text-text-secondary mb-2 uppercase mt-2">% Mỡ cơ thể (ước tính Navy)</p>
+      <RefTableBlock table={refs.bodyFat} />
+
       <p className="text-xs font-bold text-text-secondary mb-2 uppercase mt-2">Vận động (WHO)</p>
       <RefTableBlock table={refs.activity} />
 

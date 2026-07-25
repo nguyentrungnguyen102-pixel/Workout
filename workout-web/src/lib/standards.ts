@@ -244,6 +244,34 @@ export function bmiStandard(weightKg: number, heightCm: number): StandardResult 
 }
 
 // ---------------------------------------------------------------------
+// Body-fat % categories (ACE — American Council on Exercise), commonly used
+// to contextualize a Navy-method body-fat estimate (see lib/bodyFat.ts).
+// Sex-specific; bands ascend low->high like the other tables here, but
+// unlike push-up/BMI a HIGHER tier here is not "better" — it just reads
+// off the same published category cutoffs.
+const BODYFAT_NORMS: Record<SexKey, number[]> = {
+  male: [0, 6, 14, 18, 25],
+  female: [0, 14, 21, 25, 32],
+};
+const BODYFAT_LABELS = ['Mỡ thiết yếu', 'Vận động viên', 'Thể hình', 'Trung bình', 'Cao'];
+
+export function bodyFatStandard(percent: number, sex: SexKey): StandardResult {
+  const thresholds = BODYFAT_NORMS[sex];
+  const bands: Band[] = BODYFAT_LABELS.map((label, i) => ({ label, min: thresholds[i] }));
+  let tierIndex = 0;
+  bands.forEach((b, i) => {
+    if (percent >= b.min) tierIndex = i;
+  });
+  return {
+    value: percent,
+    unit: '%',
+    bands,
+    tierIndex,
+    source: 'Nguồn: ACE (American Council on Exercise) body fat percentage categories',
+  };
+}
+
+// ---------------------------------------------------------------------
 // WHO 2020 physical-activity guideline: 150-300 min/week of moderate
 // activity (or equivalent) plus >=2 strength-training days/week.
 // Source: WHO Guidelines on Physical Activity and Sedentary Behaviour
@@ -369,6 +397,19 @@ const BMI_TABLE: ReferenceTable = {
   note: 'Ngưỡng châu Á thấp hơn ngưỡng WHO toàn cầu (25/30) — phản ánh tỉ lệ mỡ cơ thể cao hơn ở cùng mức BMI tại quần thể châu Á.',
 };
 
+const BODYFAT_TABLE: ReferenceTable = {
+  key: 'bodyFat',
+  title: '% Mỡ cơ thể (ước tính Navy) — phân loại theo giới tính',
+  unit: '%',
+  tierLabels: BODYFAT_LABELS,
+  rows: [
+    { label: 'Nam', thresholds: BODYFAT_NORMS.male },
+    { label: 'Nữ', thresholds: BODYFAT_NORMS.female },
+  ],
+  source: 'ACE (American Council on Exercise) body fat percentage categories',
+  note: 'Số % ước tính bằng công thức chu vi cơ thể US Navy (Hodgdon & Beckett, 1984) — cần nhập vòng eo + vòng cổ (+ vòng hông với nữ) ở trang Cơ thể.',
+};
+
 const ACTIVITY_TABLE: ReferenceTable = {
   key: 'activity',
   title: 'Vận động — khuyến nghị WHO 2020',
@@ -382,6 +423,7 @@ const ACTIVITY_TABLE: ReferenceTable = {
 export const STANDARD_REFERENCES: {
   strength: ReferenceTable[];
   bmi: ReferenceTable;
+  bodyFat: ReferenceTable;
   activity: ReferenceTable;
   metExamples: { name: string; met: number }[];
   heuristics: { title: string; text: string; source: string }[];
@@ -389,6 +431,7 @@ export const STANDARD_REFERENCES: {
 } = {
   strength: [PUSHUP_TABLE, SITUP_TABLE, PLANK_TABLE, SQUAT_TABLE],
   bmi: BMI_TABLE,
+  bodyFat: BODYFAT_TABLE,
   activity: ACTIVITY_TABLE,
   metExamples: [
     { name: 'Hít đất (pushup)', met: MET_TABLE.pushup },
