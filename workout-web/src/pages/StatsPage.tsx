@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Flame, Trophy, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Search } from 'lucide-react';
 import { useUserStore } from '../stores/userStore';
 import { getRecentLogs, getLogsForHeatmap } from '../services/workoutService';
-import { computePRs, getPRLabel } from '../services/prService';
+import { computePRs, getPRLabel, sortPRsByRecency } from '../services/prService';
 import { WorkoutLog } from '../types/workout';
 import { getWeekLabel, formatTimeOfDay, formatDayOfWeekVi, formatDateVi, daysBetween } from '../lib/date';
 import { exerciseMinutes } from '../lib/energy';
@@ -245,10 +245,20 @@ function LogRow({ log, onClick }: LogRowProps) {
 
 interface SectionHeaderProps {
   title: string;
+  action?: { label: string; onClick: () => void };
 }
 
-function SectionHeader({ title }: SectionHeaderProps) {
-  return <h2 className="text-base font-black text-text-main mt-6 mb-2 px-1">{title}</h2>;
+function SectionHeader({ title, action }: SectionHeaderProps) {
+  return (
+    <div className="flex items-center justify-between mt-6 mb-2 px-1">
+      <h2 className="text-base font-black text-text-main">{title}</h2>
+      {action && (
+        <button onClick={action.onClick} className="text-xs font-semibold text-primary hover:underline">
+          {action.label}
+        </button>
+      )}
+    </div>
+  );
 }
 
 export default function StatsPage() {
@@ -301,7 +311,8 @@ export default function StatsPage() {
   const consistencyScore = Math.min(100, Math.round((uniqueDays30 / 30) * 100));
 
   const topExercise = getTopExercise(logs);
-  const prs = computePRs(logs).slice(0, 6);
+  const allPRs = sortPRsByRecency(computePRs(logs));
+  const prs = allPRs.slice(0, 6);
   const volumeProgress = getVolumeProgress(logs);
 
   const { start: periodStart, end: periodEnd } = getPeriodRange(period, periodOffset);
@@ -611,7 +622,10 @@ export default function StatsPage() {
       )}
 
       {/* ═══════════════════════ Kỷ lục & Thành tựu ═══════════════════════ */}
-      <SectionHeader title="Kỷ lục & Thành tựu" />
+      <SectionHeader
+        title="Kỷ lục & Thành tựu"
+        action={allPRs.length > 6 ? { label: 'Xem tất cả', onClick: () => navigate('/stats/records') } : undefined}
+      />
 
       {prs.length > 0 && (
         <div className="bg-card rounded-2xl border border-border p-4 mb-4">

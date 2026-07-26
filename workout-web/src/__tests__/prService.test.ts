@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeNewPRs, computePRs, getPRLabel } from '../services/prService';
+import { computeNewPRs, computePRs, getPRLabel, sortPRsByRecency, PersonalRecord } from '../services/prService';
 import { WorkoutLog } from '../types/workout';
 
 function makeLog(id: string, date: string, ex: Partial<WorkoutLog['exercises'][number]>): WorkoutLog {
@@ -92,6 +92,29 @@ describe('computeNewPRs — km unit (regression: distance-based custom exercises
     const prs = computePRs(logs);
     expect(prs).toHaveLength(1);
     expect(prs[0].bestDistance).toBe(7);
+  });
+});
+
+describe('sortPRsByRecency', () => {
+  function pr(name: string, achievedDate: string): PersonalRecord {
+    return { presetId: name, name, category: 'dumbbell', unit: 'reps', bestReps: 10, achievedDate };
+  }
+
+  it('orders most-recently-achieved first', () => {
+    const prs = [pr('A', '2026-07-01'), pr('B', '2026-07-15'), pr('C', '2026-07-08')];
+    expect(sortPRsByRecency(prs).map((p) => p.name)).toEqual(['B', 'C', 'A']);
+  });
+
+  it('breaks ties on the same date by name', () => {
+    const prs = [pr('Z', '2026-07-10'), pr('A', '2026-07-10')];
+    expect(sortPRsByRecency(prs).map((p) => p.name)).toEqual(['A', 'Z']);
+  });
+
+  it('does not mutate the input array', () => {
+    const prs = [pr('A', '2026-07-01'), pr('B', '2026-07-15')];
+    const sorted = sortPRsByRecency(prs);
+    expect(sorted).not.toBe(prs);
+    expect(prs.map((p) => p.name)).toEqual(['A', 'B']);
   });
 });
 

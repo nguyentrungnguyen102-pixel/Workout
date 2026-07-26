@@ -146,6 +146,12 @@ export function computeNewPRs(existingLogs: WorkoutLog[], newLog: WorkoutLog): P
   return newPRs;
 }
 
+// Most-recently-achieved first (ties broken by name) — used by the Stats
+// preview (top N) and the full Records page so both show the same order.
+export function sortPRsByRecency(prs: PersonalRecord[]): PersonalRecord[] {
+  return [...prs].sort((a, b) => b.achievedDate.localeCompare(a.achievedDate) || a.name.localeCompare(b.name));
+}
+
 export function getPRLabel(pr: PersonalRecord): string {
   if (pr.unit === 'reps') {
     const parts: string[] = [];
