@@ -5,6 +5,7 @@ import { useUserStore } from '../stores/userStore';
 import { useBodyStore } from '../stores/bodyStore';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { BodyMetric } from '../types/body';
+import { BodyMetricKey, buildMetricSeries } from '../lib/bodyMetrics';
 
 function formatDateShort(dateStr: string): string {
   const d = new Date(dateStr + 'T00:00:00');
@@ -92,6 +93,42 @@ function AddMetricForm({ onSave, onClose }: AddMetricFormProps) {
   );
 }
 
+interface MetricChartProps {
+  title: string;
+  data: { date: string; value: number }[];
+  unit: string;
+  color: string;
+}
+
+function MetricChart({ title, data, unit, color }: MetricChartProps) {
+  const chartData = data.map((p) => ({ date: formatDateShort(p.date), value: p.value }));
+  return (
+    <div className="bg-card rounded-2xl border border-border p-4 mb-5">
+      <p className="text-sm font-bold text-text-main mb-3">{title} ({data.length} lần gần nhất)</p>
+      <ResponsiveContainer width="100%" height={160}>
+        <LineChart data={chartData} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
+          <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#8A8A8A' }} />
+          <YAxis
+            tick={{ fontSize: 10, fill: '#8A8A8A' }}
+            domain={['auto', 'auto']}
+          />
+          <Tooltip
+            contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #E8E7E2' }}
+            formatter={(v: number) => [`${v} ${unit}`, title]}
+          />
+          <Line type="monotone" dataKey="value" stroke={color} strokeWidth={2.5} dot={{ r: 3, fill: color }} />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+const MEASUREMENT_CHARTS: { key: BodyMetricKey; title: string; unit: string; color: string }[] = [
+  { key: 'chestCm', title: 'Ngực', unit: 'cm', color: '#2F86EB' },
+  { key: 'hipCm', title: 'Hông', unit: 'cm', color: '#9B5DE5' },
+  { key: 'armCm', title: 'Tay', unit: 'cm', color: '#00BBA7' },
+];
+
 export default function BodyPage() {
   const navigate = useNavigate();
   const { firebaseUser } = useUserStore();
@@ -104,11 +141,7 @@ export default function BodyPage() {
     if (uid) loadMetrics(uid);
   }, [uid]);
 
-  const weightData = metrics
-    .filter((m) => m.weight !== undefined)
-    .slice(0, 14)
-    .reverse()
-    .map((m) => ({ date: formatDateShort(m.date), weight: m.weight }));
+  const weightSeries = buildMetricSeries(metrics, 'weight');
 
   const prevMetric = metrics.length > 1 ? metrics[1] : null;
   const weightDelta = latestMetric?.weight && prevMetric?.weight
@@ -199,25 +232,16 @@ export default function BodyPage() {
         </div>
       ) : null}
 
-      {weightData.length > 1 && (
-        <div className="bg-card rounded-2xl border border-border p-4 mb-5">
-          <p className="text-sm font-bold text-text-main mb-3">Cân nặng (14 lần gần nhất)</p>
-          <ResponsiveContainer width="100%" height={160}>
-            <LineChart data={weightData} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
-              <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#8A8A8A' }} />
-              <YAxis
-                tick={{ fontSize: 10, fill: '#8A8A8A' }}
-                domain={['auto', 'auto']}
-              />
-              <Tooltip
-                contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #E8E7E2' }}
-                formatter={(v: number) => [`${v} kg`, 'Cân nặng']}
-              />
-              <Line type="monotone" dataKey="weight" stroke="#FF5400" strokeWidth={2.5} dot={{ r: 3, fill: '#FF5400' }} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+      {weightSeries.length > 1 && (
+        <MetricChart title="Cân nặng" data={weightSeries} unit="kg" color="#FF5400" />
       )}
+
+      {MEASUREMENT_CHARTS.map(({ key, title, unit, color }) => {
+        const series = buildMetricSeries(metrics, key);
+        return series.length > 1 ? (
+          <MetricChart key={key} title={title} data={series} unit={unit} color={color} />
+        ) : null;
+      })}
 
       {loading ? (
         <div className="flex justify-center py-8">
