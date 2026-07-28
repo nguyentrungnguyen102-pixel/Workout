@@ -26,6 +26,7 @@ export default function SettingsPage() {
   const [sex, setSex] = useState<'male' | 'female' | undefined>(profile?.sex);
   const [birthYear, setBirthYear] = useState(profile?.birthYear ? String(profile.birthYear) : '');
   const [heightCm, setHeightCm] = useState(profile?.heightCm ? String(profile.heightCm) : '');
+  const [goalWeightKg, setGoalWeightKg] = useState(profile?.goalWeightKg ? String(profile.goalWeightKg) : '');
   const [savingPhysical, setSavingPhysical] = useState(false);
 
   // Telegram reminder settings
@@ -57,6 +58,7 @@ export default function SettingsPage() {
       setSex(profile.sex);
       setBirthYear(profile.birthYear ? String(profile.birthYear) : '');
       setHeightCm(profile.heightCm ? String(profile.heightCm) : '');
+      setGoalWeightKg(profile.goalWeightKg ? String(profile.goalWeightKg) : '');
       setReminderEnabled(profile.reminderEnabled || false);
       setReminderMorning(profile.reminderMorning || '06:30');
       setReminderEvening(profile.reminderEvening || '19:00');
@@ -118,6 +120,8 @@ export default function SettingsPage() {
       if (!isNaN(by) && by > 1900) update.birthYear = by;
       const h = parseFloat(heightCm);
       if (!isNaN(h) && h > 0) update.heightCm = h;
+      const gw = parseFloat(goalWeightKg);
+      if (!isNaN(gw) && gw > 0) update.goalWeightKg = gw;
       await updateProfile(uid, update);
       showToast('Đã lưu hồ sơ thể chất! ✅');
     } catch {
@@ -488,6 +492,13 @@ export default function SettingsPage() {
                 onChange={(e) => setHeightCm(e.target.value)}
                 className="w-full bg-card-2 border border-border rounded-xl px-3 py-2.5 text-text-main text-sm focus:border-primary outline-none transition-colors" />
             </div>
+          </div>
+          <div>
+            <label className="text-xs text-text-secondary mb-1.5 block">Cân nặng mục tiêu (kg)</label>
+            <input type="number" step="0.1" placeholder="VD: 65" value={goalWeightKg}
+              onChange={(e) => setGoalWeightKg(e.target.value)}
+              className="w-full bg-card-2 border border-border rounded-xl px-3 py-2.5 text-text-main text-sm focus:border-primary outline-none transition-colors" />
+            <p className="text-xs text-text-secondary mt-1.5">Hiện thanh tiến độ ở trang Cơ thể khi đã có ít nhất 1 lần cân</p>
           </div>
           <button onClick={handleSavePhysical} disabled={savingPhysical}
             className="w-full py-3 bg-primary text-white text-sm font-bold rounded-xl disabled:opacity-50">

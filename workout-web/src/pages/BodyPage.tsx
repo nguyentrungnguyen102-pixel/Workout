@@ -5,6 +5,7 @@ import { useUserStore } from '../stores/userStore';
 import { useBodyStore } from '../stores/bodyStore';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { BodyMetric } from '../types/body';
+import { computeWeightGoalProgress } from '../lib/weightGoal';
 
 function formatDateShort(dateStr: string): string {
   const d = new Date(dateStr + 'T00:00:00');
@@ -94,7 +95,7 @@ function AddMetricForm({ onSave, onClose }: AddMetricFormProps) {
 
 export default function BodyPage() {
   const navigate = useNavigate();
-  const { firebaseUser } = useUserStore();
+  const { firebaseUser, profile } = useUserStore();
   const { metrics, latestMetric, loading, loadMetrics, addMetric } = useBodyStore();
   const [showForm, setShowForm] = useState(false);
 
@@ -113,6 +114,14 @@ export default function BodyPage() {
   const prevMetric = metrics.length > 1 ? metrics[1] : null;
   const weightDelta = latestMetric?.weight && prevMetric?.weight
     ? (latestMetric.weight - prevMetric.weight).toFixed(1)
+    : null;
+
+  // Earliest weigh-in still in the loaded window (metrics is newest-first,
+  // capped at 30 — see bodyStore.ts) — used as the goal-progress baseline.
+  const weightHistory = metrics.filter((m) => m.weight !== undefined);
+  const startWeight = weightHistory.length > 0 ? weightHistory[weightHistory.length - 1].weight! : undefined;
+  const goalProgress = profile?.goalWeightKg && latestMetric?.weight !== undefined && startWeight !== undefined
+    ? computeWeightGoalProgress(startWeight, latestMetric.weight, profile.goalWeightKg)
     : null;
 
   const handleAddMetric = async (data: Omit<BodyMetric, 'id' | 'userId' | 'date' | 'createdAt'>) => {
@@ -198,6 +207,29 @@ export default function BodyPage() {
           </button>
         </div>
       ) : null}
+
+      {goalProgress && (
+        <div className="bg-card rounded-2xl border border-border p-4 mb-5">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm font-bold text-text-main">🎯 Mục tiêu cân nặng</p>
+            <span className="text-xs text-text-secondary">{goalProgress.goal} kg</span>
+          </div>
+          <div className="flex items-center gap-2 mb-1">
+            <div className="flex-1 h-2 bg-border rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all ${goalProgress.reached ? 'bg-success' : 'bg-primary'}`}
+                style={{ width: `${goalProgress.progressPct}%` }}
+              />
+            </div>
+            <span className="text-xs font-bold text-text-secondary w-10 text-right flex-shrink-0">{goalProgress.progressPct}%</span>
+          </div>
+          <p className="text-xs text-text-secondary mt-2">
+            {goalProgress.reached
+              ? 'Đã đạt mục tiêu! 🎉'
+              : `Còn ${goalProgress.remainingKg} kg nữa để ${goalProgress.direction === 'lose' ? 'giảm' : 'tăng'} tới mục tiêu`}
+          </p>
+        </div>
+      )}
 
       {weightData.length > 1 && (
         <div className="bg-card rounded-2xl border border-border p-4 mb-5">

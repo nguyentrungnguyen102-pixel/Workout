@@ -45,6 +45,10 @@ export interface UserProfile {
   sex?: 'male' | 'female';
   birthYear?: number;
   heightCm?: number;
+  // Target body weight (kg) set by the user in Settings; drives the goal
+  // progress card on BodyPage (lib/weightGoal.ts). Optional — most users
+  // won't set one.
+  goalWeightKg?: number;
   // Telegram reminder settings — read by the GitHub Actions cron script
   // (scripts/telegram-reminder.mjs) via the Firebase Admin SDK. All optional
   // so existing users default to reminders off until they opt in via
