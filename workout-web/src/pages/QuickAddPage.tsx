@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, ChevronRight, Flame, Target, ChevronDown, ChevronUp, Plus, Trash2, Search, Info } from 'lucide-react';
+import { X, ChevronRight, Flame, Target, ChevronDown, ChevronUp, Plus, Trash2, Search, Info, Star } from 'lucide-react';
 import { useUserStore } from '../stores/userStore';
 import { useWorkoutStore } from '../stores/workoutStore';
 import { useProgramStore } from '../stores/programStore';
@@ -15,6 +15,7 @@ import { formatAmount } from '../lib/format';
 import { getPRLabel } from '../services/prService';
 import { pickCheer, pickWeeklyCheer } from '../lib/cheers';
 import { buildSuggestions, roundNice } from '../lib/suggestions';
+import { toggleFavorite, sortWithFavoritesFirst } from '../lib/favorites';
 import { sumThisWeek } from '../lib/dayTimeline';
 import { todayString } from '../lib/date';
 import WeeklyPlanCard from '../components/WeeklyPlanCard';
@@ -35,10 +36,11 @@ function toLocalInput(d: Date): string {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
-type Category = 'all' | 'strength' | 'core' | 'dumbbell' | 'cardio' | 'mobility' | 'recovery' | 'sport';
+type Category = 'all' | 'favorites' | 'strength' | 'core' | 'dumbbell' | 'cardio' | 'mobility' | 'recovery' | 'sport';
 
 const CATEGORY_TABS: { key: Category; label: string }[] = [
   { key: 'all', label: 'Tất cả ⚡' },
+  { key: 'favorites', label: 'Yêu thích ⭐' },
   { key: 'strength', label: 'Sức mạnh 💪' },
   { key: 'core', label: 'Bụng 🔥' },
   { key: 'dumbbell', label: 'Tạ đơn 🏋️' },
@@ -954,7 +956,7 @@ function ProgramSuggestionCard({ templates }: ProgramSuggestionCardProps) {
 
 export default function QuickAddPage() {
   const navigate = useNavigate();
-  const { profile, firebaseUser } = useUserStore();
+  const { profile, firebaseUser, updateProfile } = useUserStore();
   const { draft, todayLog, yesterdayLog, recentLogs, addExercise, updateExercise, setDraftFromLog, loadRecentLogs, newPRs, clearNewPRs } = useWorkoutStore();
   const { activeState, loadActiveProgram, getTodayDay } = useProgramStore();
   const [activeCategory, setActiveCategory] = useState<Category>('all');
@@ -1046,18 +1048,31 @@ export default function QuickAddPage() {
     return scored.sort((a, b) => b.score - a.score).slice(0, 2).map((s) => s.template);
   }, [activeState, recentLogs]);
 
+  const favoriteIds = profile?.favoriteExerciseIds;
+  const favoriteIdSet = useMemo(() => new Set(favoriteIds || []), [favoriteIds]);
+
+  const handleToggleFavorite = (presetId: string) => {
+    if (!uid) return;
+    updateProfile(uid, { favoriteExerciseIds: toggleFavorite(favoriteIds, presetId) }).catch(() => {});
+  };
+
   // Searching ignores the active category tab (search across everything);
-  // with no query, fall back to the current category-tab filtering.
+  // with no query, fall back to the current category-tab filtering. The
+  // "favorites" tab isn't a real ExerciseCategory — it filters by the
+  // user's pinned preset ids across all categories instead.
   const trimmedQ = q.trim();
   const isSearching = trimmedQ.length > 0;
-  const filteredPresets = isSearching
+  const categoryFiltered = isSearching
     ? allPresets.filter((p) => {
         const nq = normalize(trimmedQ);
         return normalize(p.nameVi).includes(nq) || normalize(p.name).includes(nq);
       })
     : activeCategory === 'all'
       ? allPresets
-      : allPresets.filter((p) => p.category === activeCategory);
+      : activeCategory === 'favorites'
+        ? allPresets.filter((p) => favoriteIdSet.has(p.id))
+        : allPresets.filter((p) => p.category === activeCategory);
+  const filteredPresets = sortWithFavoritesFirst(categoryFiltered, favoriteIds);
 
   const draftIds = new Set(draft.exercises.map((e) => e.presetId));
 
@@ -1263,6 +1278,11 @@ export default function QuickAddPage() {
       {isSearching && (
         <p className="text-xs text-text-secondary mb-2">Kết quả cho "{trimmedQ}" ({filteredPresets.length})</p>
       )}
+      {!isSearching && activeCategory === 'favorites' && filteredPresets.length === 0 && (
+        <p className="text-xs text-text-secondary mb-2">
+          Chưa có bài yêu thích — bấm ⭐ trên thẻ bài tập để ghim.
+        </p>
+      )}
 
       {!isSearching && (
         <div className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide -mx-1 px-1">
@@ -1319,7 +1339,18 @@ export default function QuickAddPage() {
                   <Info size={14} />
                 </button>
               )}
-              <div className="flex items-center gap-2 mb-1.5 pr-5">
+              <button
+                onClick={(e) => { e.stopPropagation(); handleToggleFavorite(preset.id); }}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.stopPropagation(); }}
+                className={`absolute top-2 left-2 p-1 rounded-full transition-colors ${
+                  favoriteIdSet.has(preset.id)
+                    ? 'text-amber-500 hover:bg-amber-50'
+                    : 'text-text-muted hover:bg-primary-light hover:text-primary'
+                }`}
+                aria-label={favoriteIdSet.has(preset.id) ? `Bỏ yêu thích ${preset.nameVi}` : `Yêu thích ${preset.nameVi}`}>
+                <Star size={14} fill={favoriteIdSet.has(preset.id) ? 'currentColor' : 'none'} />
+              </button>
+              <div className="flex items-center gap-2 mb-1.5 pr-5 pl-5">
                 <ExerciseIcon presetId={preset.id} category={preset.category} size={24} className="text-primary flex-shrink-0" />
                 <p className="font-bold text-text-main text-sm leading-tight">{preset.nameVi}</p>
               </div>

@@ -55,4 +55,8 @@ export interface UserProfile {
   reminderEvening?: string; // 'HH:MM', default '19:00'
   telegramChatId?: string;
   lastReminderSent?: { morning?: string; evening?: string };
+  // Favorite/pinned exercise preset ids (system or custom) — surfaced first
+  // in the QuickAdd exercise picker + a dedicated "Yêu thích" tab. Optional
+  // so existing users default to no favorites.
+  favoriteExerciseIds?: string[];
 }
