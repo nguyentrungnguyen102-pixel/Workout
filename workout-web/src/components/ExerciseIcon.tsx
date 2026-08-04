@@ -464,6 +464,14 @@ const PRESET_ICON: Record<string, JSX.Element> = {
   db_step_up: gLunge,
   db_thruster: gDbOverheadPress,
 
+  // Dumbbell (home training) — Phase 11
+  db_calf_raise: gSquat,
+  db_skull_crusher: gDbTricep,
+  db_wrist_curl: gDbCurl,
+  db_side_bend: gTwist,
+  db_curtsy_lunge: gLunge,
+  db_single_leg_deadlift: gDbHinge,
+
   // Sport (outdoor/team sports)
   sport_football: gFootball,
   sport_swimming: gSwimming,

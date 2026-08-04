@@ -3,6 +3,7 @@ import { SYSTEM_PRESETS, CATEGORY_LABELS, CATEGORY_COLORS_STATS } from '../const
 import { EXERCISE_GUIDES } from '../constants/exerciseGuides';
 import { CATEGORY_CHART_COLORS } from '../constants/chartColors';
 import { CATEGORY_MET } from '../lib/energy';
+import { PROGRAM_TEMPLATES } from '../constants/programTemplates';
 
 // Guards against a preset being added without the supporting data every
 // other preset has — a silent gap here means a picker card with a missing
@@ -42,5 +43,34 @@ describe('SYSTEM_PRESETS data completeness', () => {
     categories.forEach((c) => {
       expect(CATEGORY_MET[c]).toBeGreaterThan(0);
     });
+  });
+});
+
+// Guards program templates against referencing a typo'd/removed preset id —
+// a silent gap here means ProgramDetailPage renders a card with no icon/guide
+// for that exercise, rather than a build error.
+describe('PROGRAM_TEMPLATES data completeness', () => {
+  const presetIds = new Set(SYSTEM_PRESETS.map((p) => p.id));
+
+  it('every program id is unique', () => {
+    const ids = PROGRAM_TEMPLATES.map((p) => p.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('every program day id is unique across all programs', () => {
+    const dayIds = PROGRAM_TEMPLATES.flatMap((p) => p.days.map((d) => d.id));
+    expect(new Set(dayIds).size).toBe(dayIds.length);
+  });
+
+  it('every program day exercise references a real preset id', () => {
+    const missing: string[] = [];
+    PROGRAM_TEMPLATES.forEach((p) => {
+      p.days.forEach((d) => {
+        d.exercises.forEach((ex) => {
+          if (!presetIds.has(ex.presetId)) missing.push(`${p.id}/${d.id}/${ex.presetId}`);
+        });
+      });
+    });
+    expect(missing).toEqual([]);
   });
 });

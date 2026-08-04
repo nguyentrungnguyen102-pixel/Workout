@@ -447,6 +447,56 @@ export const EXERCISE_GUIDES: Record<string, ExerciseGuide> = {
     tips: ['Bắt đầu với tạ nhẹ vì đây là động tác toàn thân cường độ cao', 'Không khoá cứng khuỷu tay/gối ở điểm cuối'],
   },
 
+  // Dumbbell (home training) — Phase 11
+  db_calf_raise: {
+    steps: [
+      'Đứng thẳng, mỗi tay cầm một tạ xuôi theo thân, hai chân rộng bằng hông',
+      'Nhón gót lên cao hết mức, giữ 1 giây ở đỉnh',
+      'Hạ gót xuống từ từ về vị trí ban đầu, kiểm soát tốc độ',
+    ],
+    tips: ['Có thể đứng trên bậc thềm để tăng biên độ', 'Giữ thân người thẳng, không đung đưa lấy đà'],
+  },
+  db_skull_crusher: {
+    steps: [
+      'Nằm ngửa trên sàn/ghế, hai tay cầm tạ duỗi thẳng trên ngực',
+      'Gập khuỷu tay hạ tạ về phía trán, cánh tay trên giữ cố định',
+      'Duỗi thẳng tay đưa tạ trở lại vị trí ban đầu',
+    ],
+    tips: ['Chỉ di chuyển cẳng tay, khuỷu tay không xoè ra ngoài', 'Hạ tạ chậm và kiểm soát để tránh chạm đầu'],
+  },
+  db_wrist_curl: {
+    steps: [
+      'Ngồi, cẳng tay tựa lên đùi, lòng bàn tay hướng lên, cổ tay để tự do ngoài đầu gối',
+      'Gập cổ tay cuộn tạ lên cao hết mức',
+      'Hạ tạ xuống từ từ, duỗi cổ tay hết cỡ rồi lặp lại',
+    ],
+    tips: ['Chỉ dùng tạ nhẹ vì cổ tay là khớp nhỏ, dễ mỏi', 'Giữ cẳng tay cố định suốt động tác'],
+  },
+  db_side_bend: {
+    steps: [
+      'Đứng thẳng, một tay cầm tạ xuôi bên hông, tay còn lại chống hông hoặc sau đầu',
+      'Nghiêng người sang bên cầm tạ hết mức có thể, giữ lưng thẳng',
+      'Trở về tư thế đứng thẳng, đổi bên sau khi hết hiệp',
+    ],
+    tips: ['Không xoay hoặc ngả người ra trước/sau, chỉ nghiêng sang ngang', 'Chuyển động chậm, không dùng đà đung đưa'],
+  },
+  db_curtsy_lunge: {
+    steps: [
+      'Đứng thẳng, mỗi tay cầm một tạ xuôi theo thân',
+      'Bước một chân ra sau chéo qua chân trụ như động tác cúi chào (curtsy), hạ gối gần chạm sàn',
+      'Đẩy gót chân trụ để đứng thẳng dậy, đổi chân',
+    ],
+    tips: ['Giữ thân người thẳng, không đổ người về trước', 'Đầu gối chân trụ không đổ vào trong'],
+  },
+  db_single_leg_deadlift: {
+    steps: [
+      'Đứng trên một chân, tay cùng bên hoặc cả hai tay cầm tạ',
+      'Gập hông đưa thân trên xuống song song sàn, chân sau duỗi thẳng ra sau để giữ thăng bằng',
+      'Siết mông kéo thân người thẳng dậy trở lại, đổi chân sau khi hết hiệp',
+    ],
+    tips: ['Giữ lưng thẳng suốt động tác, mắt nhìn xuống điểm cố định để giữ thăng bằng', 'Bắt đầu với tạ nhẹ hoặc không tạ để làm quen thăng bằng'],
+  },
+
   // Sport (outdoor/team sports)
   sport_football: {
     steps: [
