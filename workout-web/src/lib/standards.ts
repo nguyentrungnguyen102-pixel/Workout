@@ -160,6 +160,30 @@ const SQUAT_NORMS: Record<SexKey, Record<AgeBandKey, number[]>> = {
   },
 };
 
+// ---------------------------------------------------------------------
+// Pull-up test norms (max reps, dead-hang to chin-over-bar). Source:
+// commonly-cited pull-up test tables (e.g. ExRx.net/Topend Sports-style
+// references) — bodyweight-relative, so absolute counts are much lower than
+// push-up (most adults, especially women, can do 0-few); tapered by age
+// using the same proportional decay as PUSHUP_NORMS above.
+// TODO verify exact cutoffs vs a primary published source.
+const PULLUP_NORMS: Record<SexKey, Record<AgeBandKey, number[]>> = {
+  male: {
+    '18-29': [0, 3, 6, 10, 15],
+    '30-39': [0, 3, 6, 9, 13],
+    '40-49': [0, 2, 5, 8, 11],
+    '50-59': [0, 2, 4, 7, 9],
+    '60+': [0, 1, 3, 5, 7],
+  },
+  female: {
+    '18-29': [0, 1, 3, 5, 8],
+    '30-39': [0, 1, 3, 5, 7],
+    '40-49': [0, 1, 2, 4, 6],
+    '50-59': [0, 1, 2, 3, 5],
+    '60+': [0, 1, 2, 3, 4],
+  },
+};
+
 /**
  * Score a best-effort measurement against a published (or commonly-cited)
  * field-test norm table, sex- and age-banded. Returns null for exercises
@@ -202,6 +226,13 @@ export function strengthStandard(
         'cái',
         SQUAT_NORMS[sex][band],
         'Nguồn: Bodyweight squat test — chuẩn tham khảo phổ biến (Topend Sports) — TODO verify, độ tin cậy thấp hơn push-up/sit-up'
+      );
+    case 'pullup':
+      return buildTiered(
+        best,
+        'cái',
+        PULLUP_NORMS[sex][band],
+        'Nguồn: Chuẩn pull-up phổ biến (dẫn theo ExRx.net/Topend Sports) — TODO verify cutoffs chính xác'
       );
     default:
       return null;
@@ -386,6 +417,15 @@ const SQUAT_TABLE = buildSexAgeTable(
   'TODO verify — độ tin cậy thấp hơn hít đất/gập bụng, đây là bảng ít chuẩn hoá nhất trong 4 bài.'
 );
 
+const PULLUP_TABLE = buildSexAgeTable(
+  'pullup',
+  'Kéo xà / Pull-up (số cái tối đa)',
+  'cái',
+  PULLUP_NORMS,
+  'Chuẩn pull-up phổ biến (dẫn theo ExRx.net/Topend Sports)',
+  'TODO verify cutoffs chính xác — chuẩn bodyweight-relative nên số tuyệt đối thấp hơn nhiều hít đất.'
+);
+
 const BMI_TABLE: ReferenceTable = {
   key: 'bmi',
   title: 'BMI — ngưỡng châu Á',
@@ -429,7 +469,7 @@ export const STANDARD_REFERENCES: {
   heuristics: { title: string; text: string; source: string }[];
   methodNote: string;
 } = {
-  strength: [PUSHUP_TABLE, SITUP_TABLE, PLANK_TABLE, SQUAT_TABLE],
+  strength: [PUSHUP_TABLE, SITUP_TABLE, PLANK_TABLE, SQUAT_TABLE, PULLUP_TABLE],
   bmi: BMI_TABLE,
   bodyFat: BODYFAT_TABLE,
   activity: ACTIVITY_TABLE,

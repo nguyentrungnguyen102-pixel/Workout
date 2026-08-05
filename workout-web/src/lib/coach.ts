@@ -196,6 +196,41 @@ function composite(builds: DimBuild[]): { score: number; weights: { key: string;
   return { score, weights };
 }
 
+// Best reps/duration achieved per presetId within a recent window — reflects
+// CURRENT form rather than an all-time PR that may be stale. computePRs() in
+// prService.ts deliberately never decays (correct for "Kỷ lục cá nhân 🏆"/
+// Thành tựu, which are lifetime bragging rights), but strength SCORING needs
+// the opposite: how strong is anh right now, not what he once hit years ago.
+// 90 days is wide enough that an exercise trained only every couple of weeks
+// still has a recent data point, narrow enough to track actual current
+// capability. Mirrors the same unit convention as prService.ts's computePRs
+// (reps vs seconds) but as a single-pass max — no need to track improvement
+// history, only "best in window".
+const STRENGTH_WINDOW_DAYS = 90;
+
+interface RecentBest {
+  presetId: string;
+  name: string;
+  unit: string;
+  best: number;
+}
+
+function computeRecentBests(logs: WorkoutLog[], cutoff: string): Map<string, RecentBest> {
+  const map = new Map<string, RecentBest>();
+  for (const log of logs) {
+    if (!log.date || log.date < cutoff) continue;
+    for (const ex of log.exercises || []) {
+      const value = ex.unit === 'reps' ? ex.reps : ex.unit === 'seconds' ? ex.durationSeconds : undefined;
+      if (!value) continue;
+      const existing = map.get(ex.presetId);
+      if (!existing || value > existing.best) {
+        map.set(ex.presetId, { presetId: ex.presetId, name: ex.name, unit: ex.unit, best: value });
+      }
+    }
+  }
+  return map;
+}
+
 // --- activity (WHO) — over an arbitrary window, normalized per week --------
 function buildActivityDim(logs: WorkoutLog[], weeks: number): DimBuild {
   const weeklyMinutes = logs.reduce((s, l) => s + logMinutes(l), 0) / weeks;
@@ -366,37 +401,51 @@ export function buildFitnessAssessment(
     const sex = profile!.sex!;
 
     // Frequency of each presetId across all logs, to pick the user's "main"
-    // (most-practiced) standardized lift as the headline value.
+    // (most-practiced) standardized lift as the headline/scale-bar anchor.
     const freq = new Map<string, number>();
     for (const log of allLogs) {
       const presetsInLog = new Set((log.exercises || []).map((ex) => ex.presetId));
       for (const pid of presetsInLog) freq.set(pid, (freq.get(pid) || 0) + 1);
     }
 
-    const matched: { pr: PersonalRecord; std: NonNullable<ReturnType<typeof strengthStandard>>; freq: number }[] = [];
-    for (const pr of allPRs) {
-      const best = pr.unit === 'seconds' ? pr.bestDurationSeconds : pr.bestReps;
-      if (!best) continue;
-      const std = strengthStandard(pr.presetId, best, sex, age);
+    // Match against RECENT form (best in the last STRENGTH_WINDOW_DAYS), not
+    // the all-time PR — see computeRecentBests's comment above for why.
+    const recentCutoff = daysAgoString(STRENGTH_WINDOW_DAYS);
+    const recentBests = computeRecentBests(allLogs, recentCutoff);
+
+    const matched: { name: string; std: NonNullable<ReturnType<typeof strengthStandard>>; freq: number }[] = [];
+    for (const rb of recentBests.values()) {
+      const std = strengthStandard(rb.presetId, rb.best, sex, age);
       if (!std) continue;
-      matched.push({ pr, std, freq: freq.get(pr.presetId) || 0 });
+      matched.push({ name: rb.name, std, freq: freq.get(rb.presetId) || 0 });
     }
 
     if (matched.length === 0) {
+      // Distinguish "never trained a standard-covered exercise" from "has
+      // trained one before, just not within the recent window" — the latter
+      // shouldn't read as if anh has literally never done a push-up.
+      const everMatched = allPRs.some((pr) => {
+        const best = pr.unit === 'seconds' ? pr.bestDurationSeconds : pr.bestReps;
+        return !!best && !!strengthStandard(pr.presetId, best, sex, age);
+      });
       return {
         hasData: false,
         dimension: {
           key: 'strength',
           label,
-          valueText: 'Chưa có bài có chuẩn (hít đất, gập bụng, plank, squat)',
+          valueText: everMatched
+            ? `Không tập hít đất/gập bụng/plank/squat/hít xà trong ${STRENGTH_WINDOW_DAYS} ngày gần đây`
+            : 'Chưa có bài có chuẩn (hít đất, gập bụng, plank, squat, hít xà)',
           tierLabel: 'Chưa đủ dữ liệu',
           bands: [],
           value: 0,
           unit: '',
-          source: 'Nguồn: ExRx/ACSM push-up/sit-up/plank/squat norms',
+          source: 'Nguồn: ExRx/ACSM push-up/sit-up/plank/squat/pull-up norms',
           score: 0,
         },
-        focusText: 'Tập thêm hít đất, gập bụng, plank hoặc squat để có chuẩn chấm sức mạnh.',
+        focusText: everMatched
+          ? `Tập lại hít đất, gập bụng, plank, squat hoặc hít xà trong ${STRENGTH_WINDOW_DAYS} ngày gần đây để có điểm sức mạnh cập nhật.`
+          : 'Tập thêm hít đất, gập bụng, plank, squat hoặc hít xà để có chuẩn chấm sức mạnh.',
       };
     }
 
@@ -407,23 +456,30 @@ export function buildFitnessAssessment(
       ? `cần +${primary.std.nextMilestone.need} ${primary.std.unit} để đạt ${primary.std.nextMilestone.toLabel}`
       : undefined;
 
+    // Score is a weighted average across ALL matched exercises (not just
+    // `primary`) — the headline text lists every one with its own tier so
+    // what's shown matches what's actually being scored, not just 1 bài.
+    const valueText = matched
+      .map((m) => `${m.name} ${m.std.value} ${m.std.unit} (${m.std.bands[m.std.tierIndex].label})`)
+      .join(' · ');
+
     return {
       hasData: true,
       dimension: {
         key: 'strength',
         label,
-        valueText: `${primary.pr.name} ${primary.std.value} ${primary.std.unit}`,
+        valueText,
         tierLabel: primary.std.bands[primary.std.tierIndex].label,
         bands: primary.std.bands,
         value: primary.std.value,
         unit: primary.std.unit,
-        source: primary.std.source,
+        source: `${primary.std.source} · trung bình có trọng số ${matched.length} bài đã tập trong ${STRENGTH_WINDOW_DAYS} ngày gần đây`,
         nextText,
         score,
       },
       focusText: primary.std.nextMilestone
-        ? `Đẩy ${primary.pr.name} thêm ${primary.std.nextMilestone.need} ${primary.std.unit} để đạt mốc ${primary.std.nextMilestone.toLabel}.`
-        : `${primary.pr.name} đã đạt mốc cao nhất (${primary.std.bands[primary.std.tierIndex].label}) — thử thêm bài mới để mở rộng thế mạnh.`,
+        ? `Đẩy ${primary.name} thêm ${primary.std.nextMilestone.need} ${primary.std.unit} để đạt mốc ${primary.std.nextMilestone.toLabel}.`
+        : `${primary.name} đã đạt mốc cao nhất (${primary.std.bands[primary.std.tierIndex].label}) — thử thêm bài mới để mở rộng thế mạnh.`,
     };
   })();
 
