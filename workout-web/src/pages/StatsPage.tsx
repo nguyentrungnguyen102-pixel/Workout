@@ -373,43 +373,64 @@ export default function StatsPage() {
     <div className="px-4 md:px-8 pt-6 md:pt-8 pb-8">
       <h1 className="text-2xl font-black text-text-main mb-4">Thống kê</h1>
 
+      {/* Period selector — sticky so it stays reachable while scrolling far down
+          the page. Drives KPI strip, CoachInsights, ActivityHeatmap (hour view),
+          category breakdown and the charts group below (except WeeklyVolumeChart,
+          which is an intentional fixed 10-week trend — see its own file). */}
+      <div className="sticky top-0 z-40 bg-background pt-1 pb-3 -mx-4 px-4 md:-mx-8 md:px-8">
+        <div className="flex gap-1 p-1 bg-card-2 rounded-xl mb-3">
+          {(['week', 'month', 'quarter'] as const).map(p => (
+            <button key={p} onClick={() => { setPeriod(p); setPeriodOffset(0); }}
+              className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                period === p ? 'bg-white shadow-sm text-primary' : 'text-text-secondary'}`}>
+              {p === 'week' ? 'Tuần' : p === 'month' ? 'Tháng' : '3 tháng'}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center justify-between">
+          <button onClick={() => setPeriodOffset(o => o - 1)}
+            aria-label="Kỳ trước"
+            className="w-8 h-8 flex items-center justify-center rounded-lg bg-card-2 text-text-secondary hover:text-primary active:scale-95 transition-all flex-shrink-0">
+            <ChevronLeft size={16} />
+          </button>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-black text-text-main">{periodLabel}</span>
+            {periodOffset !== 0 && (
+              <button onClick={() => setPeriodOffset(0)}
+                className="text-xs font-bold text-primary underline underline-offset-2">
+                Hôm nay
+              </button>
+            )}
+          </div>
+          <button onClick={() => setPeriodOffset(o => Math.min(0, o + 1))}
+            disabled={periodOffset === 0}
+            aria-label="Kỳ sau"
+            className="w-8 h-8 flex items-center justify-center rounded-lg bg-card-2 text-text-secondary hover:text-primary active:scale-95 transition-all disabled:opacity-30 disabled:pointer-events-none flex-shrink-0">
+            <ChevronRight size={16} />
+          </button>
+        </div>
+      </div>
+
+      {/* Fitness assessment (coach insights) — kept as the very first content
+          card so the headline "level" is the first thing anh sees, right below
+          the period filter that drives it. */}
+      <CoachInsights
+        allLogs={logs}
+        periodLogs={periodLogs}
+        prevPeriodLogs={coachPrevPeriodLogs}
+        profile={profile}
+        periodLabel={periodLabel}
+        periodDays={periodDays}
+        prevPeriodDays={periodDays}
+        periodStart={periodStart}
+        periodEnd={periodEnd}
+        prevPeriodStart={prevPeriodStart}
+        prevPeriodEnd={coachPrevPeriodEnd}
+      />
+
       {/* ═══════════════════════ Tổng quan ═══════════════════════ */}
       <SectionHeader title="Tổng quan" />
-
-      {/* Period selector — drives KPI strip, ActivityHeatmap (hour view) and category breakdown */}
-      <div className="flex gap-1 p-1 bg-card-2 rounded-xl mb-3">
-        {(['week', 'month', 'quarter'] as const).map(p => (
-          <button key={p} onClick={() => { setPeriod(p); setPeriodOffset(0); }}
-            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${
-              period === p ? 'bg-white shadow-sm text-primary' : 'text-text-secondary'}`}>
-            {p === 'week' ? 'Tuần' : p === 'month' ? 'Tháng' : '3 tháng'}
-          </button>
-        ))}
-      </div>
-
-      {/* Period navigation */}
-      <div className="flex items-center justify-between mb-4">
-        <button onClick={() => setPeriodOffset(o => o - 1)}
-          aria-label="Kỳ trước"
-          className="w-8 h-8 flex items-center justify-center rounded-lg bg-card-2 text-text-secondary hover:text-primary active:scale-95 transition-all flex-shrink-0">
-          <ChevronLeft size={16} />
-        </button>
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-black text-text-main">{periodLabel}</span>
-          {periodOffset !== 0 && (
-            <button onClick={() => setPeriodOffset(0)}
-              className="text-xs font-bold text-primary underline underline-offset-2">
-              Hôm nay
-            </button>
-          )}
-        </div>
-        <button onClick={() => setPeriodOffset(o => Math.min(0, o + 1))}
-          disabled={periodOffset === 0}
-          aria-label="Kỳ sau"
-          className="w-8 h-8 flex items-center justify-center rounded-lg bg-card-2 text-text-secondary hover:text-primary active:scale-95 transition-all disabled:opacity-30 disabled:pointer-events-none flex-shrink-0">
-          <ChevronRight size={16} />
-        </button>
-      </div>
 
       {/* KPI strip */}
       <div className="grid grid-cols-3 gap-2 mb-4">
@@ -476,26 +497,13 @@ export default function StatsPage() {
         </div>
         <div className="bg-card border border-border rounded-2xl p-4">
           <p className="text-2xl font-black text-text-main">{profile?.streak?.longest || 0}</p>
-          <p className="text-xs text-text-secondary mt-1">chuỗi dài nhất</p>
+          <p className="text-xs text-text-secondary mt-1">chuỗi dài nhất (toàn thời gian)</p>
         </div>
       </div>
 
-      {/* Fitness assessment (coach insights) */}
-      <CoachInsights
-        allLogs={logs}
-        periodLogs={periodLogs}
-        prevPeriodLogs={coachPrevPeriodLogs}
-        profile={profile}
-        periodLabel={periodLabel}
-        periodDays={periodDays}
-        prevPeriodDays={periodDays}
-        periodStart={periodStart}
-        periodEnd={periodEnd}
-        prevPeriodStart={prevPeriodStart}
-        prevPeriodEnd={coachPrevPeriodEnd}
-      />
-
-      {/* Weekly plan card */}
+      {/* Weekly plan card — always the actual current week regardless of the
+          Tuần/Tháng/3 tháng filter above, since "kế hoạch tuần" is inherently
+          a weekly concept. */}
       <WeeklyPlanCard logs={logs} profile={profile} />
 
       {/* ═══════════════════════ Biểu đồ ═══════════════════════ */}
@@ -615,13 +623,13 @@ export default function StatsPage() {
         <div className="bg-primary-light border border-primary/20 rounded-2xl p-4 mb-4 flex items-center gap-3">
           <Trophy size={20} className="text-primary flex-shrink-0" />
           <div>
-            <p className="text-xs text-text-secondary">Bài tập yêu thích</p>
+            <p className="text-xs text-text-secondary">Bài tập tập nhiều nhất (toàn thời gian)</p>
             <p className="font-bold text-text-main text-sm">{topExercise}</p>
           </div>
         </div>
       )}
 
-      {/* ═══════════════════════ Kỷ lục & Thành tựu ═══════════════════════ */}
+      {/* ═══════════════════════ Kỷ lục & Thành tựu (toàn thời gian, không theo bộ lọc kỳ) ═══════════════════════ */}
       <SectionHeader
         title="Kỷ lục & Thành tựu"
         action={allPRs.length > 6 ? { label: 'Xem tất cả', onClick: () => navigate('/stats/records') } : undefined}
@@ -629,7 +637,7 @@ export default function StatsPage() {
 
       {prs.length > 0 && (
         <div className="bg-card rounded-2xl border border-border p-4 mb-4">
-          <p className="text-sm font-bold text-text-main mb-3">Kỷ lục cá nhân 🏆</p>
+          <p className="text-sm font-bold text-text-main mb-3">Kỷ lục cá nhân 🏆 <span className="font-normal text-text-muted text-xs">(toàn thời gian)</span></p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
             {prs.map((pr) => (
               <button key={pr.presetId}
@@ -646,8 +654,9 @@ export default function StatsPage() {
 
       <AchievementsCard logs={logs} profile={profile} />
 
-      {/* ═══════════════════════ Lịch sử ═══════════════════════ */}
+      {/* ═══════════════════════ Lịch sử (50 buổi gần nhất, không theo bộ lọc kỳ) ═══════════════════════ */}
       <SectionHeader title="Lịch sử" />
+      <p className="text-xs text-text-muted -mt-2 mb-3">Hiện 50 buổi gần nhất</p>
 
       {recentLogs.length > 0 && (
         <div className="relative mb-3">

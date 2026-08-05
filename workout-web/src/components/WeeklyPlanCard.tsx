@@ -75,7 +75,7 @@ export default function WeeklyPlanCard({ logs, profile }: WeeklyPlanCardProps) {
 
   return (
     <div className="bg-card rounded-2xl border border-border p-4 mb-4">
-      <p className="text-xs font-bold text-text-secondary mb-2">📋 Kế hoạch tuần</p>
+      <p className="text-xs font-bold text-text-secondary mb-2">📋 Kế hoạch tuần <span className="font-normal text-text-muted">(luôn theo tuần thực tế)</span></p>
 
       <div className="flex items-end gap-2 mb-3">
         <span className="text-3xl font-black text-primary">{thisWeek.score}%</span>

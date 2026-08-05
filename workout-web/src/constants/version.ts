@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.21.0';
+export const APP_VERSION = '2.22.0';
 
 // Lich su phien ban chinh thuc (sau dot don nhanh 14/07/2026 — gop cac
 // nang cap tot nhat tu cac nhanh phien hang ngay vao mot ban duy nhat).
@@ -38,4 +38,5 @@ export const PHASE_HISTORY = [
   { version: '2.19.0', phase: 11, summary: 'Hotfix: heatmap "Theo khung giờ" ở Thống kê đang lấy giờ theo lúc LƯU log (createdAt) thay vì giờ TẬP THẬT (startedAt, ô "🕐 Thời gian tập" người dùng chỉnh được khi quên ghi lúc tập) — ai tập sáng nhưng log lại vào tối sẽ thấy sai khung giờ' },
   { version: '2.20.0', phase: 11, summary: 'Mở rộng kho câu quote động lực từ 100 lên 210 câu song ngữ Anh–Việt kèm tác giả (banner app + tin nhắc Telegram), đa dạng thêm chủ đề kỷ luật/kiên trì/sức khoẻ để đỡ lặp lại' },
   { version: '2.21.0', phase: 11, summary: 'Chuẩn hoá "📊 Đánh giá thể lực": 1 điểm tổng hợp 0-100 duy nhất theo 4 bậc Nhập môn/Nghiệp dư/Bán chuyên/Chuyên nghiệp (ngưỡng 40/60/80) hiện nổi bật ở đầu card kèm mũi tên ▲/▼ so với kỳ trước (so cùng số ngày đã trôi qua, không so lệch kỳ dở dang với kỳ trước trọn vẹn); Sức mạnh & Vận động nay tính điểm liên tục thay vì nhảy cụm theo bậc; bỏ card "Điểm kiên trì (30 ngày)" trùng lặp ở Thống kê; Tiêu chí & Nguồn tham khảo giải thích rõ đây là quy ước trong app, không phải chứng chỉ' },
+  { version: '2.22.0', phase: 12, summary: 'Trang Thống kê: "📊 Đánh giá thể lực" đưa lên đầu trang (ngay dưới bộ lọc kỳ); bộ lọc Tuần/Tháng/3 tháng nay cố định (sticky) khi cuộn; gắn nhãn rõ "(toàn thời gian)" cho các card vốn không theo bộ lọc kỳ (chuỗi dài nhất, Kỷ lục cá nhân, Thành tựu, bài tập tập nhiều nhất, Lịch sử, Kế hoạch tuần); thẻ bài tập ở Ghi buổi tập không còn vỡ layout khi tên bài dài (giới hạn 2 dòng)' },
 ] as const;

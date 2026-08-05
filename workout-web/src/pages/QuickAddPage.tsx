@@ -1350,9 +1350,9 @@ export default function QuickAddPage() {
                 aria-label={favoriteIdSet.has(preset.id) ? `Bỏ yêu thích ${preset.nameVi}` : `Yêu thích ${preset.nameVi}`}>
                 <Star size={14} fill={favoriteIdSet.has(preset.id) ? 'currentColor' : 'none'} />
               </button>
-              <div className="flex items-center gap-2 mb-1.5 pr-5 pl-5">
+              <div className="flex items-center gap-2 mb-1.5 pr-5 pl-5 min-w-0">
                 <ExerciseIcon presetId={preset.id} category={preset.category} size={24} className="text-primary flex-shrink-0" />
-                <p className="font-bold text-text-main text-sm leading-tight">{preset.nameVi}</p>
+                <p className="font-bold text-text-main text-sm leading-tight line-clamp-2 min-w-0">{preset.nameVi}</p>
               </div>
               <p className="text-xs text-text-secondary mb-1.5">{getSuggestedValue(preset)}</p>
               <div className="flex items-center justify-between gap-1">
