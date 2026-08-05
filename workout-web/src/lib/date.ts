@@ -17,6 +17,14 @@ export function yesterdayString(): string {
   return daysAgoString(1);
 }
 
+// Local-date add/subtract N days from a 'YYYY-MM-DD' string, same local-
+// component approach as daysAgoString (avoids toISOString's UTC day shift).
+export function addDaysString(dateStr: string, days: number): string {
+  const d = new Date(dateStr + 'T00:00:00');
+  d.setDate(d.getDate() + days);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 export function daysBetween(a: string, b: string): number {
   const da = new Date(a);
   const db = new Date(b);

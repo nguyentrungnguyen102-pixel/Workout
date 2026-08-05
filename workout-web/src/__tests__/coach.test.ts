@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildFitnessAssessment, AssessmentPeriod } from '../lib/coach';
+import { buildFitnessAssessment, levelForScore, AssessmentPeriod } from '../lib/coach';
 import { daysAgoString } from '../lib/date';
 import { WorkoutLog } from '../types/workout';
 import { UserProfile } from '../types/user';
@@ -71,6 +71,8 @@ describe('buildFitnessAssessment', () => {
       prevDays: 7,
       start: daysAgoString(6),
       end: daysAgoString(0),
+      prevStart: daysAgoString(13),
+      prevEnd: daysAgoString(7),
     };
     const periodLong: AssessmentPeriod = {
       logs: allLogs,
@@ -80,6 +82,8 @@ describe('buildFitnessAssessment', () => {
       prevDays: 90,
       start: daysAgoString(89),
       end: daysAgoString(0),
+      prevStart: daysAgoString(179),
+      prevEnd: daysAgoString(90),
     };
 
     const assessmentShort = buildFitnessAssessment(allLogs, mockProfile, 65, periodShort);
@@ -101,5 +105,70 @@ describe('buildFitnessAssessment', () => {
     const assessment = buildFitnessAssessment(allLogs, incompleteProfile, 65);
     expect(assessment).not.toBeNull();
     expect(assessment!.needsProfile).toBe(true);
+  });
+
+  it('pins the overall tier boundaries at 40/60/80 (score < 40 upper-exclusive)', () => {
+    expect(levelForScore(39).level).toBe('Nhập môn');
+    expect(levelForScore(40).level).toBe('Nghiệp dư');
+    expect(levelForScore(59).level).toBe('Nghiệp dư');
+    expect(levelForScore(60).level).toBe('Bán chuyên');
+    expect(levelForScore(79).level).toBe('Bán chuyên');
+    expect(levelForScore(80).level).toBe('Chuyên nghiệp');
+  });
+
+  it('keeps strength/body weights identical across a 7-day and a 90-day period (they are not period-scoped)', () => {
+    const period7: AssessmentPeriod = {
+      logs: allLogs.filter((l) => l.date >= daysAgoString(6)),
+      prevLogs: allLogs.filter((l) => l.date >= daysAgoString(13) && l.date < daysAgoString(6)),
+      label: '7 ngày',
+      days: 7,
+      prevDays: 7,
+      start: daysAgoString(6),
+      end: daysAgoString(0),
+      prevStart: daysAgoString(13),
+      prevEnd: daysAgoString(7),
+    };
+    const period90: AssessmentPeriod = {
+      logs: allLogs,
+      prevLogs: [],
+      label: '90 ngày',
+      days: 90,
+      prevDays: 90,
+      start: daysAgoString(89),
+      end: daysAgoString(0),
+      prevStart: daysAgoString(179),
+      prevEnd: daysAgoString(90),
+    };
+
+    const assessment7 = buildFitnessAssessment(allLogs, mockProfile, 65, period7);
+    const assessment90 = buildFitnessAssessment(allLogs, mockProfile, 65, period90);
+    expect(assessment7).not.toBeNull();
+    expect(assessment90).not.toBeNull();
+
+    const strengthWeight7 = assessment7!.weights.find((w) => w.key === 'strength');
+    const strengthWeight90 = assessment90!.weights.find((w) => w.key === 'strength');
+    const bodyWeight7 = assessment7!.weights.find((w) => w.key === 'body');
+    const bodyWeight90 = assessment90!.weights.find((w) => w.key === 'body');
+    expect(strengthWeight7).toEqual(strengthWeight90);
+    expect(bodyWeight7).toEqual(bodyWeight90);
+  });
+
+  it('reports prevScore === score when prevLogs mirrors logs over an equal-length window', () => {
+    const sameLogs = allLogs.filter((l) => l.date >= daysAgoString(6));
+    const period: AssessmentPeriod = {
+      logs: sameLogs,
+      prevLogs: sameLogs,
+      label: '7 ngày',
+      days: 7,
+      prevDays: 7,
+      start: daysAgoString(6),
+      end: daysAgoString(0),
+      prevStart: daysAgoString(6),
+      prevEnd: daysAgoString(0),
+    };
+    const assessment = buildFitnessAssessment(allLogs, mockProfile, 65, period);
+    expect(assessment).not.toBeNull();
+    expect(assessment!.prevScore).toBe(assessment!.score);
+    expect(assessment!.prevLevel).toBe(assessment!.level);
   });
 });

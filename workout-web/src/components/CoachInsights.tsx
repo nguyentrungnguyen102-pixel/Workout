@@ -17,6 +17,8 @@ interface CoachInsightsProps {
   prevPeriodDays: number;
   periodStart: string;
   periodEnd: string;
+  prevPeriodStart: string;
+  prevPeriodEnd: string;
 }
 
 export default function CoachInsights({
@@ -29,6 +31,8 @@ export default function CoachInsights({
   prevPeriodDays,
   periodStart,
   periodEnd,
+  prevPeriodStart,
+  prevPeriodEnd,
 }: CoachInsightsProps) {
   const uid = useUserStore((s) => s.firebaseUser?.uid);
   const latestMetric = useBodyStore((s) => s.latestMetric);
@@ -50,22 +54,43 @@ export default function CoachInsights({
     prevDays: prevPeriodDays,
     start: periodStart,
     end: periodEnd,
+    prevStart: prevPeriodStart,
+    prevEnd: prevPeriodEnd,
   });
 
   if (!assessment) return null;
 
+  const delta = assessment.prevScore === null ? null : assessment.score - assessment.prevScore;
+
   return (
     <div className="bg-card rounded-2xl border border-border p-4 mb-4 space-y-4">
-      <div className="space-y-1">
+      <div className="space-y-2">
         <p className="text-sm font-black text-text-main">📊 Đánh giá thể lực</p>
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs font-bold text-primary bg-primary-light border border-primary/20 rounded-full px-2.5 py-0.5">
-            Chỉ số thể lực {assessment.score}/100
-          </span>
-          <span className="text-sm font-black text-text-main">
-            {assessment.emoji} {assessment.level}
-          </span>
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className="text-3xl font-black text-text-main">{assessment.score}</span>
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm font-black text-text-main">
+                {assessment.emoji} {assessment.level}
+              </span>
+              {delta !== null ? (
+                delta === 0 ? (
+                  <span className="text-xs font-bold text-text-secondary">bằng kỳ trước</span>
+                ) : (
+                  <span className={`text-xs font-bold ${delta > 0 ? 'text-success' : 'text-danger'}`}>
+                    {delta > 0 ? '▲' : '▼'} {Math.abs(delta)} so với kỳ trước
+                  </span>
+                )
+              ) : (
+                <span className="text-xs font-bold text-text-secondary">kỳ trước chưa tập</span>
+              )}
+            </div>
+            {assessment.overall.nextText && (
+              <p className="text-xs text-text-secondary">{assessment.overall.nextText}</p>
+            )}
+          </div>
         </div>
+        <ScaleBarSafe dim={assessment.overall} />
         <p className="text-[10px] text-text-secondary">
           Trọng số: {assessment.weights.map((w) => `${w.label} ${w.pct}%`).join(' · ')}
         </p>
@@ -83,17 +108,17 @@ export default function CoachInsights({
 
       <div className="space-y-3">
         {assessment.dimensions.map((dim) => (
-          <div key={dim.key} className="pt-3 border-t border-border first:border-t-0 first:pt-0 space-y-0.5">
+          <div key={dim.key} className="pt-3 border-t border-border first:border-t-0 first:pt-0 space-y-0.5 opacity-90">
             <div className="flex items-center justify-between gap-2 flex-wrap">
-              <span className="text-xs font-bold text-text-main">
+              <span className="text-[11px] font-bold text-text-main">
                 {dim.label} · <span className="font-normal text-text-secondary">{dim.valueText}</span>
               </span>
-              <span className="text-[11px] font-bold text-primary bg-primary-light border border-primary/20 rounded-full px-2 py-0.5">
+              <span className="text-[10px] font-bold text-primary bg-primary-light border border-primary/20 rounded-full px-2 py-0.5">
                 {dim.tierLabel}
               </span>
             </div>
             <ScaleBarSafe dim={dim} />
-            {dim.nextText && <p className="text-xs text-text-secondary">{dim.nextText}</p>}
+            {dim.nextText && <p className="text-[11px] text-text-secondary">{dim.nextText}</p>}
           </div>
         ))}
       </div>
