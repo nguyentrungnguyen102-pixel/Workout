@@ -137,13 +137,17 @@ function HourView({ logs }: { logs: WorkoutLog[] }) {
   const { grid, max } = useMemo(() => {
     const g: number[][] = Array.from({ length: 7 }, () => new Array(HOURS.length).fill(0));
     for (const log of logs) {
-      // Logs missing createdAt have no reliable time-of-day — skip rather
-      // than guess a bucket (per spec: don't assume noon/whatever).
-      if (!log.createdAt) continue;
+      // startedAt is the user-editable "when I actually worked out" time
+      // (the "🕐 Thời gian tập" field, back-datable in WorkoutSummaryModal);
+      // createdAt is just the Firestore save timestamp — falls back to it
+      // only for legacy logs that predate startedAt. Logs missing both have
+      // no reliable time-of-day — skip rather than guess a bucket.
+      const timeSource = log.startedAt ?? log.createdAt;
+      if (!timeSource) continue;
       if (!log.date) continue;
       let hour: number;
       try {
-        hour = log.createdAt.toDate().getHours();
+        hour = timeSource.toDate().getHours();
       } catch {
         continue;
       }
