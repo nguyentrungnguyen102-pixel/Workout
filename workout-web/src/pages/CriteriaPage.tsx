@@ -84,7 +84,25 @@ export default function CriteriaPage() {
         </p>
       </div>
 
+      <div className="bg-card rounded-2xl border border-border p-4 mb-4">
+        <p className="font-bold text-text-main text-sm mb-2">Phạm vi tính theo kỳ đang chọn</p>
+        <p className="text-xs text-text-secondary mb-2">
+          Đổi bộ lọc <strong>Tuần / Tháng / 3 tháng</strong> ở đầu trang Thống kê chỉ ảnh hưởng tới: Vận động,
+          Đều đặn, Tiến bộ, biểu đồ "Bài tập theo ngày", biểu đồ "Cân bằng nhóm cơ", bảng "Chi tiết bài tập" và
+          KPI buổi/phút/kcal đầu trang.
+        </p>
+        <p className="text-xs text-text-secondary">
+          Không đổi theo bộ lọc kỳ (cố định theo thiết kế): Sức mạnh & Vóc dáng là trạng thái hiện tại; "Kế hoạch
+          tuần" luôn theo tuần thực tế; "Khối lượng theo tuần" luôn hiện 10 tuần gần nhất; Kỷ lục cá nhân, Thành
+          tựu, chuỗi ngày dài nhất và Lịch sử luôn là toàn thời gian.
+        </p>
+      </div>
+
       <p className="text-xs font-bold text-text-secondary mb-2 uppercase">Sức mạnh (theo giới tính · độ tuổi)</p>
+      <p className="text-xs text-text-secondary mb-3">
+        Chấm theo <strong>trung bình mức tốt nhất mỗi tuần trong 90 ngày gần đây</strong> (không phải kỷ lục cao
+        nhất từng đạt) — phản ánh đúng phong độ hiện tại thay vì 1 buổi đỉnh cao từ lâu.
+      </p>
       {refs.strength.map((t) => (
         <RefTableBlock key={t.key} table={t} />
       ))}

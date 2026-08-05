@@ -91,10 +91,6 @@ export default function CoachInsights({
           </div>
         </div>
         <ScaleBarSafe dim={assessment.overall} />
-        <p className="text-[10px] text-text-secondary">
-          Trọng số: {assessment.weights.map((w) => `${w.label} ${w.pct}%`).join(' · ')}
-        </p>
-        <p className="text-[10px] text-text-muted italic">{assessment.scopeNote}</p>
       </div>
 
       {assessment.needsProfile && (

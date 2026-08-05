@@ -62,7 +62,7 @@ export default function WeeklyVolumeChart({ logs }: WeeklyVolumeChartProps) {
   return (
     <div className="bg-card rounded-2xl border border-border p-4 mb-4">
       <p className="text-sm font-bold text-text-main mb-1">Khối lượng theo tuần (nhóm cơ)</p>
-      <p className="text-xs text-text-secondary mb-3">Tổng số phút tập mỗi tuần, chia theo nhóm cơ — {WEEKS_COUNT} tuần gần nhất</p>
+      <p className="text-xs text-text-secondary mb-3">{WEEKS_COUNT} tuần gần nhất</p>
       {!hasData ? (
         <p className="text-xs text-text-secondary text-center py-10">Chưa có dữ liệu</p>
       ) : (

@@ -656,7 +656,6 @@ export default function StatsPage() {
 
       {/* ═══════════════════════ Lịch sử (50 buổi gần nhất, không theo bộ lọc kỳ) ═══════════════════════ */}
       <SectionHeader title="Lịch sử" />
-      <p className="text-xs text-text-muted -mt-2 mb-3">Hiện 50 buổi gần nhất</p>
 
       {recentLogs.length > 0 && (
         <div className="relative mb-3">
