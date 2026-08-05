@@ -14,6 +14,7 @@ import BodyPage from './pages/BodyPage';
 import CriteriaPage from './pages/CriteriaPage';
 import StatsPage from './pages/StatsPage';
 import ExerciseProgressPage from './pages/ExerciseProgressPage';
+import RecordsPage from './pages/RecordsPage';
 import SettingsPage from './pages/SettingsPage';
 import ProgramsPage from './pages/ProgramsPage';
 import ProgramDetailPage from './pages/ProgramDetailPage';
@@ -71,6 +72,7 @@ export default function App() {
             <Route path="history/:logId" element={<LogDetailPage />} />
             <Route path="body" element={<Navigate to="/settings/body" replace />} />
             <Route path="stats" element={<StatsPage />} />
+            <Route path="stats/records" element={<RecordsPage />} />
             <Route path="stats/exercise/:presetId" element={<ExerciseProgressPage />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="settings/body" element={<BodyPage />} />
