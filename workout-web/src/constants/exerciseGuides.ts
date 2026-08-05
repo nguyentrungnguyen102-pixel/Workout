@@ -497,6 +497,32 @@ export const EXERCISE_GUIDES: Record<string, ExerciseGuide> = {
     tips: ['Giữ lưng thẳng suốt động tác, mắt nhìn xuống điểm cố định để giữ thăng bằng', 'Bắt đầu với tạ nhẹ hoặc không tạ để làm quen thăng bằng'],
   },
 
+  // Dumbbell (home training) — Phase 14
+  db_russian_twist: {
+    steps: [
+      'Ngồi, gối gập, ngả thân trên ra sau một góc, hai tay cầm chung một tạ trước bụng',
+      'Xoay thân đưa tạ chạm sàn bên phải rồi sang bên trái, giữ lưng thẳng',
+      'Có thể nhấc chân khỏi sàn để tăng độ khó',
+    ],
+    tips: ['Xoay bằng thân trên, không chỉ vung tay', 'Bắt đầu với tạ nhẹ để giữ đúng tư thế lưng'],
+  },
+  db_situp: {
+    steps: [
+      'Nằm ngửa, gối gập, bàn chân cố định trên sàn, hai tay ôm tạ trước ngực',
+      'Siết bụng, ngồi dậy đến khi thân trên gần vuông góc với sàn',
+      'Hạ xuống từ từ về vị trí ban đầu',
+    ],
+    tips: ['Giữ tạ sát ngực suốt động tác, không đưa tạ ra xa làm mất thăng bằng', 'Không giật người bằng đà'],
+  },
+  db_svend_press: {
+    steps: [
+      'Đứng thẳng, hai lòng bàn tay ép chặt hai đầu tạ (hoặc một tạ đĩa) trước ngực',
+      'Duỗi thẳng tay đẩy tạ ra trước, giữ lực ép hai tay vào nhau suốt động tác',
+      'Kéo tạ trở lại sát ngực, không ngừng siết ép',
+    ],
+    tips: ['Lực ép hai tay vào nhau quan trọng hơn trọng lượng tạ', 'Giữ vai thả lỏng xuống, không nhún vai'],
+  },
+
   // Sport (outdoor/team sports)
   sport_football: {
     steps: [
