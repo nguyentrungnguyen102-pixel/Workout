@@ -5,6 +5,14 @@ export type ExerciseUnit = 'reps' | 'seconds' | 'minutes' | 'km';
 export type Intensity = 'light' | 'moderate' | 'heavy';
 export type LogSource = 'manual' | 'voice' | 'repeat_yesterday';
 
+// Anatomical muscle group targeted, for the "Cân bằng nhóm cơ" chart —
+// distinct from ExerciseCategory (an equipment/discipline grouping: cardio,
+// dumbbell, sport... which doesn't say WHICH muscles a dumbbell exercise
+// actually works). Optional on WorkoutPreset because user-created custom
+// presets (customExerciseService.ts) don't collect one — callers computing
+// the chart should fall back to 'fullBody' when absent.
+export type MuscleGroup = 'chest' | 'back' | 'shoulders' | 'arms' | 'legs' | 'core' | 'fullBody';
+
 export interface WorkoutPreset {
   id: string;
   name: string;
@@ -18,6 +26,7 @@ export interface WorkoutPreset {
   userId?: string;
   usageCount: number;
   lastUsedAt?: string;
+  muscleGroup?: MuscleGroup;
 }
 
 export interface ExerciseEntry {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { SYSTEM_PRESETS, CATEGORY_LABELS, CATEGORY_COLORS_STATS } from '../constants/exercises';
+import { SYSTEM_PRESETS, CATEGORY_LABELS, CATEGORY_COLORS_STATS, MUSCLE_GROUP_LABELS } from '../constants/exercises';
 import { EXERCISE_GUIDES } from '../constants/exerciseGuides';
 import { CATEGORY_CHART_COLORS } from '../constants/chartColors';
 import { CATEGORY_MET } from '../lib/energy';
@@ -43,6 +43,15 @@ describe('SYSTEM_PRESETS data completeness', () => {
     categories.forEach((c) => {
       expect(CATEGORY_MET[c]).toBeGreaterThan(0);
     });
+  });
+
+  // Guards the "Cân bằng nhóm cơ" chart (Đợt 3) — a preset added without a
+  // muscleGroup tag would silently vanish from every axis instead of
+  // showing up as 'fullBody', so a build/data-completeness error here is
+  // preferable to a silently-wrong chart.
+  it('every preset has a valid muscleGroup', () => {
+    const missing = SYSTEM_PRESETS.filter((p) => !p.muscleGroup || !MUSCLE_GROUP_LABELS[p.muscleGroup]).map((p) => p.id);
+    expect(missing).toEqual([]);
   });
 });
 

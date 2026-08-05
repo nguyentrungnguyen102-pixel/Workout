@@ -22,11 +22,12 @@ export function seriesColor(i: number): string {
   return SERIES_PALETTE[i % SERIES_PALETTE.length];
 }
 
-// Per-category color map for stacked/category charts (WeeklyVolumeChart,
-// MuscleRadarChart) — kept separate from CATEGORY_COLORS_STATS (used for
-// non-chart pills/badges elsewhere) so chart-specific contrast requirements
-// don't ripple into unrelated UI. `dumbbell` is moved to teal here (was
-// amber, too close to strength's orange) for clearer separation.
+// Per-category (ExerciseCategory, not MuscleGroup) color map for
+// stacked/category charts (WeeklyVolumeChart) — kept separate from
+// CATEGORY_COLORS_STATS (used for non-chart pills/badges elsewhere) so
+// chart-specific contrast requirements don't ripple into unrelated UI.
+// `dumbbell` is moved to teal here (was amber, too close to strength's
+// orange) for clearer separation.
 export const CATEGORY_CHART_COLORS: Record<string, string> = {
   strength: '#FF5400',
   core: '#DB2777',

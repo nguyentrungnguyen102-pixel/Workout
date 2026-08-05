@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.23.0';
+export const APP_VERSION = '2.24.0';
 
 // Lich su phien ban chinh thuc (sau dot don nhanh 14/07/2026 — gop cac
 // nang cap tot nhat tu cac nhanh phien hang ngay vao mot ban duy nhat).
@@ -40,4 +40,5 @@ export const PHASE_HISTORY = [
   { version: '2.21.0', phase: 11, summary: 'Chuẩn hoá "📊 Đánh giá thể lực": 1 điểm tổng hợp 0-100 duy nhất theo 4 bậc Nhập môn/Nghiệp dư/Bán chuyên/Chuyên nghiệp (ngưỡng 40/60/80) hiện nổi bật ở đầu card kèm mũi tên ▲/▼ so với kỳ trước (so cùng số ngày đã trôi qua, không so lệch kỳ dở dang với kỳ trước trọn vẹn); Sức mạnh & Vận động nay tính điểm liên tục thay vì nhảy cụm theo bậc; bỏ card "Điểm kiên trì (30 ngày)" trùng lặp ở Thống kê; Tiêu chí & Nguồn tham khảo giải thích rõ đây là quy ước trong app, không phải chứng chỉ' },
   { version: '2.22.0', phase: 12, summary: 'Trang Thống kê: "📊 Đánh giá thể lực" đưa lên đầu trang (ngay dưới bộ lọc kỳ); bộ lọc Tuần/Tháng/3 tháng nay cố định (sticky) khi cuộn; gắn nhãn rõ "(toàn thời gian)" cho các card vốn không theo bộ lọc kỳ (chuỗi dài nhất, Kỷ lục cá nhân, Thành tựu, bài tập tập nhiều nhất, Lịch sử, Kế hoạch tuần); thẻ bài tập ở Ghi buổi tập không còn vỡ layout khi tên bài dài (giới hạn 2 dòng)' },
   { version: '2.23.0', phase: 12, summary: 'Điểm "Sức mạnh" trong Đánh giá thể lực nay chấm theo phong độ 90 ngày gần đây thay vì kỷ lục cao nhất từng đạt (không giảm theo thời gian); thêm chuẩn Kéo xà/Pull-up (ACSM/ExRx) bên cạnh hít đất/gập bụng/plank/squat; hiện rõ đủ tất cả bài đã tính vào điểm kèm tier riêng từng bài, không chỉ 1 bài đại diện' },
+  { version: '2.24.0', phase: 12, summary: 'Biểu đồ "Cân bằng nhóm cơ" ở Thống kê đổi từ radar theo loại bài tập (Tạ đơn/Cardio/Core...) sang cột ngang theo nhóm cơ giải phẫu thật (Ngực/Lưng/Vai/Tay/Chân/Bụng/Toàn thân — gắn tay cho toàn bộ bài tập, kể cả 30+ bài tạ đơn trước đây dồn chung 1 trục), tính theo số hiệp đã tập trong kỳ thay vì số phút' },
 ] as const;

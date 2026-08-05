@@ -15,7 +15,7 @@ import ExercisePeriodTable from '../components/ExercisePeriodTable';
 import CoachInsights from '../components/CoachInsights';
 import DailyExerciseChart from '../components/charts/DailyExerciseChart';
 import WeeklyVolumeChart from '../components/charts/WeeklyVolumeChart';
-import MuscleRadarChart from '../components/charts/MuscleRadarChart';
+import MuscleBalanceChart from '../components/charts/MuscleBalanceChart';
 import AchievementsCard from '../components/AchievementsCard';
 
 type Period = 'week' | 'month' | 'quarter';
@@ -519,7 +519,7 @@ export default function StatsPage() {
           <>
             <DailyExerciseChart periodLogs={periodLogs} />
             <WeeklyVolumeChart logs={logs} />
-            <MuscleRadarChart periodLogs={periodLogs} />
+            <MuscleBalanceChart periodLogs={periodLogs} />
           </>
         )}
       </div>
