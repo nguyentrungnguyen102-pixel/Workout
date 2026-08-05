@@ -93,10 +93,7 @@ export default function DailyExerciseChart({ periodLogs }: DailyExerciseChartPro
   return (
     <div className="bg-card rounded-2xl border border-border p-4 mb-4">
       <p className="text-sm font-bold text-text-main mb-1">Bài tập theo ngày</p>
-      <p className="text-xs text-text-secondary mb-3">
-        Trục trái: số lượng (cái) mỗi bài · Trục phải: tổng số phút tập/ngày
-        {truncated ? ' · hiện 6 bài nhiều nhất' : ''}
-      </p>
+      {truncated && <p className="text-xs text-text-secondary mb-3">Hiện 6 bài nhiều nhất</p>}
       {chartData.length === 0 || series.length === 0 ? (
         <p className="text-xs text-text-secondary text-center py-10">Chưa có dữ liệu trong kỳ này</p>
       ) : (

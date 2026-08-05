@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.25.0';
+export const APP_VERSION = '2.26.0';
 
 // Lich su phien ban chinh thuc (sau dot don nhanh 14/07/2026 — gop cac
 // nang cap tot nhat tu cac nhanh phien hang ngay vao mot ban duy nhat).
@@ -42,4 +42,5 @@ export const PHASE_HISTORY = [
   { version: '2.23.0', phase: 12, summary: 'Điểm "Sức mạnh" trong Đánh giá thể lực nay chấm theo phong độ 90 ngày gần đây thay vì kỷ lục cao nhất từng đạt (không giảm theo thời gian); thêm chuẩn Kéo xà/Pull-up (ACSM/ExRx) bên cạnh hít đất/gập bụng/plank/squat; hiện rõ đủ tất cả bài đã tính vào điểm kèm tier riêng từng bài, không chỉ 1 bài đại diện' },
   { version: '2.24.0', phase: 12, summary: 'Biểu đồ "Cân bằng nhóm cơ" ở Thống kê đổi từ radar theo loại bài tập (Tạ đơn/Cardio/Core...) sang cột ngang theo nhóm cơ giải phẫu thật (Ngực/Lưng/Vai/Tay/Chân/Bụng/Toàn thân — gắn tay cho toàn bộ bài tập, kể cả 30+ bài tạ đơn trước đây dồn chung 1 trục), tính theo số hiệp đã tập trong kỳ thay vì số phút' },
   { version: '2.25.0', phase: 13, summary: 'Điểm "Sức mạnh" nay lấy trung bình mức tốt nhất MỖI TUẦN trong 90 ngày gần đây (thay vì hard-code 1 buổi tốt nhất duy nhất) — mỗi tuần chỉ đóng góp 1 giá trị nên tuần tập nhiều buổi không lấn át tuần tập ít buổi, và vẫn so đúng nghĩa với bảng chuẩn ACSM/ExRx (đo 1 lần gắng sức, không phải tổng khối lượng)' },
+  { version: '2.26.0', phase: 13, summary: 'Gọn giao diện Thống kê: bỏ dòng "Trọng số"/ghi chú phạm vi khỏi card Đánh giá thể lực + rút gọn phụ đề 3 biểu đồ (nội dung dồn vào khối mới "Phạm vi tính theo kỳ đang chọn" ở trang Tiêu chí & nguồn tham khảo); biểu đồ Cân bằng nhóm cơ nay hiện % trên tổng + dòng "🎯 Ít được tập nhất" nêu đích danh nhóm cơ yếu nhất trong kỳ; màn hình tóm tắt buổi tập trước khi lưu gộp tên bài + loại bài về 1 dòng' },
 ] as const;

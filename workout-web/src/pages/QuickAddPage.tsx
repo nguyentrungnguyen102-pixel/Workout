@@ -423,10 +423,10 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
             const cc = CATEGORY_COLORS[ex.category] || CATEGORY_COLORS.strength;
             return (
               <div key={ex.presetId} className="bg-card rounded-2xl p-4 border border-border">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <p className="font-bold text-text-main">{ex.name}</p>
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full mt-1 inline-block"
+                <div className="flex items-center justify-between mb-3 gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <p className="font-bold text-text-main truncate">{ex.name}</p>
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
                       style={{ color: cc.text, backgroundColor: cc.bg }}>
                       {CATEGORY_LABELS[ex.category] || ex.category}
                     </span>
