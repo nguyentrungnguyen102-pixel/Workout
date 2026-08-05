@@ -48,6 +48,26 @@ const allLogs: WorkoutLog[] = Array.from({ length: 30 }, (_, i) => {
   return makeLog(daysAgo, reps);
 });
 
+// Like makeLog but with an arbitrary set of exercises, for strength-scoring
+// tests that need more than 1 exercise per log.
+function makeMultiLog(
+  daysAgo: number,
+  exercises: { presetId: string; name: string; unit: 'reps' | 'seconds'; reps?: number; durationSeconds?: number }[]
+): WorkoutLog {
+  return {
+    id: `multi-${daysAgo}`,
+    userId: 'test-user',
+    date: daysAgoString(daysAgo),
+    exercises: exercises.map((e) => ({ ...e, category: 'strength', sets: 3 })),
+    totalDurationMinutes: 10,
+    intensityScore: 5,
+    intensity: 'moderate',
+    caloriesEstimate: 50,
+    source: 'manual',
+    syncedToSheets: false,
+  } as unknown as WorkoutLog;
+}
+
 function findDim(assessment: NonNullable<ReturnType<typeof buildFitnessAssessment>>, key: string) {
   const dim = assessment.dimensions.find((d) => d.key === key);
   if (!dim) throw new Error(`dimension ${key} not found`);
@@ -170,5 +190,28 @@ describe('buildFitnessAssessment', () => {
     expect(assessment).not.toBeNull();
     expect(assessment!.prevScore).toBe(assessment!.score);
     expect(assessment!.prevLevel).toBe(assessment!.level);
+  });
+
+  it('does not count a strength PR from outside the recent 90-day scoring window', () => {
+    const oldOnly: WorkoutLog[] = [makeLog(120, 50)];
+    const assessment = buildFitnessAssessment(oldOnly, mockProfile, 65);
+    expect(assessment).not.toBeNull();
+    const strength = findDim(assessment!, 'strength');
+    expect(strength.tierLabel).toBe('Chưa đủ dữ liệu');
+    expect(strength.valueText).toContain('90 ngày gần đây');
+  });
+
+  it('lists every matched exercise (not just the most-frequent one) when ≥2 standard-covered exercises were trained recently', () => {
+    const logs: WorkoutLog[] = [
+      makeMultiLog(2, [
+        { presetId: 'pushup', name: 'Hít đất', unit: 'reps', reps: 30 },
+        { presetId: 'situp', name: 'Gập bụng', unit: 'reps', reps: 40 },
+      ]),
+    ];
+    const assessment = buildFitnessAssessment(logs, mockProfile, 65);
+    expect(assessment).not.toBeNull();
+    const strength = findDim(assessment!, 'strength');
+    expect(strength.valueText).toContain('Hít đất');
+    expect(strength.valueText).toContain('Gập bụng');
   });
 });

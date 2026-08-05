@@ -31,6 +31,18 @@ describe('strengthStandard', () => {
     const std = strengthStandard('unknown', 10, 'male', 30);
     expect(std).toBeNull();
   });
+
+  it('pullup 8 reps, male, age 25 scores a sensible mid-or-better tier', () => {
+    const std = strengthStandard('pullup', 8, 'male', 25);
+    expect(std).not.toBeNull();
+    expect(std!.tierIndex).toBeGreaterThanOrEqual(1);
+  });
+
+  it('pullup 0 reps scores the bottom tier', () => {
+    const std = strengthStandard('pullup', 0, 'male', 25);
+    expect(std).not.toBeNull();
+    expect(std!.tierIndex).toBe(0);
+  });
 });
 
 describe('scaleMarkerPercent', () => {
