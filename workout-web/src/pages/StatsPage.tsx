@@ -5,7 +5,7 @@ import { useUserStore } from '../stores/userStore';
 import { getRecentLogs, getLogsForHeatmap } from '../services/workoutService';
 import { computePRs, getPRLabel, sortPRsByRecency } from '../services/prService';
 import { WorkoutLog } from '../types/workout';
-import { getWeekLabel, formatTimeOfDay, formatDayOfWeekVi, formatDateVi, daysBetween } from '../lib/date';
+import { getWeekLabel, formatTimeOfDay, formatDayOfWeekVi, formatDateVi, daysBetween, addDaysString } from '../lib/date';
 import { exerciseMinutes } from '../lib/energy';
 import { SYSTEM_PRESETS, CATEGORY_COLORS_STATS } from '../constants/exercises';
 import MonthCalendar from '../components/MonthCalendar';
@@ -303,13 +303,6 @@ export default function StatsPage() {
   const totalKcal = logs.reduce((s, l) => s + (l.caloriesEstimate || 0), 0);
   const totalTime = logs.reduce((s, l) => s + (l.totalDurationMinutes || 0), 0);
 
-  const last30Start = new Date(now);
-  last30Start.setDate(now.getDate() - 30);
-  const last30Str = `${last30Start.getFullYear()}-${String(last30Start.getMonth() + 1).padStart(2, '0')}-${String(last30Start.getDate()).padStart(2, '0')}`;
-  const last30Logs = logs.filter((l) => (l.date || '') >= last30Str);
-  const uniqueDays30 = new Set(last30Logs.map((l) => l.date).filter(Boolean)).size;
-  const consistencyScore = Math.min(100, Math.round((uniqueDays30 / 30) * 100));
-
   const topExercise = getTopExercise(logs);
   const allPRs = sortPRsByRecency(computePRs(logs));
   const prs = allPRs.slice(0, 6);
@@ -328,6 +321,14 @@ export default function StatsPage() {
   // 28-day Feb) is calendar noise, not a real pace signal.
   const periodDays = daysBetween(periodStart, periodEnd) + 1;
   const prevPeriodDays = periodOffset === 0 ? daysBetween(prevPeriodStart, prevPeriodEnd) + 1 : periodDays;
+  // Coach's own previous-period window, truncated to the SAME elapsed-day
+  // count as the current period (unlike prevPeriodLogs/prevPeriodDays above,
+  // which ExercisePeriodTable prorates against the full previous period).
+  // Sessions aren't spread evenly (e.g. only Mon/Wed/Fri), so a partial
+  // current period compared against a full previous period would show a
+  // misleadingly large negative delta early in the period.
+  const coachPrevPeriodEnd = addDaysString(prevPeriodStart, periodDays - 1);
+  const coachPrevPeriodLogs = logs.filter(l => (l.date || '') >= prevPeriodStart && (l.date || '') <= coachPrevPeriodEnd);
   const periodMinutes = periodLogs.reduce((s, l) => s + (l.totalDurationMinutes || 0), 0);
   const periodKcal = periodLogs.reduce((s, l) => s + (l.caloriesEstimate || 0), 0);
   const periodSessions = periodLogs.length;
@@ -479,21 +480,20 @@ export default function StatsPage() {
         </div>
       </div>
 
-      {/* Consistency */}
-      <div className="bg-card rounded-2xl border border-border p-4 mb-4">
-        <div className="flex items-center justify-between mb-1">
-          <p className="text-sm font-bold text-text-main">Điểm kiên trì (30 ngày)</p>
-          <p className="text-sm font-black text-primary">{consistencyScore}/100</p>
-        </div>
-        <div className="h-2.5 bg-border rounded-full overflow-hidden">
-          <div className="h-full rounded-full transition-all"
-            style={{ width: `${consistencyScore}%`, backgroundColor: consistencyScore >= 70 ? '#1DAA60' : consistencyScore >= 40 ? '#D97706' : '#FF5400' }} />
-        </div>
-        <p className="text-xs text-text-secondary mt-1">{uniqueDays30} ngày tập trong 30 ngày qua</p>
-      </div>
-
       {/* Fitness assessment (coach insights) */}
-      <CoachInsights allLogs={logs} periodLogs={periodLogs} prevPeriodLogs={prevPeriodLogs} profile={profile} periodLabel={periodLabel} periodDays={periodDays} prevPeriodDays={prevPeriodDays} periodStart={periodStart} periodEnd={periodEnd} />
+      <CoachInsights
+        allLogs={logs}
+        periodLogs={periodLogs}
+        prevPeriodLogs={coachPrevPeriodLogs}
+        profile={profile}
+        periodLabel={periodLabel}
+        periodDays={periodDays}
+        prevPeriodDays={periodDays}
+        periodStart={periodStart}
+        periodEnd={periodEnd}
+        prevPeriodStart={prevPeriodStart}
+        prevPeriodEnd={coachPrevPeriodEnd}
+      />
 
       {/* Weekly plan card */}
       <WeeklyPlanCard logs={logs} profile={profile} />

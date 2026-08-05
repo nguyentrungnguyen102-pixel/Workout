@@ -70,6 +70,20 @@ export default function CriteriaPage() {
         dưới khớp đúng với số liệu app dùng để tính điểm — không phải bản rút gọn.
       </p>
 
+      <div className="bg-card rounded-2xl border border-border p-4 mb-4">
+        <p className="font-bold text-text-main text-sm mb-2">Điểm tổng hợp & 4 bậc (Nhập môn → Nghiệp dư → Bán chuyên → Chuyên nghiệp)</p>
+        <p className="text-xs text-text-secondary mb-2">
+          Điểm 0-100 là <strong>quy ước tổng hợp trong app</strong> — trung bình có trọng số của 5 tiêu chí bên
+          dưới (Sức mạnh 35% · Vận động 20% · Đều đặn 20% · Vóc dáng 15% · Tiến bộ 10%), không phải một chứng chỉ
+          hay trích dẫn từ một tổ chức cụ thể nào. Từng tiêu chí thành phần vẫn được chấm theo đúng các bảng chuẩn
+          ACSM/ExRx, WHO 2020 và BMI châu Á/Bộ Y tế VN liệt kê phía dưới.
+        </p>
+        <p className="text-xs text-text-secondary">
+          Ngưỡng 4 bậc (40 / 60 / 80 điểm) kế thừa từ thang 5 mức cũ của app (20/40/60/80), chỉ gộp 2 bậc thấp
+          nhất lại thành "Nhập môn" — các ngưỡng còn lại giữ nguyên, không phải số tự đặt mới.
+        </p>
+      </div>
+
       <p className="text-xs font-bold text-text-secondary mb-2 uppercase">Sức mạnh (theo giới tính · độ tuổi)</p>
       {refs.strength.map((t) => (
         <RefTableBlock key={t.key} table={t} />

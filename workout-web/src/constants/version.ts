@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.20.0';
+export const APP_VERSION = '2.21.0';
 
 // Lich su phien ban chinh thuc (sau dot don nhanh 14/07/2026 — gop cac
 // nang cap tot nhat tu cac nhanh phien hang ngay vao mot ban duy nhat).
@@ -37,4 +37,5 @@ export const PHASE_HISTORY = [
   { version: '2.18.0', phase: 11, summary: 'Gộp nhánh: Xuất dữ liệu CSV/JSON (Cài đặt); 6 bài tạ đơn mới lấp nhóm cơ còn thiếu + chương trình "Trung Cấp 4x"; ước tính 1RM (Epley) cho bài tạ có ghi cân nặng; ước tính % mỡ cơ thể (US Navy) + mục tiêu cân nặng có thanh tiến độ + biểu đồ xu hướng Ngực/Hông/Eo/Cổ/Tay (trang Cơ thể); trang Kỷ lục cá nhân đầy đủ; bài tập yêu thích ⭐ (ghim lên đầu khi chọn bài). Dọn code chết: bỏ tính năng lưu mẫu buổi tập (đã ngừng dùng từ v2.7.0)' },
   { version: '2.19.0', phase: 11, summary: 'Hotfix: heatmap "Theo khung giờ" ở Thống kê đang lấy giờ theo lúc LƯU log (createdAt) thay vì giờ TẬP THẬT (startedAt, ô "🕐 Thời gian tập" người dùng chỉnh được khi quên ghi lúc tập) — ai tập sáng nhưng log lại vào tối sẽ thấy sai khung giờ' },
   { version: '2.20.0', phase: 11, summary: 'Mở rộng kho câu quote động lực từ 100 lên 210 câu song ngữ Anh–Việt kèm tác giả (banner app + tin nhắc Telegram), đa dạng thêm chủ đề kỷ luật/kiên trì/sức khoẻ để đỡ lặp lại' },
+  { version: '2.21.0', phase: 11, summary: 'Chuẩn hoá "📊 Đánh giá thể lực": 1 điểm tổng hợp 0-100 duy nhất theo 4 bậc Nhập môn/Nghiệp dư/Bán chuyên/Chuyên nghiệp (ngưỡng 40/60/80) hiện nổi bật ở đầu card kèm mũi tên ▲/▼ so với kỳ trước (so cùng số ngày đã trôi qua, không so lệch kỳ dở dang với kỳ trước trọn vẹn); Sức mạnh & Vận động nay tính điểm liên tục thay vì nhảy cụm theo bậc; bỏ card "Điểm kiên trì (30 ngày)" trùng lặp ở Thống kê; Tiêu chí & Nguồn tham khảo giải thích rõ đây là quy ước trong app, không phải chứng chỉ' },
 ] as const;
