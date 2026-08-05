@@ -58,6 +58,14 @@ function mondayOf(dateStr: string): Date {
   return monday;
 }
 
+// Local 'YYYY-MM-DD' of the Monday starting the week containing `dateStr` —
+// exported string version of mondayOf, for callers (lib/coach.ts) that need
+// a week-bucket KEY rather than a Date object.
+export function weekStartString(dateStr: string): string {
+  const monday = mondayOf(dateStr);
+  return `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, '0')}-${String(monday.getDate()).padStart(2, '0')}`;
+}
+
 export function getWeekLabel(dateStr: string): string {
   // Compare Monday-of-week by elapsed days rather than ISO week+year, since
   // ISO week numbers reset at each year boundary and "week N of year Y" vs

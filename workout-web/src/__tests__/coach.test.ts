@@ -214,4 +214,15 @@ describe('buildFitnessAssessment', () => {
     expect(strength.valueText).toContain('Hít đất');
     expect(strength.valueText).toContain('Gập bụng');
   });
+
+  it('averages per-week bests over the recent window instead of taking the single best session (guards the old max-only regression)', () => {
+    // Exactly 7 days apart guarantees 2 distinct Monday-anchored weeks
+    // regardless of what day "today" actually is.
+    const twoWeekLogs: WorkoutLog[] = [makeLog(2, 20), makeLog(9, 40)];
+    const assessment = buildFitnessAssessment(twoWeekLogs, mockProfile, 65);
+    expect(assessment).not.toBeNull();
+    const strength = findDim(assessment!, 'strength');
+    // Average of 20 and 40 is 30 — NOT max(20, 40) = 40.
+    expect(strength.value).toBeCloseTo(30, 1);
+  });
 });
