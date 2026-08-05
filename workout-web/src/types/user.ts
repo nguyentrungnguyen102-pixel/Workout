@@ -45,6 +45,10 @@ export interface UserProfile {
   sex?: 'male' | 'female';
   birthYear?: number;
   heightCm?: number;
+  // Target body weight (kg) set by the user in Settings; drives the goal
+  // progress card on BodyPage (lib/weightGoal.ts). Optional — most users
+  // won't set one.
+  goalWeightKg?: number;
   // Telegram reminder settings — read by the GitHub Actions cron script
   // (scripts/telegram-reminder.mjs) via the Firebase Admin SDK. All optional
   // so existing users default to reminders off until they opt in via
@@ -55,4 +59,8 @@ export interface UserProfile {
   reminderEvening?: string; // 'HH:MM', default '19:00'
   telegramChatId?: string;
   lastReminderSent?: { morning?: string; evening?: string };
+  // Favorite/pinned exercise preset ids (system or custom) — surfaced first
+  // in the QuickAdd exercise picker + a dedicated "Yêu thích" tab. Optional
+  // so existing users default to no favorites.
+  favoriteExerciseIds?: string[];
 }

@@ -117,6 +117,14 @@ export const MET_TABLE: Record<string, number> = {
   db_step_up: 5.0, // TODO verify — Compendium "step training" ballpark
   db_thruster: 6.0, // TODO verify — compound squat+press, treated like db_deadlift
 
+  // Dumbbell (home training) — Phase 11
+  db_calf_raise: 3.0, // TODO verify — small isolated lower-leg movement, lighter than compound squats
+  db_skull_crusher: 3.5, // TODO verify — same family as db_tricep_ext
+  db_wrist_curl: 2.8, // TODO verify — small isolated forearm movement, lighter than db_bicep_curl
+  db_side_bend: 3.5, // TODO verify — same family as core/oblique work
+  db_curtsy_lunge: 4.5, // TODO verify — same family as db_lunge, added lateral/rotational component
+  db_single_leg_deadlift: 5.0, // TODO verify — same family as db_rdl, added balance demand
+
   // Sport (outdoor/team sports) — TODO verify against Compendium sport codes
   sport_football: 7.0, // soccer, casual/competitive
   sport_swimming: 6.0, // laps, moderate effort

@@ -57,12 +57,3 @@ export interface DraftWorkout {
   notes: string;
   location: string;
 }
-
-// Saved workout template (named routine)
-export interface WorkoutTemplate {
-  id: string;
-  userId: string;
-  name: string;
-  exercises: ExerciseEntry[];
-  createdAt?: import('firebase/firestore').Timestamp;
-}
