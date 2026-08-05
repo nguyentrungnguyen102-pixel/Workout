@@ -1,6 +1,6 @@
 import { WorkoutLog } from '../types/workout';
 import { UserProfile } from '../types/user';
-import { daysAgoString, daysBetween, todayString } from './date';
+import { daysAgoString, daysBetween, todayString, weekStartString } from './date';
 import { computePRs, PersonalRecord } from '../services/prService';
 import { logMinutes, ENERGY_METHOD_NOTE } from './energy';
 import { strengthStandard, bmiStandard, whoActivityStandard, ageFromBirthYear, Band } from './standards';
@@ -196,39 +196,66 @@ function composite(builds: DimBuild[]): { score: number; weights: { key: string;
   return { score, weights };
 }
 
-// Best reps/duration achieved per presetId within a recent window — reflects
-// CURRENT form rather than an all-time PR that may be stale. computePRs() in
-// prService.ts deliberately never decays (correct for "Kỷ lục cá nhân 🏆"/
-// Thành tựu, which are lifetime bragging rights), but strength SCORING needs
-// the opposite: how strong is anh right now, not what he once hit years ago.
-// 90 days is wide enough that an exercise trained only every couple of weeks
-// still has a recent data point, narrow enough to track actual current
-// capability. Mirrors the same unit convention as prService.ts's computePRs
-// (reps vs seconds) but as a single-pass max — no need to track improvement
-// history, only "best in window".
+// Average of each week's BEST reps/duration per presetId within a recent
+// window — reflects CURRENT, TYPICAL form rather than an all-time PR that
+// may be stale (computePRs() in prService.ts deliberately never decays,
+// correct for "Kỷ lục cá nhân 🏆"/Thành tựu, which are lifetime bragging
+// rights — strength SCORING needs the opposite) AND rather than a single
+// lucky-day max (one great session shouldn't set the score for the whole
+// window). Grouped by week — not by session — so a week with 2 sessions
+// contributes exactly one data point (that week's best), the same as a week
+// with 1 session; otherwise training more often in a week would silently
+// pull more weight in the average despite not testing a higher capability.
+// 90 days is wide enough that an exercise trained only every couple of
+// weeks still has recent data points, narrow enough to track actual current
+// capability. Averaging (not summing) keeps the result comparable to the
+// ACSM/ExRx tables in standards.ts, which grade a single best-effort test —
+// summing reps and dividing by weeks (the convention buildActivityDim/
+// buildConsistencyDim use) would instead measure frequency×volume, which
+// those tables were never calibrated against.
 const STRENGTH_WINDOW_DAYS = 90;
 
-interface RecentBest {
+interface WeeklyStrengthAvg {
   presetId: string;
   name: string;
   unit: string;
-  best: number;
+  avgWeeklyBest: number;
 }
 
-function computeRecentBests(logs: WorkoutLog[], cutoff: string): Map<string, RecentBest> {
-  const map = new Map<string, RecentBest>();
+function computeWeeklyStrengthAverages(logs: WorkoutLog[], cutoff: string): Map<string, WeeklyStrengthAvg> {
+  // presetId -> weekStart -> that week's best value (+ name/unit, same for
+  // every entry of a given presetId).
+  const weekBestsByPreset = new Map<string, Map<string, { value: number; name: string; unit: string }>>();
   for (const log of logs) {
     if (!log.date || log.date < cutoff) continue;
+    const week = weekStartString(log.date);
     for (const ex of log.exercises || []) {
       const value = ex.unit === 'reps' ? ex.reps : ex.unit === 'seconds' ? ex.durationSeconds : undefined;
       if (!value) continue;
-      const existing = map.get(ex.presetId);
-      if (!existing || value > existing.best) {
-        map.set(ex.presetId, { presetId: ex.presetId, name: ex.name, unit: ex.unit, best: value });
+      let weekMap = weekBestsByPreset.get(ex.presetId);
+      if (!weekMap) {
+        weekMap = new Map();
+        weekBestsByPreset.set(ex.presetId, weekMap);
+      }
+      const existing = weekMap.get(week);
+      if (!existing || value > existing.value) {
+        weekMap.set(week, { value, name: ex.name, unit: ex.unit });
       }
     }
   }
-  return map;
+
+  const result = new Map<string, WeeklyStrengthAvg>();
+  for (const [presetId, weekMap] of weekBestsByPreset) {
+    const weekBests = Array.from(weekMap.values());
+    const avg = weekBests.reduce((s, w) => s + w.value, 0) / weekBests.length;
+    result.set(presetId, {
+      presetId,
+      name: weekBests[0].name,
+      unit: weekBests[0].unit,
+      avgWeeklyBest: Math.round(avg * 10) / 10,
+    });
+  }
+  return result;
 }
 
 // --- activity (WHO) — over an arbitrary window, normalized per week --------
@@ -408,16 +435,17 @@ export function buildFitnessAssessment(
       for (const pid of presetsInLog) freq.set(pid, (freq.get(pid) || 0) + 1);
     }
 
-    // Match against RECENT form (best in the last STRENGTH_WINDOW_DAYS), not
-    // the all-time PR — see computeRecentBests's comment above for why.
+    // Match against RECENT, TYPICAL form (average of each week's best in the
+    // last STRENGTH_WINDOW_DAYS), not the all-time PR — see
+    // computeWeeklyStrengthAverages's comment above for why.
     const recentCutoff = daysAgoString(STRENGTH_WINDOW_DAYS);
-    const recentBests = computeRecentBests(allLogs, recentCutoff);
+    const weeklyAverages = computeWeeklyStrengthAverages(allLogs, recentCutoff);
 
     const matched: { name: string; std: NonNullable<ReturnType<typeof strengthStandard>>; freq: number }[] = [];
-    for (const rb of recentBests.values()) {
-      const std = strengthStandard(rb.presetId, rb.best, sex, age);
+    for (const wa of weeklyAverages.values()) {
+      const std = strengthStandard(wa.presetId, wa.avgWeeklyBest, sex, age);
       if (!std) continue;
-      matched.push({ name: rb.name, std, freq: freq.get(rb.presetId) || 0 });
+      matched.push({ name: wa.name, std, freq: freq.get(wa.presetId) || 0 });
     }
 
     if (matched.length === 0) {
@@ -456,9 +484,9 @@ export function buildFitnessAssessment(
       ? `cần +${primary.std.nextMilestone.need} ${primary.std.unit} để đạt ${primary.std.nextMilestone.toLabel}`
       : undefined;
 
-    // Score is a weighted average across ALL matched exercises (not just
-    // `primary`) — the headline text lists every one with its own tier so
-    // what's shown matches what's actually being scored, not just 1 bài.
+    // Score averages across ALL matched exercises (not just `primary`) — the
+    // headline text lists every one with its own tier so what's shown
+    // matches what's actually being scored, not just 1 bài.
     const valueText = matched
       .map((m) => `${m.name} ${m.std.value} ${m.std.unit} (${m.std.bands[m.std.tierIndex].label})`)
       .join(' · ');
@@ -473,7 +501,10 @@ export function buildFitnessAssessment(
         bands: primary.std.bands,
         value: primary.std.value,
         unit: primary.std.unit,
-        source: `${primary.std.source} · trung bình có trọng số ${matched.length} bài đã tập trong ${STRENGTH_WINDOW_DAYS} ngày gần đây`,
+        // 2 tầng trung bình khác nhau: (1) mỗi bài lấy trung bình mức tốt
+        // nhất/tuần trong cửa sổ ${STRENGTH_WINDOW_DAYS} ngày; (2) điểm cuối
+        // là trung bình của ${matched.length} bài đã tập như vậy.
+        source: `${primary.std.source} · mỗi bài lấy trung bình mức tốt nhất/tuần trong ${STRENGTH_WINDOW_DAYS} ngày gần đây, rồi lấy trung bình ${matched.length} bài đã tập`,
         nextText,
         score,
       },
