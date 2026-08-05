@@ -61,7 +61,7 @@ export default function AchievementsCard({ logs, profile }: Props) {
   return (
     <div className="bg-card rounded-2xl border border-border p-4 mb-4">
       <div className="flex items-center justify-between mb-3">
-        <p className="text-sm font-bold text-text-main">🏅 Thành tựu</p>
+        <p className="text-sm font-bold text-text-main">🏅 Thành tựu <span className="font-normal text-text-muted text-xs">(toàn thời gian)</span></p>
         <p className="text-sm font-black text-primary">{unlockedCount}/{total} huy hiệu</p>
       </div>
 
