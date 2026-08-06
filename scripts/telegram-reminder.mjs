@@ -32,6 +32,24 @@ const FIREBASE_SERVICE_ACCOUNT = process.env.FIREBASE_SERVICE_ACCOUNT;
 // an actual Saturday/Sunday.
 const TEST_ALL_VARIANTS = process.env.TEST_ALL_VARIANTS === 'true';
 
+// Mọi gọi mạng (Firestore, Telegram) phải có timeout — nếu không, một lần
+// treo mạng/DNS sẽ khiến cả job chạy vô thời hạn cho đến khi GitHub Actions
+// tự huỷ job sau ~15 phút (quan sát thực tế 2026-08-06, 2 lần liên tiếp,
+// job "cancelled" không rõ lý do, không để lại log — nghi do fetch()/gRPC
+// treo không timeout khi mạng chập chờn).
+const REQUEST_TIMEOUT_MS = 20_000;
+
+function withTimeout(promise, label) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`Timeout sau ${REQUEST_TIMEOUT_MS}ms: ${label}`)), REQUEST_TIMEOUT_MS);
+  });
+  // Nếu promise gốc reject sau khi timeout đã thắng race, đừng để nó thành
+  // unhandled rejection — Node mặc định crash cả process vì lỗi đó.
+  promise.catch(() => {});
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
 // Mirrors src/lib/quotes.ts QUOTES — bilingual (en/vi) + author, same set
 // shown in the app's QuoteBanner so the Telegram message matches the app.
 const QUOTES = [
@@ -537,6 +555,8 @@ function resolveSlot(nowMinutes, morningStr, eveningStr) {
 }
 
 async function sendTelegramMessage(chatId, text) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
     const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
       method: 'POST',
@@ -547,6 +567,7 @@ async function sendTelegramMessage(chatId, text) {
         parse_mode: 'HTML',
         disable_web_page_preview: true,
       }),
+      signal: controller.signal,
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.ok) {
@@ -557,6 +578,8 @@ async function sendTelegramMessage(chatId, text) {
   } catch (err) {
     console.error(`  Lỗi gọi Telegram API: ${err.message}`);
     return false;
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -586,7 +609,7 @@ async function processUser(db, uid, profile) {
 
   const goals = profile.exerciseGoals || [];
 
-  const logsSnap = await db.collection('logs').where('userId', '==', uid).get();
+  const logsSnap = await withTimeout(db.collection('logs').where('userId', '==', uid).get(), `lấy logs user ${uid}`);
   const allLogs = logsSnap.docs.map((d) => d.data());
 
   let message;
@@ -602,9 +625,9 @@ async function processUser(db, uid, profile) {
 
   const ok = await sendTelegramMessage(profile.telegramChatId, message);
   if (ok) {
-    await db.collection('users').doc(uid).set(
-      { lastReminderSent: { [slot]: localToday } },
-      { merge: true }
+    await withTimeout(
+      db.collection('users').doc(uid).set({ lastReminderSent: { [slot]: localToday } }, { merge: true }),
+      `ghi lastReminderSent user ${uid}`
     );
     console.log(`  Đã gửi (${slot}) cho user ${uid}`);
   } else {
@@ -622,7 +645,7 @@ async function sendTestAllVariants(db, uid, profile) {
   const localToday = new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(now); // YYYY-MM-DD
 
   const goals = profile.exerciseGoals || [];
-  const logsSnap = await db.collection('logs').where('userId', '==', uid).get();
+  const logsSnap = await withTimeout(db.collection('logs').where('userId', '==', uid).get(), `lấy logs user ${uid} (test mode)`);
   const allLogs = logsSnap.docs.map((d) => d.data());
 
   const variants = [
@@ -645,7 +668,7 @@ async function runLive() {
   admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
   const db = admin.firestore();
 
-  const usersSnap = await db.collection('users').where('reminderEnabled', '==', true).get();
+  const usersSnap = await withTimeout(db.collection('users').where('reminderEnabled', '==', true).get(), 'lấy danh sách user bật nhắc tập');
   console.log(`Tìm thấy ${usersSnap.size} user bật nhắc tập.`);
   if (TEST_ALL_VARIANTS) console.log('=== TEST MODE — gửi cả 4 mẫu tin, bỏ qua giờ/thứ/chống trùng ===');
 
@@ -711,7 +734,20 @@ async function main() {
   await runLive();
 }
 
-main().catch((err) => {
-  console.error('Lỗi không xử lý được:', err);
+// Toàn bộ job (fetch danh sách user + logs + gửi Telegram cho vài chục user)
+// thường xong trong vài giây. Nếu treo lâu hơn nhiều — ví dụ withTimeout ở
+// từng lệnh gọi vẫn không đủ vì mắc kẹt ở chỗ nào đó ngoài dự kiến — thoát
+// sớm với lỗi rõ ràng thay vì để GitHub Actions tự huỷ job sau ~15 phút mà
+// không để lại log nào giải thích lý do.
+const WATCHDOG_MS = 5 * 60_000;
+const watchdog = setTimeout(() => {
+  console.error(`Watchdog: quá ${WATCHDOG_MS}ms vẫn chưa xong, thoát sớm để tránh treo job.`);
   process.exit(1);
-});
+}, WATCHDOG_MS);
+
+main()
+  .catch((err) => {
+    console.error('Lỗi không xử lý được:', err);
+    process.exitCode = 1;
+  })
+  .finally(() => clearTimeout(watchdog));
