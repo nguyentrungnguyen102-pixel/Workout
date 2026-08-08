@@ -11,7 +11,7 @@ import { getCustomPresets, saveCustomPreset, deleteCustomPreset } from '../servi
 import { ExerciseEntry, WorkoutLog, WorkoutPreset, ExerciseCategory, ExerciseUnit } from '../types/workout';
 import { WorkoutProgram } from '../types/program';
 import { ExerciseGoal } from '../types/user';
-import { formatAmount } from '../lib/format';
+import { formatAmount, formatElapsedClock } from '../lib/format';
 import { getPRLabel } from '../services/prService';
 import { pickCheer, pickWeeklyCheer } from '../lib/cheers';
 import { buildSuggestions, roundNice } from '../lib/suggestions';
@@ -34,6 +34,24 @@ function normalize(s: string): string {
 function toLocalInput(d: Date): string {
   const p = (n: number) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+// Live "0:12:34" workout clock (Strong/Hevy-style) while a session is being
+// built — ticks every second from draft.startedAt, resets to 0 once the
+// draft is cleared (active=false) so it doesn't keep counting a stale time.
+function useElapsedSeconds(startedAt: Date | null, active: boolean): number {
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() => {
+    if (!active || !startedAt) {
+      setElapsed(0);
+      return;
+    }
+    const tick = () => setElapsed(Math.round((Date.now() - startedAt.getTime()) / 1000));
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [active, startedAt]);
+  return elapsed;
 }
 
 type Category = 'all' | 'favorites' | 'strength' | 'core' | 'dumbbell' | 'cardio' | 'mobility' | 'recovery' | 'sport';
@@ -968,6 +986,7 @@ export default function QuickAddPage() {
   const [guidePresetId, setGuidePresetId] = useState<string | null>(null);
 
   const uid = firebaseUser?.uid;
+  const elapsedSeconds = useElapsedSeconds(draft.startedAt, draft.exercises.length > 0);
 
   // Fires once the summary modal has closed and handed off any PRs the save
   // beat — kept separate from the modal's own save-confirmation toast so it
@@ -1388,7 +1407,10 @@ export default function QuickAddPage() {
       {draft.exercises.length > 0 && (
         <div className="fixed bottom-16 md:bottom-6 left-0 right-0 md:left-56 lg:left-60 max-w-md md:max-w-3xl lg:max-w-5xl mx-auto px-4 z-40">
           <button onClick={() => setShowModal(true)}
-            className="w-full py-4 bg-primary text-white font-black text-base rounded-2xl shadow-lg shadow-primary/40 flex items-center justify-center gap-2">
+            className="w-full py-4 bg-primary text-white font-black text-base rounded-2xl shadow-lg shadow-primary/40 flex items-center justify-center gap-3">
+            <span className="font-mono text-sm font-bold bg-white/15 px-2.5 py-1 rounded-lg tabular-nums">
+              ⏱ {formatElapsedClock(elapsedSeconds)}
+            </span>
             <span>Log workout ({draft.exercises.length} bài)</span>
             <ChevronRight size={20} />
           </button>
