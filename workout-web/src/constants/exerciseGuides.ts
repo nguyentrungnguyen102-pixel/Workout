@@ -496,6 +496,30 @@ export const EXERCISE_GUIDES: Record<string, ExerciseGuide> = {
     ],
     tips: ['Giữ lưng thẳng suốt động tác, mắt nhìn xuống điểm cố định để giữ thăng bằng', 'Bắt đầu với tạ nhẹ hoặc không tạ để làm quen thăng bằng'],
   },
+  db_shrug: {
+    steps: [
+      'Đứng thẳng, mỗi tay cầm một tạ để xuôi hai bên thân',
+      'Nhún hai vai lên thẳng đứng (như động tác "không biết"), không xoay tròn vai',
+      'Hạ vai xuống từ từ về vị trí ban đầu, kiểm soát tốc độ',
+    ],
+    tips: ['Không dùng tay kéo tạ lên, lực đến từ cơ vai/thang', 'Giữ tay thẳng, chỉ khớp vai chuyển động'],
+  },
+  db_dead_bug: {
+    steps: [
+      'Nằm ngửa, hai tay giơ thẳng cầm tạ trên vai, gối gập 90° trên hông',
+      'Duỗi thẳng đồng thời một tay ra sau đầu và chân đối diện xuống sàn, lưng vẫn ép sát sàn',
+      'Thu tay và chân về vị trí ban đầu, đổi bên',
+    ],
+    tips: ['Siết bụng ép cột sống sát sàn suốt động tác, không để lưng dưới ưỡn lên', 'Có thể bỏ tạ, chỉ tập tay không nếu mới bắt đầu'],
+  },
+  db_suitcase_carry: {
+    steps: [
+      'Đứng thẳng, một tay cầm tạ để xuôi bên thân như xách vali, tay còn lại tự do',
+      'Đi bộ những bước ngắn, giữ thân người thẳng, không nghiêng người sang bên đối diện',
+      'Đi hết quãng/thời gian rồi đổi tay',
+    ],
+    tips: ['Siết bụng bên đối diện để chống nghiêng người — đây chính là mục đích bài tập', 'Bước chậm, có kiểm soát hơn là đi nhanh'],
+  },
 
   // Sport (outdoor/team sports)
   sport_football: {

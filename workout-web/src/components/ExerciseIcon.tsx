@@ -472,6 +472,11 @@ const PRESET_ICON: Record<string, JSX.Element> = {
   db_curtsy_lunge: gLunge,
   db_single_leg_deadlift: gDbHinge,
 
+  // Dumbbell (home training) — Phase 15
+  db_shrug: gDbLateral,
+  db_dead_bug: gLegRaise,
+  db_suitcase_carry: gDbHinge,
+
   // Sport (outdoor/team sports)
   sport_football: gFootball,
   sport_swimming: gSwimming,
