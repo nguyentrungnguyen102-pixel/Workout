@@ -244,7 +244,7 @@ export default function ActivityHeatmap({ allLogs, periodLogs }: ActivityHeatmap
               key={opt.key}
               onClick={() => setView(opt.key)}
               className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all ${
-                view === opt.key ? 'bg-white shadow-sm text-primary' : 'text-text-secondary'
+                view === opt.key ? 'bg-card shadow-sm text-primary' : 'text-text-secondary'
               }`}
             >
               {opt.label}

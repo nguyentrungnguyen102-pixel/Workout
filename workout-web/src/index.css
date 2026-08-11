@@ -2,10 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Color tokens as "R G B" triples so Tailwind's rgb(var(...) / <alpha-value>)
+   pattern (tailwind.config.js) can apply opacity modifiers (e.g. bg-border/50).
+   .dark is toggled on <html> by src/lib/theme.ts / src/stores/themeStore.ts —
+   an inline script in index.html applies it before first paint to avoid a
+   flash of the wrong theme. */
+:root {
+  --color-background: 250 249 246;
+  --color-card: 255 255 255;
+  --color-card-2: 243 242 238;
+  --color-text-main: 17 17 17;
+  --color-text-secondary: 138 138 138;
+  --color-text-muted: 200 199 194;
+  --color-border: 232 231 226;
+  --color-primary-light: 255 240 236;
+  --color-success-light: 232 249 240;
+  --color-danger-light: 255 235 238;
+  color-scheme: light;
+}
+
+.dark {
+  --color-background: 23 20 15;
+  --color-card: 34 31 25;
+  --color-card-2: 16 14 11;
+  --color-text-main: 245 243 239;
+  --color-text-secondary: 168 166 160;
+  --color-text-muted: 107 104 98;
+  --color-border: 51 47 40;
+  --color-primary-light: 58 35 24;
+  --color-success-light: 17 51 40;
+  --color-danger-light: 58 23 23;
+  color-scheme: dark;
+}
+
 body {
   font-family: 'Be Vietnam Pro', system-ui, sans-serif;
-  background-color: #FAF9F6;
-  color: #111111;
+  background-color: rgb(var(--color-background));
+  color: rgb(var(--color-text-main));
   -webkit-font-smoothing: antialiased;
 }
 
@@ -21,9 +54,9 @@ input, textarea {
   width: 4px;
 }
 ::-webkit-scrollbar-track {
-  background: #F3F2EE;
+  background: rgb(var(--color-card-2));
 }
 ::-webkit-scrollbar-thumb {
-  background: #E8E7E2;
+  background: rgb(var(--color-border));
   border-radius: 2px;
 }

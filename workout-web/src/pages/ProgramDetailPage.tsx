@@ -147,7 +147,7 @@ export default function ProgramDetailPage() {
             <p className="font-bold text-text-main">Ngày {currentDayIndex + 1}/{program.days.length}</p>
             <p className="text-xs text-text-secondary">{activeState?.completedDates?.length || 0} buổi đã hoàn thành</p>
           </div>
-          <div className="h-2 bg-white rounded-full overflow-hidden">
+          <div className="h-2 bg-card rounded-full overflow-hidden">
             <div className="h-full bg-primary rounded-full transition-all"
               style={{ width: `${Math.round(((activeState?.completedDates?.length || 0) / program.days.length) * 100)}%` }} />
           </div>
