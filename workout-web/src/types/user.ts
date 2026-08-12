@@ -1,4 +1,5 @@
 import { Timestamp } from 'firebase/firestore';
+import { WorkoutProgram } from './program';
 
 export interface ExerciseGoal {
   presetId: string;
@@ -63,4 +64,10 @@ export interface UserProfile {
   // in the QuickAdd exercise picker + a dedicated "Yêu thích" tab. Optional
   // so existing users default to no favorites.
   favoriteExerciseIds?: string[];
+  // User-built workout programs (ProgramBuilderPage), stored alongside the
+  // fixed PROGRAM_TEMPLATES so "Chương trình" can activate/track either kind
+  // through the same programStore. Kept on the user doc (not a separate
+  // Firestore collection) so no new security rule is needed — same pattern
+  // as favoriteExerciseIds/activeProgram above.
+  customPrograms?: WorkoutProgram[];
 }
