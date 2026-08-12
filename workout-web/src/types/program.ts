@@ -29,6 +29,11 @@ export interface WorkoutProgram {
   focus: ProgramFocus;
   estimatedMinutes: number;
   days: ProgramDay[];
+  // Set on programs the user builds themselves (ProgramBuilderPage), stored
+  // in UserProfile.customPrograms — absent/false on the fixed PROGRAM_TEMPLATES.
+  // Lets pages show Edit/Delete only where they're valid.
+  isCustom?: boolean;
+  createdAt?: string;
 }
 
 export interface ActiveProgramState {

@@ -999,7 +999,7 @@ export default function QuickAddPage() {
     getCustomPresets(uid).then(setCustomPresets).catch(() => {});
   }, [uid]);
 
-  const todayDay = getTodayDay();
+  const todayDay = getTodayDay(profile?.customPrograms);
   const firstName = profile?.displayName?.split(' ').pop() || 'bạn';
   const streak = profile?.streak?.current || 0;
 
