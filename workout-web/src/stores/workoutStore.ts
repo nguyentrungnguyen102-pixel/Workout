@@ -5,7 +5,7 @@ import {
   Intensity,
   WorkoutLog,
 } from '../types/workout';
-import { logWorkout as saveLog, getLogsForHeatmap } from '../services/workoutService';
+import { logWorkout as saveLog, updateWorkoutLog, getLogsForHeatmap } from '../services/workoutService';
 import { updateStreakAfterLog, updateWeeklyMinutes } from '../services/userService';
 import { getLatestBodyMetric } from '../services/bodyService';
 import { computeNewPRs, PersonalRecord } from '../services/prService';
@@ -16,6 +16,10 @@ import { exerciseMinutes } from '../lib/energy';
 interface WorkoutStore {
   draft: DraftWorkout;
   isLogging: boolean;
+  // Non-null while editing an already-saved log (LogDetailPage → "Sửa") —
+  // logWorkout() branches to update that doc in place instead of creating a
+  // new one. Null means "logging a brand-new workout", the default flow.
+  editingLogId: string | null;
 
   yesterdayLog: WorkoutLog | null;
   todayLog: WorkoutLog | null;
@@ -27,6 +31,8 @@ interface WorkoutStore {
   removeExercise: (presetId: string) => void;
   updateExercise: (presetId: string, updates: Partial<ExerciseEntry>) => void;
   setDraftFromLog: (log: WorkoutLog) => void;
+  startEditLog: (log: WorkoutLog) => void;
+  cancelEdit: () => void;
   setIntensity: (intensity: Intensity) => void;
   setNotes: (notes: string) => void;
   setLocation: (location: string) => void;
@@ -67,6 +73,7 @@ function mergeExercises(logs: WorkoutLog[]): WorkoutLog['exercises'] {
 export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
   draft: emptyDraft(),
   isLogging: false,
+  editingLogId: null,
   yesterdayLog: null,
   todayLog: null,
   recentLogs: [],
@@ -117,6 +124,23 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
       },
     }),
 
+  // Unlike setDraftFromLog (used for "repeat this workout" — a fresh session
+  // starting now), this preserves the original date/time/notes/location so
+  // the summary modal shows the actual thing being corrected.
+  startEditLog: (log) =>
+    set({
+      editingLogId: log.id,
+      draft: {
+        exercises: log.exercises.map((e) => ({ ...e })),
+        startedAt: log.startedAt ? log.startedAt.toDate() : new Date(`${log.date}T00:00:00`),
+        intensity: log.intensity,
+        notes: log.notes || '',
+        location: log.location || '',
+      },
+    }),
+
+  cancelEdit: () => set({ editingLogId: null, draft: emptyDraft() }),
+
   setIntensity: (intensity) =>
     set((s) => ({ draft: { ...s.draft, intensity } })),
 
@@ -132,18 +156,31 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
   resetDraft: () => set({ draft: emptyDraft() }),
 
   logWorkout: async (uid) => {
-    const { draft } = get();
+    const { draft, editingLogId } = get();
     set({ isLogging: true });
     try {
+      // Latest recorded bodyweight drives the MET-based calorie estimate;
+      // a missing body-metric record just falls back to DEFAULT_WEIGHT_KG
+      // (see lib/energy.ts).
+      const latestMetric = await getLatestBodyMetric(uid).catch(() => null);
+
+      if (editingLogId) {
+        // Editing an already-saved log: overwrite it in place. Skips PR /
+        // streak / weekly-minutes bookkeeping — those already ran once when
+        // the log was first created, and re-running them here (against a
+        // possibly-changed set of exercises) risks awarding or revoking a PR
+        // for a session the user isn't actively completing right now.
+        await updateWorkoutLog(editingLogId, draft, latestMetric?.weight);
+        set({ draft: emptyDraft(), isLogging: false, editingLogId: null });
+        await get().loadRecentLogs(uid);
+        return;
+      }
+
       // PR baseline must come from logs saved BEFORE this one — fetch it
       // ahead of the write so the just-saved entries aren't counted against
       // themselves. '2000-01-01' matches the full-history fetch StatsPage
       // uses for the same computePRs() call.
       const existingLogs = await getLogsForHeatmap(uid, '2000-01-01');
-      // Latest recorded bodyweight drives the MET-based calorie estimate in
-      // logWorkout(); a missing body-metric record just means logWorkout()
-      // falls back to DEFAULT_WEIGHT_KG (see lib/energy.ts).
-      const latestMetric = await getLatestBodyMetric(uid).catch(() => null);
       const savedLog = await saveLog(uid, draft, latestMetric?.weight);
       const newPRs = computeNewPRs(existingLogs, savedLog);
       await updateStreakAfterLog(uid);

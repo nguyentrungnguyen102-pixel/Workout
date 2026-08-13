@@ -272,7 +272,8 @@ interface WorkoutSummaryModalProps {
 }
 
 function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
-  const { draft, removeExercise, updateExercise, setNotes, setLocation, setStartedAt, logWorkout, isLogging } = useWorkoutStore();
+  const navigate = useNavigate();
+  const { draft, removeExercise, updateExercise, setNotes, setLocation, setStartedAt, logWorkout, isLogging, editingLogId, cancelEdit } = useWorkoutStore();
   const [toast, setToast] = useState('');
   // Ref (not state) holds the pending timer so a fast second toast can clear
   // the first toast's timeout before it fires and clears the newer message.
@@ -290,14 +291,26 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
     toastTimerRef.current = setTimeout(() => setToast(''), 2500);
   };
 
+  const handleClose = () => {
+    if (editingLogId) cancelEdit();
+    onClose();
+  };
+
   const handleLog = async () => {
     if (draft.exercises.length === 0) return;
+    // Captured before logWorkout() clears it from the store on success.
+    const wasEditingLogId = editingLogId;
     try {
       await logWorkout(uid);
-      showToast('Đã lưu buổi tập! 🎉');
-      setTimeout(onClose, 800);
+      if (wasEditingLogId) {
+        showToast('Đã lưu thay đổi! ✅');
+        setTimeout(() => navigate(`/history/${wasEditingLogId}`), 800);
+      } else {
+        showToast('Đã lưu buổi tập! 🎉');
+        setTimeout(onClose, 800);
+      }
     } catch {
-      showToast('Lỗi lưu buổi tập');
+      showToast(wasEditingLogId ? 'Lỗi lưu thay đổi' : 'Lỗi lưu buổi tập');
     }
   };
 
@@ -397,8 +410,8 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
         </div>
       )}
       <div className="flex items-center justify-between px-4 py-4 border-b border-border bg-card">
-        <h2 className="text-lg font-black text-text-main">Lưu buổi tập</h2>
-        <button onClick={onClose} className="p-2 rounded-full hover:bg-card-2 transition-colors">
+        <h2 className="text-lg font-black text-text-main">{editingLogId ? 'Sửa buổi tập' : 'Lưu buổi tập'}</h2>
+        <button onClick={handleClose} className="p-2 rounded-full hover:bg-card-2 transition-colors">
           <X size={20} className="text-text-secondary" />
         </button>
       </div>
@@ -553,7 +566,11 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
       <div className="px-4 py-4 border-t border-border bg-card">
         <button onClick={handleLog} disabled={isLogging || draft.exercises.length === 0}
           className="w-full py-4 bg-primary text-white font-black text-base rounded-2xl disabled:opacity-50 shadow-lg shadow-primary/30 transition-opacity">
-          {isLogging ? 'Đang lưu...' : `Lưu buổi tập (${draft.exercises.length} bài) ✅`}
+          {isLogging
+            ? 'Đang lưu...'
+            : editingLogId
+              ? `Lưu thay đổi (${draft.exercises.length} bài) ✅`
+              : `Lưu buổi tập (${draft.exercises.length} bài) ✅`}
         </button>
       </div>
       </div>
