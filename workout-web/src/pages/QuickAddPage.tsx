@@ -957,7 +957,7 @@ function ProgramSuggestionCard({ templates }: ProgramSuggestionCardProps) {
 export default function QuickAddPage() {
   const navigate = useNavigate();
   const { profile, firebaseUser, updateProfile } = useUserStore();
-  const { draft, todayLog, yesterdayLog, recentLogs, addExercise, updateExercise, setDraftFromLog, loadRecentLogs, newPRs, clearNewPRs } = useWorkoutStore();
+  const { draft, draftResumed, dismissDraftResumed, resetDraft, todayLog, yesterdayLog, recentLogs, addExercise, updateExercise, setDraftFromLog, loadRecentLogs, newPRs, clearNewPRs } = useWorkoutStore();
   const { activeState, loadActiveProgram, getTodayDay } = useProgramStore();
   const [activeCategory, setActiveCategory] = useState<Category>('all');
   const [q, setQ] = useState('');
@@ -1191,6 +1191,20 @@ export default function QuickAddPage() {
           />
         );
       })()}
+
+      {/* Draft restored from a previous session (see draftPersistence.ts) —
+          without this, exercises reappearing after a reload with no
+          explanation would look like a bug rather than a recovery. */}
+      {draftResumed && draft.exercises.length > 0 && (
+        <div className="mb-3 flex items-center justify-between gap-2 bg-primary-light text-primary text-xs font-bold px-3 py-2 rounded-xl">
+          <span>↩️ Đã khôi phục buổi tập dang dở ({draft.exercises.length} bài) từ lần trước</span>
+          <div className="flex items-center gap-2 shrink-0">
+            <button onClick={() => { setShowModal(true); dismissDraftResumed(); }} className="underline">Xem lại</button>
+            <button onClick={resetDraft} className="underline">Bỏ qua</button>
+            <button onClick={dismissDraftResumed} aria-label="Đóng"><X size={14} /></button>
+          </div>
+        </div>
+      )}
 
       {/* Compact header */}
       <div className="flex items-center justify-between mb-3">
