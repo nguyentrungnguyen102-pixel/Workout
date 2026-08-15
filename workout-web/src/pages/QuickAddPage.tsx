@@ -21,6 +21,7 @@ import { todayString } from '../lib/date';
 import WeeklyPlanCard from '../components/WeeklyPlanCard';
 import QuoteBanner from '../components/QuoteBanner';
 import ExerciseIcon from '../components/ExerciseIcon';
+import MuscleRecoveryCard from '../components/MuscleRecoveryCard';
 
 // Strips Vietnamese diacritics for accent-insensitive search matching
 // (e.g. "gap bung" should still find "Gập bụng").
@@ -1233,6 +1234,9 @@ export default function QuickAddPage() {
 
       {/* Weekly forecast */}
       <WeeklyForecastCard recentLogs={recentLogs} />
+
+      {/* Muscle recovery — which groups are ready to train today */}
+      <MuscleRecoveryCard recentLogs={recentLogs} />
 
       {/* Goals strip */}
       <GoalsStrip

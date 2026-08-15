@@ -711,7 +711,9 @@ async function main() {
   await runLive();
 }
 
-main().catch((err) => {
-  console.error('Lỗi không xử lý được:', err);
-  process.exit(1);
-});
+main()
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error('Lỗi không xử lý được:', err);
+    process.exit(1);
+  });
