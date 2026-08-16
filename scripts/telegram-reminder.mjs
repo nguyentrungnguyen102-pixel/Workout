@@ -536,7 +536,15 @@ function resolveSlot(nowMinutes, morningStr, eveningStr) {
   return null;
 }
 
+// 15s timeout on the Telegram call itself — without this, a stalled TCP
+// connection (no response, no error) leaves the fetch pending forever, which
+// keeps the whole job alive well past the workflow's timeout-minutes guard
+// waiting on this one await instead of failing fast per-user.
+const TELEGRAM_FETCH_TIMEOUT_MS = 15_000;
+
 async function sendTelegramMessage(chatId, text) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TELEGRAM_FETCH_TIMEOUT_MS);
   try {
     const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
       method: 'POST',
@@ -547,6 +555,7 @@ async function sendTelegramMessage(chatId, text) {
         parse_mode: 'HTML',
         disable_web_page_preview: true,
       }),
+      signal: controller.signal,
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.ok) {
@@ -555,8 +564,14 @@ async function sendTelegramMessage(chatId, text) {
     }
     return true;
   } catch (err) {
-    console.error(`  Lỗi gọi Telegram API: ${err.message}`);
+    if (err.name === 'AbortError') {
+      console.error(`  Lỗi gọi Telegram API: timeout sau ${TELEGRAM_FETCH_TIMEOUT_MS / 1000}s`);
+    } else {
+      console.error(`  Lỗi gọi Telegram API: ${err.message}`);
+    }
     return false;
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -711,7 +726,17 @@ async function main() {
   await runLive();
 }
 
-main().catch((err) => {
-  console.error('Lỗi không xử lý được:', err);
-  process.exit(1);
-});
+main()
+  .then(() => {
+    // firebase-admin keeps its gRPC connection to Firestore open after the
+    // last await resolves, so Node never sees an empty event loop and the
+    // process hangs instead of exiting — the actual cause behind "job treo"
+    // (GitHub Actions then runs it until the default 360min job timeout).
+    // Exiting explicitly on the success path is the fix; process.exit(1)
+    // below already did this on the error path.
+    process.exit(0);
+  })
+  .catch((err) => {
+    console.error('Lỗi không xử lý được:', err);
+    process.exit(1);
+  });

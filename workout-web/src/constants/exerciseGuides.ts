@@ -496,6 +496,30 @@ export const EXERCISE_GUIDES: Record<string, ExerciseGuide> = {
     ],
     tips: ['Giữ lưng thẳng suốt động tác, mắt nhìn xuống điểm cố định để giữ thăng bằng', 'Bắt đầu với tạ nhẹ hoặc không tạ để làm quen thăng bằng'],
   },
+  db_zottman_curl: {
+    steps: [
+      'Đứng thẳng, mỗi tay cầm một tạ, lòng bàn tay hướng lên (như curl thường)',
+      'Curl tạ lên đến vai, sau đó xoay cổ tay để lòng bàn tay hướng xuống ở đỉnh',
+      'Hạ tạ xuống từ từ với lòng bàn tay vẫn úp xuống, xoay lại trước khi curl hiệp tiếp theo',
+    ],
+    tips: ['Pha hạ tạ (úp lòng bàn tay) mới là phần chính rèn cẳng tay, hạ chậm và có kiểm soát', 'Khuỷu tay giữ sát thân, không đung đưa lấy đà'],
+  },
+  db_good_morning: {
+    steps: [
+      'Đứng thẳng, tạ đặt trên vai (như đòn tạ) hoặc ôm trước ngực, chân rộng bằng hông',
+      'Gập hông đẩy mông ra sau, hạ thân trên xuống gần song song sàn, gối hơi chùng',
+      'Siết mông và cơ sau đùi kéo thân người thẳng dậy trở lại',
+    ],
+    tips: ['Giữ lưng thẳng suốt động tác, không gù hoặc võng lưng', 'Bắt đầu với tạ nhẹ — đây là bài tập kỹ thuật, sai form dễ ảnh hưởng lưng dưới'],
+  },
+  db_woodchopper: {
+    steps: [
+      'Đứng chân rộng bằng vai, hai tay cầm một tạ đưa chéo xuống ngoài hông bên này',
+      'Xoay thân và kéo tạ chéo lên cao qua phía đối diện, như động tác chặt củi ngược',
+      'Hạ tạ về vị trí ban đầu theo đúng đường chéo, hết hiệp thì đổi bên',
+    ],
+    tips: ['Lực xoay đến từ hông và core, không chỉ vung tay', 'Giữ tay duỗi tương đối thẳng suốt đường di chuyển của tạ'],
+  },
 
   // Sport (outdoor/team sports)
   sport_football: {
