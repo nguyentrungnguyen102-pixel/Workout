@@ -14,6 +14,10 @@ on:
 jobs:
   remind:
     runs-on: ubuntu-latest
+    # Backstop against the job hanging: without this, GitHub Actions falls
+    # back to its default 360min timeout, so an every-30min cron trigger
+    # could pile up many stuck runs in parallel before anything gets killed.
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
 

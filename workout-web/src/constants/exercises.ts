@@ -77,6 +77,12 @@ export const SYSTEM_PRESETS: WorkoutPreset[] = [
   { id: 'db_curtsy_lunge',     name: 'Curtsy Lunge',       nameVi: 'Lunge chéo tạ (đùi trong/mông)', category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🦵', isCustom: false, usageCount: 0, muscleGroup: 'legs' },
   { id: 'db_single_leg_deadlift', name: 'Single Leg Deadlift', nameVi: 'Deadlift một chân tạ (thăng bằng/mông)', category: 'dumbbell', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '🧍', isCustom: false, usageCount: 0, muscleGroup: 'legs' },
 
+  // Dumbbell (home training) — Phase 14, 3 bài đơn giản tại nhà không cần
+  // ghế/thiết bị thêm, lấp biến thể bắp tay/gập hông/xoay core còn thiếu
+  { id: 'db_zottman_curl',    name: 'Zottman Curl',     nameVi: 'Curl Zottman (bắp tay/cẳng tay)', category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🔃', isCustom: false, usageCount: 0, muscleGroup: 'arms' },
+  { id: 'db_good_morning',    name: 'Dumbbell Good Morning', nameVi: 'Gập hông tạ (sau đùi/lưng dưới)', category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🙇', isCustom: false, usageCount: 0, muscleGroup: 'legs' },
+  { id: 'db_woodchopper',     name: 'Dumbbell Woodchopper', nameVi: 'Chặt củi tạ (xoay core)', category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🪓', isCustom: false, usageCount: 0, muscleGroup: 'core' },
+
   // Sport (outdoor/team sports) — tracked separately from indoor cardio so
   // "sport frequency" stats/PRs/charts don't blend with treadmill running,
   // jump rope etc. Existing running/cycling stay in cardio (unchanged) —
