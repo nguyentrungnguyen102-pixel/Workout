@@ -124,6 +124,9 @@ export const MET_TABLE: Record<string, number> = {
   db_side_bend: 3.5, // TODO verify — same family as core/oblique work
   db_curtsy_lunge: 4.5, // TODO verify — same family as db_lunge, added lateral/rotational component
   db_single_leg_deadlift: 5.0, // TODO verify — same family as db_rdl, added balance demand
+  db_squeeze_press: 3.5, // TODO verify — same family as db_chest_press, isometric squeeze adds little load
+  db_windmill: 3.5, // TODO verify — same family as core/oblique work, standing balance component
+  db_weighted_superman: 3.0, // TODO verify — light isolated lower-back extension, similar to db_calf_raise
 
   // Sport (outdoor/team sports) — TODO verify against Compendium sport codes
   sport_football: 7.0, // soccer, casual/competitive

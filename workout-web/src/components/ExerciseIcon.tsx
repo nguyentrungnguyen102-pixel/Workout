@@ -471,6 +471,9 @@ const PRESET_ICON: Record<string, JSX.Element> = {
   db_side_bend: gTwist,
   db_curtsy_lunge: gLunge,
   db_single_leg_deadlift: gDbHinge,
+  db_squeeze_press: gDbChestPress,
+  db_windmill: gTwist,
+  db_weighted_superman: gPlank,
 
   // Sport (outdoor/team sports)
   sport_football: gFootball,
