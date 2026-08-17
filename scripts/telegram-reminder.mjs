@@ -536,7 +536,29 @@ function resolveSlot(nowMinutes, morningStr, eveningStr) {
   return null;
 }
 
+// Firestore Admin SDK calls and the Telegram fetch below have no built-in
+// timeout — a stalled connection (no error, no response) would hold the
+// `await` forever, and with a */30 cron this can pile up hung runs (only
+// caught by GitHub Actions' default 360-minute job timeout, observed in
+// production as 2 silently-cancelled runs on 2026-08-06). Every network
+// call in this script is wrapped so a stall fails fast instead of hanging.
+const NETWORK_TIMEOUT_MS = 20_000;
+
+function withTimeout(promise, label) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label} timed out after ${NETWORK_TIMEOUT_MS}ms`)), NETWORK_TIMEOUT_MS);
+  });
+  // Swallow a late rejection from the original promise after timeout already
+  // won the race — otherwise it surfaces as an unhandled rejection and can
+  // crash the whole process instead of just this one call.
+  promise.catch(() => {});
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
 async function sendTelegramMessage(chatId, text) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), NETWORK_TIMEOUT_MS);
   try {
     const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
       method: 'POST',
@@ -547,6 +569,7 @@ async function sendTelegramMessage(chatId, text) {
         parse_mode: 'HTML',
         disable_web_page_preview: true,
       }),
+      signal: controller.signal,
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.ok) {
@@ -557,6 +580,8 @@ async function sendTelegramMessage(chatId, text) {
   } catch (err) {
     console.error(`  Lỗi gọi Telegram API: ${err.message}`);
     return false;
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -586,7 +611,7 @@ async function processUser(db, uid, profile) {
 
   const goals = profile.exerciseGoals || [];
 
-  const logsSnap = await db.collection('logs').where('userId', '==', uid).get();
+  const logsSnap = await withTimeout(db.collection('logs').where('userId', '==', uid).get(), `Firestore logs.get() (uid=${uid})`);
   const allLogs = logsSnap.docs.map((d) => d.data());
 
   let message;
@@ -602,9 +627,9 @@ async function processUser(db, uid, profile) {
 
   const ok = await sendTelegramMessage(profile.telegramChatId, message);
   if (ok) {
-    await db.collection('users').doc(uid).set(
-      { lastReminderSent: { [slot]: localToday } },
-      { merge: true }
+    await withTimeout(
+      db.collection('users').doc(uid).set({ lastReminderSent: { [slot]: localToday } }, { merge: true }),
+      `Firestore users.set() (uid=${uid})`
     );
     console.log(`  Đã gửi (${slot}) cho user ${uid}`);
   } else {
@@ -622,7 +647,7 @@ async function sendTestAllVariants(db, uid, profile) {
   const localToday = new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(now); // YYYY-MM-DD
 
   const goals = profile.exerciseGoals || [];
-  const logsSnap = await db.collection('logs').where('userId', '==', uid).get();
+  const logsSnap = await withTimeout(db.collection('logs').where('userId', '==', uid).get(), `Firestore logs.get() (uid=${uid})`);
   const allLogs = logsSnap.docs.map((d) => d.data());
 
   const variants = [
@@ -645,7 +670,7 @@ async function runLive() {
   admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
   const db = admin.firestore();
 
-  const usersSnap = await db.collection('users').where('reminderEnabled', '==', true).get();
+  const usersSnap = await withTimeout(db.collection('users').where('reminderEnabled', '==', true).get(), 'Firestore users.get()');
   console.log(`Tìm thấy ${usersSnap.size} user bật nhắc tập.`);
   if (TEST_ALL_VARIANTS) console.log('=== TEST MODE — gửi cả 4 mẫu tin, bỏ qua giờ/thứ/chống trùng ===');
 
@@ -711,7 +736,26 @@ async function main() {
   await runLive();
 }
 
-main().catch((err) => {
-  console.error('Lỗi không xử lý được:', err);
+// Last-resort backstop: per-call timeouts above should always win first, but
+// if something outside their coverage still stalls, exit with a clear log
+// instead of letting GitHub Actions kill the job silently after 360 minutes.
+const watchdog = setTimeout(() => {
+  console.error('Watchdog: job chạy quá 5 phút, thoát cưỡng bức.');
   process.exit(1);
-});
+}, 5 * 60 * 1000);
+watchdog.unref?.();
+
+main()
+  .then(() => {
+    clearTimeout(watchdog);
+    // firebase-admin keeps its gRPC channel to Firestore open, which keeps
+    // Node's event loop alive even though there's no more work — without
+    // this, a successful run never exits on its own and GitHub Actions has
+    // to kill the job after the default 360-minute job timeout.
+    process.exit(0);
+  })
+  .catch((err) => {
+    clearTimeout(watchdog);
+    console.error('Lỗi không xử lý được:', err);
+    process.exit(1);
+  });

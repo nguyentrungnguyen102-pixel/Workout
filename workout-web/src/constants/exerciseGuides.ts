@@ -496,6 +496,30 @@ export const EXERCISE_GUIDES: Record<string, ExerciseGuide> = {
     ],
     tips: ['Giữ lưng thẳng suốt động tác, mắt nhìn xuống điểm cố định để giữ thăng bằng', 'Bắt đầu với tạ nhẹ hoặc không tạ để làm quen thăng bằng'],
   },
+  db_squeeze_press: {
+    steps: [
+      'Nằm ngửa hoặc ngồi, hai tay cầm một tạ (hoặc mỗi tay một tạ) ép chặt vào nhau trước ngực',
+      'Vừa giữ lực ép vừa đẩy thẳng tay lên cao',
+      'Hạ về vị trí ban đầu trước ngực, vẫn giữ lực ép suốt động tác',
+    ],
+    tips: ['Ép hai lòng bàn tay/tạ vào nhau càng chặt càng kích hoạt ngực nhiều', 'Không cần bệ tạ, tập được ngay trên sàn hoặc ghế thường'],
+  },
+  db_windmill: {
+    steps: [
+      'Đứng thẳng, chân rộng hơn vai, một tay đưa tạ thẳng lên trần nhà',
+      'Xoay hông sang bên đối diện, tay còn lại trượt dọc theo chân, mắt luôn nhìn lên tạ',
+      'Siết bụng kéo người về tư thế đứng thẳng, đổi bên sau khi hết hiệp',
+    ],
+    tips: ['Tay cầm tạ giữ thẳng, luôn vuông góc với sàn', 'Bắt đầu với tạ nhẹ và biên độ nhỏ để làm quen thăng bằng'],
+  },
+  db_weighted_superman: {
+    steps: [
+      'Nằm sấp, hai tay duỗi thẳng về phía trước mỗi tay cầm một tạ nhẹ',
+      'Đồng thời nâng tay, ngực và chân khỏi sàn, siết cơ lưng dưới và mông',
+      'Giữ 1-2 giây ở điểm cao nhất rồi hạ từ từ về vị trí ban đầu',
+    ],
+    tips: ['Dùng tạ rất nhẹ — đây là bài tăng cường lưng dưới, không phải bài sức mạnh nặng', 'Không giật hoặc dùng đà, chuyển động chậm và kiểm soát'],
+  },
 
   // Sport (outdoor/team sports)
   sport_football: {
