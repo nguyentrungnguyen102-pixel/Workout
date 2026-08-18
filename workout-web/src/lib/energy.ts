@@ -125,6 +125,10 @@ export const MET_TABLE: Record<string, number> = {
   db_curtsy_lunge: 4.5, // TODO verify — same family as db_lunge, added lateral/rotational component
   db_single_leg_deadlift: 5.0, // TODO verify — same family as db_rdl, added balance demand
 
+  // Dumbbell (home training) — Phase 14
+  db_shrug: 3.0, // TODO verify — small isolated shoulder movement, light like db_calf_raise
+  db_squat: 5.0, // TODO verify — same family as db_goblet_squat, load held at sides instead of chest
+
   // Sport (outdoor/team sports) — TODO verify against Compendium sport codes
   sport_football: 7.0, // soccer, casual/competitive
   sport_swimming: 6.0, // laps, moderate effort
