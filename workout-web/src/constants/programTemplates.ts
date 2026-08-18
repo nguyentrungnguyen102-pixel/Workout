@@ -471,6 +471,55 @@ export const PROGRAM_TEMPLATES: WorkoutProgram[] = [
       },
     ],
   },
+
+  {
+    id: 'dumbbell_home_ultra_simple_3x',
+    nameVi: 'Tạ Đơn Tại Nhà - Siêu Cơ Bản 3x',
+    descriptionVi: 'Cho người chưa từng cầm tạ. Mỗi buổi chỉ 3 bài dễ nhất, số hiệp thấp, không cần nhớ nhiều động tác.',
+    emoji: '🌱',
+    daysPerWeek: 3,
+    difficulty: 'beginner',
+    focus: 'strength',
+    estimatedMinutes: 20,
+    days: [
+      {
+        id: 'dbus_day1',
+        order: 1,
+        nameVi: 'Buổi A',
+        focusVi: 'Chân · Lưng · Vai',
+        emoji: '🌱',
+        exercises: [
+          { presetId: 'db_squat',          nameVi: 'Squat tạ hai bên (đùi, dễ hơn ôm tạ)', sets: 2, reps: 12, unit: 'reps' },
+          { presetId: 'db_bent_row',       nameVi: 'Kéo tạ cúi người (lưng)',               sets: 2, reps: 10, unit: 'reps' },
+          { presetId: 'db_shrug',          nameVi: 'Nhún vai tạ (cầu vai)',                 sets: 2, reps: 15, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'dbus_day2',
+        order: 2,
+        nameVi: 'Buổi B',
+        focusVi: 'Tay trước · Vai · Chân',
+        emoji: '🌱',
+        exercises: [
+          { presetId: 'db_bicep_curl',     nameVi: 'Curl tạ đơn (bắp tay)', sets: 2, reps: 10, unit: 'reps' },
+          { presetId: 'db_shoulder_press', nameVi: 'Đẩy tạ đôi (vai)',      sets: 2, reps: 10, unit: 'reps' },
+          { presetId: 'db_squat',          nameVi: 'Squat tạ hai bên (đùi, dễ hơn ôm tạ)', sets: 2, reps: 12, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'dbus_day3',
+        order: 3,
+        nameVi: 'Buổi C',
+        focusVi: 'Lưng · Vai · Tay trước',
+        emoji: '🌱',
+        exercises: [
+          { presetId: 'db_bent_row',       nameVi: 'Kéo tạ cúi người (lưng)', sets: 2, reps: 10, unit: 'reps' },
+          { presetId: 'db_shrug',          nameVi: 'Nhún vai tạ (cầu vai)',   sets: 2, reps: 15, unit: 'reps' },
+          { presetId: 'db_bicep_curl',     nameVi: 'Curl tạ đơn (bắp tay)',   sets: 2, reps: 10, unit: 'reps' },
+        ],
+      },
+    ],
+  },
 ];
 
 export const DIFFICULTY_LABELS: Record<string, string> = {

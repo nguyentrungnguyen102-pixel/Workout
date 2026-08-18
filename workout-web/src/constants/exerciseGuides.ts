@@ -496,6 +496,22 @@ export const EXERCISE_GUIDES: Record<string, ExerciseGuide> = {
     ],
     tips: ['Giữ lưng thẳng suốt động tác, mắt nhìn xuống điểm cố định để giữ thăng bằng', 'Bắt đầu với tạ nhẹ hoặc không tạ để làm quen thăng bằng'],
   },
+  db_shrug: {
+    steps: [
+      'Đứng thẳng, mỗi tay cầm một tạ xuôi theo thân, hai tay thả lỏng',
+      'Nhún hai vai thẳng lên cao hết mức, giữ 1 giây ở đỉnh',
+      'Hạ vai xuống từ từ về vị trí ban đầu',
+    ],
+    tips: ['Chỉ nhún lên-xuống theo chiều thẳng đứng, không xoay tròn vai', 'Không dùng đà hoặc gập khuỷu tay để kéo tạ lên'],
+  },
+  db_squat: {
+    steps: [
+      'Đứng thẳng, chân rộng bằng vai, mỗi tay cầm một tạ xuôi hai bên đùi',
+      'Đẩy hông ra sau và hạ xuống như ngồi ghế, lưng thẳng, tạ theo sát hai bên đùi',
+      'Xuống đến khi đùi song song sàn rồi đẩy gót chân để đứng thẳng dậy',
+    ],
+    tips: ['Dễ giữ thăng bằng hơn Goblet Squat vì tạ ở hai bên thay vì ôm trước ngực — phù hợp người mới cầm tạ lần đầu', 'Không để đầu gối đổ vào trong, gót chân chạm sàn suốt động tác'],
+  },
 
   // Sport (outdoor/team sports)
   sport_football: {
