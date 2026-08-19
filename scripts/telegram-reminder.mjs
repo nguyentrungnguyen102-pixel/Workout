@@ -536,6 +536,21 @@ function resolveSlot(nowMinutes, morningStr, eveningStr) {
   return null;
 }
 
+// Không có timeout mặc định cho fetch/Firestore — nếu Telegram API hoặc
+// Firestore không phản hồi (mất mạng, treo kết nối), job GitHub Actions có
+// thể treo tới khi hết giờ chạy, chiếm slot và làm trễ các lần cron /30
+// phút kế tiếp (từng gây bỏ lỡ tin nhắc thực tế). Bọc mọi lệnh gọi mạng
+// bằng timeout ngắn để job luôn kết thúc nhanh, kể cả khi lỗi.
+const NETWORK_TIMEOUT_MS = 10_000;
+
+function withTimeout(promise, ms, label) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`Timeout sau ${ms}ms: ${label}`)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
 async function sendTelegramMessage(chatId, text) {
   try {
     const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
@@ -547,6 +562,7 @@ async function sendTelegramMessage(chatId, text) {
         parse_mode: 'HTML',
         disable_web_page_preview: true,
       }),
+      signal: AbortSignal.timeout(NETWORK_TIMEOUT_MS),
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.ok) {
@@ -558,6 +574,17 @@ async function sendTelegramMessage(chatId, text) {
     console.error(`  Lỗi gọi Telegram API: ${err.message}`);
     return false;
   }
+}
+
+// Dùng chung bởi processUser() và sendTestAllVariants() — cùng 1 query,
+// cùng timeout guard.
+async function queryUserLogs(db, uid) {
+  const logsSnap = await withTimeout(
+    db.collection('logs').where('userId', '==', uid).get(),
+    NETWORK_TIMEOUT_MS,
+    `query logs của user ${uid}`
+  );
+  return logsSnap.docs.map((d) => d.data());
 }
 
 async function processUser(db, uid, profile) {
@@ -585,9 +612,7 @@ async function processUser(db, uid, profile) {
   if (profile.lastReminderSent?.[slot] === localToday) return; // already sent today
 
   const goals = profile.exerciseGoals || [];
-
-  const logsSnap = await db.collection('logs').where('userId', '==', uid).get();
-  const allLogs = logsSnap.docs.map((d) => d.data());
+  const allLogs = await queryUserLogs(db, uid);
 
   let message;
   if (slot === 'morning') {
@@ -622,8 +647,7 @@ async function sendTestAllVariants(db, uid, profile) {
   const localToday = new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(now); // YYYY-MM-DD
 
   const goals = profile.exerciseGoals || [];
-  const logsSnap = await db.collection('logs').where('userId', '==', uid).get();
-  const allLogs = logsSnap.docs.map((d) => d.data());
+  const allLogs = await queryUserLogs(db, uid);
 
   const variants = [
     { label: 'Thứ 2–6 · Sáng', build: buildWeekdayMorningMessage },
@@ -645,7 +669,11 @@ async function runLive() {
   admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
   const db = admin.firestore();
 
-  const usersSnap = await db.collection('users').where('reminderEnabled', '==', true).get();
+  const usersSnap = await withTimeout(
+    db.collection('users').where('reminderEnabled', '==', true).get(),
+    NETWORK_TIMEOUT_MS,
+    'query users bật nhắc tập'
+  );
   console.log(`Tìm thấy ${usersSnap.size} user bật nhắc tập.`);
   if (TEST_ALL_VARIANTS) console.log('=== TEST MODE — gửi cả 4 mẫu tin, bỏ qua giờ/thứ/chống trùng ===');
 
