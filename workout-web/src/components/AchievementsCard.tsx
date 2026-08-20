@@ -8,7 +8,7 @@ interface Props {
   profile: UserProfile | null;
 }
 
-const GROUP_ORDER = ['streak', 'sessions', 'minutes', 'pr', 'consistency', 'variety'];
+const GROUP_ORDER = ['streak', 'sessions', 'minutes', 'pr', 'consistency', 'variety', 'dumbbell_sessions'];
 
 function AchievementBadge({ a }: { a: Achievement }) {
   if (a.unlocked) {

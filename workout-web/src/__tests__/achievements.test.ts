@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { computeAchievements } from '../lib/achievements';
 import { daysAgoString } from '../lib/date';
+import { CATEGORY_LABELS } from '../constants/exercises';
 import { WorkoutLog } from '../types/workout';
 import { UserProfile } from '../types/user';
 
@@ -85,6 +86,32 @@ describe('computeAchievements', () => {
 
     expect(find(achievements, 'variety', 3).unlocked).toBe(true);
     expect(find(achievements, 'variety', 4).unlocked).toBe(false);
+  });
+
+  it('offers a variety tier for every exercise category that actually exists (not a stale hardcoded max)', () => {
+    // Regression: the 'variety' ladder used to cap at 6 and its label said
+    // "n/6 nhóm cơ" even after the 'sport' category brought the real total
+    // to 7 (v2.16.0) — so a user who trained all 7 categories could never
+    // unlock (or even see) a matching top tier.
+    const achievements = computeAchievements([], makeProfile(0));
+    const varietyTiers = achievements.filter((a) => a.group === 'variety');
+    const highestTarget = Math.max(...varietyTiers.map((a) => a.target));
+
+    expect(highestTarget).toBe(Object.keys(CATEGORY_LABELS).length);
+    expect(varietyTiers.find((a) => a.target === highestTarget)?.title).toContain(`/${highestTarget}`);
+  });
+
+  it('counts dumbbell_sessions as logs containing at least one dumbbell-category exercise', () => {
+    const logs = [
+      makeLog(0, { presetId: 'db_bicep_curl', category: 'dumbbell' }),
+      makeLog(1, { presetId: 'db_goblet_squat', category: 'dumbbell' }),
+      makeLog(2, { presetId: 'pushup', category: 'strength' }),
+    ];
+    const achievements = computeAchievements(logs, makeProfile(0));
+
+    expect(find(achievements, 'dumbbell_sessions', 1).unlocked).toBe(true);
+    expect(find(achievements, 'dumbbell_sessions', 1).current).toBe(2);
+    expect(find(achievements, 'dumbbell_sessions', 5).unlocked).toBe(false);
   });
 
   it('counts PRs via prService.computePRs for the pr group', () => {
