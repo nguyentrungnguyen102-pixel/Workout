@@ -3,6 +3,12 @@ import { UserProfile } from '../types/user';
 import { computePRs } from '../services/prService';
 import { logMinutes } from './energy';
 import { daysAgoString } from './date';
+import { CATEGORY_LABELS } from '../constants/exercises';
+
+// Single source of truth for "how many exercise categories exist" so the
+// 'variety' ladder below never drifts from CATEGORY_LABELS again (it did:
+// 'sport' was added in v2.16.0 but this file kept hardcoding a max of 6).
+const TOTAL_CATEGORIES = Object.keys(CATEGORY_LABELS).length;
 
 export interface Achievement {
   id: string;
@@ -65,9 +71,16 @@ const GROUPS: GroupDef[] = [
   {
     group: 'variety',
     icon: '🧩',
-    thresholds: [3, 4, 5, 6],
-    title: (n) => `Tập ${n}/6 nhóm cơ`,
-    desc: (n) => `Đã luyện tập ${n}/6 nhóm bài tập khác nhau`,
+    thresholds: Array.from({ length: TOTAL_CATEGORIES - 2 }, (_, i) => i + 3),
+    title: (n) => `Tập ${n}/${TOTAL_CATEGORIES} nhóm cơ`,
+    desc: (n) => `Đã luyện tập ${n}/${TOTAL_CATEGORIES} nhóm bài tập khác nhau`,
+  },
+  {
+    group: 'dumbbell_sessions',
+    icon: '🏋️‍♂️',
+    thresholds: [1, 5, 15, 30, 60],
+    title: (n) => `${n} buổi tạ đơn`,
+    desc: (n) => `Tập với tạ đơn tại nhà ${n} buổi`,
   },
 ];
 
@@ -105,6 +118,9 @@ function currentValueFor(group: string, logs: WorkoutLog[], profile: UserProfile
       logs.forEach((l) => l.exercises.forEach((e) => categories.add(e.category)));
       return categories.size;
     }
+
+    case 'dumbbell_sessions':
+      return logs.filter((l) => l.exercises.some((e) => e.category === 'dumbbell')).length;
 
     default:
       return 0;
