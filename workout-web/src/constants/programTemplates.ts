@@ -471,6 +471,62 @@ export const PROGRAM_TEMPLATES: WorkoutProgram[] = [
       },
     ],
   },
+
+  // Phase 14 — dùng 8 bài tạ đơn đã có sẵn trong SYSTEM_PRESETS từ các đợt
+  // trước (Phase 5/9/11) nhưng chưa từng được xếp vào chương trình nào:
+  // db_sumo_squat, db_upright_row, db_tricep_kick, db_front_raise,
+  // db_pullover, db_concentration_curl, db_thruster, db_wrist_curl. Chia
+  // theo Đẩy/Kéo/Chân — cấu trúc quen thuộc ở các app tập phổ biến — số
+  // hiệp thấp (3) và bài đơn giản, phù hợp mới cầm tạ.
+  {
+    id: 'dumbbell_home_basic_push_pull_legs_3x',
+    nameVi: 'Tạ Đơn Cơ Bản - Đẩy/Kéo/Chân 3x',
+    descriptionVi: 'Bài tạ đơn đơn giản, chia Đẩy/Kéo/Chân, 3 buổi/tuần. Dễ tập, chỉ cần 1 đôi tạ nhẹ.',
+    emoji: '🔵',
+    daysPerWeek: 3,
+    difficulty: 'beginner',
+    focus: 'strength',
+    estimatedMinutes: 30,
+    days: [
+      {
+        id: 'dbpl_push',
+        order: 1,
+        nameVi: 'Buổi Đẩy',
+        focusVi: 'Ngực · Vai · Tay sau',
+        emoji: '🫸',
+        exercises: [
+          { presetId: 'db_thruster',    nameVi: 'Thruster tạ (toàn thân)',  sets: 3, reps: 10, unit: 'reps' },
+          { presetId: 'db_front_raise', nameVi: 'Nâng tạ phía trước',       sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_tricep_kick', nameVi: 'Đá tay sau (tricep)',      sets: 3, reps: 12, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'dbpl_pull',
+        order: 2,
+        nameVi: 'Buổi Kéo',
+        focusVi: 'Lưng · Vai/Thang · Tay trước',
+        emoji: '🫷',
+        exercises: [
+          { presetId: 'db_pullover',          nameVi: 'Kéo tạ qua đầu (ngực/xô)', sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_upright_row',       nameVi: 'Kéo tạ đứng (vai/thang)',  sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_concentration_curl',nameVi: 'Curl tập trung (bắp tay)', sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_wrist_curl',        nameVi: 'Gập cổ tay tạ (cẳng tay)', sets: 2, reps: 15, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'dbpl_legs',
+        order: 3,
+        nameVi: 'Buổi Chân',
+        focusVi: 'Đùi · Mông · Bắp chân',
+        emoji: '🦵',
+        exercises: [
+          { presetId: 'db_sumo_squat', nameVi: 'Squat sumo tạ (mông)',   sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'db_step_up',    nameVi: 'Bước lên bục có tạ (đùi mông)', sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_calf_raise', nameVi: 'Nâng gót tạ (bắp chân)', sets: 3, reps: 20, unit: 'reps' },
+        ],
+      },
+    ],
+  },
 ];
 
 export const DIFFICULTY_LABELS: Record<string, string> = {
