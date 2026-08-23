@@ -11,9 +11,20 @@ on:
         type: boolean
         default: false
 
+# Chống chồng lấn: nếu 1 lần chạy bị treo mà chưa xong khi tick /30 phút kế
+# tiếp tới, lần chạy mới sẽ CHỜ thay vì chạy song song — tránh 2 job cùng
+# ghi lastReminderSent một lúc.
+concurrency:
+  group: telegram-reminder
+  cancel-in-progress: false
+
 jobs:
   remind:
     runs-on: ubuntu-latest
+    # Backstop cứng: script tự thoát tường minh (process.exit) ngay khi xong
+    # và mọi lệnh gọi mạng có timeout riêng, nhưng nếu vẫn treo vì lý do nào
+    # khác thì job tự huỷ sau 5 phút thay vì chiếm slot hàng giờ.
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
 

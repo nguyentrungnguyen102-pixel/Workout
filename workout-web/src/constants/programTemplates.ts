@@ -471,6 +471,57 @@ export const PROGRAM_TEMPLATES: WorkoutProgram[] = [
       },
     ],
   },
+
+  // Phase 14 — dành cho người CHƯA TỪNG cầm tạ (khác "Người Mới 2x" vốn đã
+  // giả định biết vài động tác cơ bản): mỗi buổi chỉ 2 bài, số hiệp thấp
+  // (2), ưu tiên bài ít rủi ro sai form (nhún vai, dead bug, mang tạ đi bộ)
+  // — giống cấu trúc "tuần làm quen" ở các app tập phổ biến (Nike Training
+  // Club, Freeletics) cho người mới hoàn toàn.
+  {
+    id: 'dumbbell_home_super_basic_3x',
+    nameVi: 'Tạ Đơn Siêu Cơ Bản 3x',
+    descriptionVi: 'Dành cho người chưa từng cầm tạ. Mỗi buổi chỉ 2 bài, ít hiệp, động tác đơn giản dễ giữ đúng form.',
+    emoji: '🌱',
+    daysPerWeek: 3,
+    difficulty: 'beginner',
+    focus: 'strength',
+    estimatedMinutes: 15,
+    days: [
+      {
+        id: 'dbsb_a',
+        order: 1,
+        nameVi: 'Buổi A · Chân & Vai',
+        focusVi: 'Đùi · Vai',
+        emoji: '🌱',
+        exercises: [
+          { presetId: 'db_goblet_squat', nameVi: 'Squat ôm tạ (đùi)',     sets: 2, reps: 10, unit: 'reps' },
+          { presetId: 'db_shrug',        nameVi: 'Nhún vai tạ (cầu vai)', sets: 2, reps: 12, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'dbsb_b',
+        order: 2,
+        nameVi: 'Buổi B · Tay & Core',
+        focusVi: 'Bắp tay · Core',
+        emoji: '🌱',
+        exercises: [
+          { presetId: 'db_bicep_curl', nameVi: 'Curl tạ đơn (bắp tay)', sets: 2, reps: 10, unit: 'reps' },
+          { presetId: 'db_dead_bug',   nameVi: 'Dead bug tạ (core)',    sets: 2, reps: 10, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'dbsb_c',
+        order: 3,
+        nameVi: 'Buổi C · Toàn Thân',
+        focusVi: 'Cầm nắm · Core · Thăng bằng',
+        emoji: '🌱',
+        exercises: [
+          { presetId: 'db_suitcase_carry', nameVi: 'Mang tạ một bên (core/cầm nắm)', sets: 2, durationSeconds: 20, unit: 'seconds' },
+          { presetId: 'db_shoulder_press', nameVi: 'Đẩy tạ đôi (vai)',               sets: 2, reps: 8,  unit: 'reps' },
+        ],
+      },
+    ],
+  },
 ];
 
 export const DIFFICULTY_LABELS: Record<string, string> = {

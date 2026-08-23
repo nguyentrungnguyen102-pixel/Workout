@@ -32,6 +32,25 @@ const FIREBASE_SERVICE_ACCOUNT = process.env.FIREBASE_SERVICE_ACCOUNT;
 // an actual Saturday/Sunday.
 const TEST_ALL_VARIANTS = process.env.TEST_ALL_VARIANTS === 'true';
 
+// GitHub Actions job đã treo vô thời hạn nhiều lần trong thực tế (job
+// "cancelled" sau hàng chục phút không rõ lý do). Nguyên nhân gốc:
+// firebase-admin giữ kết nối gRPC nền mở nên process không tự thoát dù
+// main() đã resolve xong toàn bộ logic — phải process.exit() tường minh
+// (xem cuối file). Đồng thời mọi lệnh gọi mạng (Firestore, Telegram) được
+// bọc timeout riêng để 1 request treo giữa chừng không kéo cả job theo.
+const NETWORK_TIMEOUT_MS = 15_000;
+
+function withTimeout(promise, label) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`Timeout sau ${NETWORK_TIMEOUT_MS}ms: ${label}`)), NETWORK_TIMEOUT_MS);
+  });
+  // Nếu promise gốc reject sau khi timeout đã thắng race, đừng để nó thành
+  // unhandled rejection (Node mặc định crash process vì lỗi này).
+  promise.catch(() => {});
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
 // Mirrors src/lib/quotes.ts QUOTES — bilingual (en/vi) + author, same set
 // shown in the app's QuoteBanner so the Telegram message matches the app.
 const QUOTES = [
@@ -547,6 +566,7 @@ async function sendTelegramMessage(chatId, text) {
         parse_mode: 'HTML',
         disable_web_page_preview: true,
       }),
+      signal: AbortSignal.timeout(NETWORK_TIMEOUT_MS),
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.ok) {
@@ -586,7 +606,10 @@ async function processUser(db, uid, profile) {
 
   const goals = profile.exerciseGoals || [];
 
-  const logsSnap = await db.collection('logs').where('userId', '==', uid).get();
+  const logsSnap = await withTimeout(
+    db.collection('logs').where('userId', '==', uid).get(),
+    `lấy logs của user ${uid}`
+  );
   const allLogs = logsSnap.docs.map((d) => d.data());
 
   let message;
@@ -602,9 +625,12 @@ async function processUser(db, uid, profile) {
 
   const ok = await sendTelegramMessage(profile.telegramChatId, message);
   if (ok) {
-    await db.collection('users').doc(uid).set(
-      { lastReminderSent: { [slot]: localToday } },
-      { merge: true }
+    await withTimeout(
+      db.collection('users').doc(uid).set(
+        { lastReminderSent: { [slot]: localToday } },
+        { merge: true }
+      ),
+      `ghi lastReminderSent cho user ${uid}`
     );
     console.log(`  Đã gửi (${slot}) cho user ${uid}`);
   } else {
@@ -622,7 +648,10 @@ async function sendTestAllVariants(db, uid, profile) {
   const localToday = new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(now); // YYYY-MM-DD
 
   const goals = profile.exerciseGoals || [];
-  const logsSnap = await db.collection('logs').where('userId', '==', uid).get();
+  const logsSnap = await withTimeout(
+    db.collection('logs').where('userId', '==', uid).get(),
+    `lấy logs của user ${uid} (test mode)`
+  );
   const allLogs = logsSnap.docs.map((d) => d.data());
 
   const variants = [
@@ -645,7 +674,10 @@ async function runLive() {
   admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
   const db = admin.firestore();
 
-  const usersSnap = await db.collection('users').where('reminderEnabled', '==', true).get();
+  const usersSnap = await withTimeout(
+    db.collection('users').where('reminderEnabled', '==', true).get(),
+    'lấy danh sách user bật nhắc tập'
+  );
   console.log(`Tìm thấy ${usersSnap.size} user bật nhắc tập.`);
   if (TEST_ALL_VARIANTS) console.log('=== TEST MODE — gửi cả 4 mẫu tin, bỏ qua giờ/thứ/chống trùng ===');
 
@@ -711,7 +743,15 @@ async function main() {
   await runLive();
 }
 
-main().catch((err) => {
-  console.error('Lỗi không xử lý được:', err);
-  process.exit(1);
-});
+// firebase-admin giữ kết nối gRPC nền mở nên Node KHÔNG tự thoát process dù
+// main() đã resolve xong toàn bộ logic — không có process.exit() tường
+// minh ở đây thì job GitHub Actions treo tới khi bị hệ thống tự huỷ, chiếm
+// slot và làm trễ mọi lần chạy cron /30 phút kế tiếp. Thoát tường minh ở cả
+// 2 nhánh (thành công/lỗi) để job luôn kết thúc ngay khi logic xong, bất kể
+// còn handle nền nào mở.
+main()
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error('Lỗi không xử lý được:', err);
+    process.exit(1);
+  });
