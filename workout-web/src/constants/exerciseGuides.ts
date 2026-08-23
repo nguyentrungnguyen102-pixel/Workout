@@ -497,6 +497,32 @@ export const EXERCISE_GUIDES: Record<string, ExerciseGuide> = {
     tips: ['Giữ lưng thẳng suốt động tác, mắt nhìn xuống điểm cố định để giữ thăng bằng', 'Bắt đầu với tạ nhẹ hoặc không tạ để làm quen thăng bằng'],
   },
 
+  // Dumbbell — Phase 14, 3 bài siêu cơ bản
+  db_shrug: {
+    steps: [
+      'Đứng thẳng, hai tay cầm tạ buông thẳng dọc thân người',
+      'Nhún hai vai lên cao hết mức về phía tai, giữ 1 giây',
+      'Hạ vai xuống từ từ về vị trí ban đầu',
+    ],
+    tips: ['Không xoay vai theo vòng tròn, chỉ nhún thẳng lên-xuống', 'Không dùng tay/khuỷu để hất tạ lên'],
+  },
+  db_dead_bug: {
+    steps: [
+      'Nằm ngửa, tay cầm tạ duỗi thẳng lên trần, gối gập vuông góc như đang ngồi',
+      'Duỗi thẳng đồng thời tay đối diện ra sau đầu và chân đối diện ra trước, gần chạm sàn',
+      'Thu tay và chân về vị trí ban đầu, đổi bên',
+    ],
+    tips: ['Ép lưng dưới sát sàn suốt động tác, không để võng lưng', 'Làm chậm, kiểm soát hơn là làm nhanh'],
+  },
+  db_suitcase_carry: {
+    steps: [
+      'Đứng thẳng, một tay cầm tạ buông dọc thân như xách vali',
+      'Đi bộ thẳng lưng, vai ngang bằng, không nghiêng người về phía tạ',
+      'Đi đủ thời gian/quãng đường rồi đổi tay',
+    ],
+    tips: ['Siết bụng để giữ thân thẳng, đây chính là bài tập core dù tay đang cầm tạ', 'Bắt đầu với tạ nhẹ vì giữ thăng bằng khó hơn tưởng tượng'],
+  },
+
   // Sport (outdoor/team sports)
   sport_football: {
     steps: [
