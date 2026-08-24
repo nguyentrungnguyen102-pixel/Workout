@@ -362,6 +362,7 @@ export const PROGRAM_TEMPLATES: WorkoutProgram[] = [
           { presetId: 'db_lunge',        nameVi: 'Lunge tạ (đùi mông)',        sets: 3, reps: 12, unit: 'reps' },
           { presetId: 'db_rdl',          nameVi: 'Deadlift tạ Romania (sau đùi)', sets: 3, reps: 12, unit: 'reps' },
           { presetId: 'db_hip_thrust',   nameVi: 'Hip thrust tạ (mông)',       sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'db_suitcase_carry', nameVi: 'Xách tạ một bên (core chống nghiêng)', sets: 3, durationSeconds: 40, unit: 'seconds' },
         ],
       },
     ],
@@ -398,6 +399,7 @@ export const PROGRAM_TEMPLATES: WorkoutProgram[] = [
         exercises: [
           { presetId: 'db_bent_row',        nameVi: 'Kéo tạ cúi người (lưng)', sets: 2, reps: 10, unit: 'reps' },
           { presetId: 'db_lunge',           nameVi: 'Lunge tạ (đùi mông)',     sets: 2, reps: 10, unit: 'reps' },
+          { presetId: 'db_dead_bug',        nameVi: 'Dead bug tạ (bụng)',      sets: 2, reps: 10, unit: 'reps' },
           { presetId: 'db_farmers_carry',   nameVi: 'Đi bộ mang tạ (toàn thân)', sets: 2, durationSeconds: 30, unit: 'seconds' },
         ],
       },
@@ -450,6 +452,7 @@ export const PROGRAM_TEMPLATES: WorkoutProgram[] = [
         exercises: [
           { presetId: 'db_bent_row',       nameVi: 'Kéo tạ cúi người (lưng)', sets: 4, reps: 12, unit: 'reps' },
           { presetId: 'db_single_arm_row', nameVi: 'Kéo tạ một tay (lưng)',   sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_shrug',          nameVi: 'Nhún vai tạ (cầu vai)',   sets: 3, reps: 15, unit: 'reps' },
           { presetId: 'db_reverse_fly',    nameVi: 'Bay tạ ngược (vai sau)',  sets: 3, reps: 15, unit: 'reps' },
           { presetId: 'db_bicep_curl',     nameVi: 'Curl tạ đơn (bắp tay)',   sets: 3, reps: 12, unit: 'reps' },
           { presetId: 'db_hammer_curl',    nameVi: 'Curl búa (bắp tay)',      sets: 3, reps: 12, unit: 'reps' },
