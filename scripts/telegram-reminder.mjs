@@ -708,10 +708,22 @@ async function main() {
     runDryRun();
     return;
   }
-  await runLive();
+  try {
+    await runLive();
+  } finally {
+    // firebase-admin keeps its gRPC channel to Firestore open after the last
+    // call resolves, so the event loop never drains on its own — without an
+    // explicit exit, this job hangs until the workflow's default timeout
+    // instead of finishing in seconds (observed running the cron every 30
+    // min, queuing up runs). admin.app().delete() closes the channel first
+    // so this stays a clean shutdown rather than a hard kill.
+    await admin.app().delete();
+  }
 }
 
-main().catch((err) => {
-  console.error('Lỗi không xử lý được:', err);
-  process.exit(1);
-});
+main()
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error('Lỗi không xử lý được:', err);
+    process.exit(1);
+  });

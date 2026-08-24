@@ -497,6 +497,40 @@ export const EXERCISE_GUIDES: Record<string, ExerciseGuide> = {
     tips: ['Giữ lưng thẳng suốt động tác, mắt nhìn xuống điểm cố định để giữ thăng bằng', 'Bắt đầu với tạ nhẹ hoặc không tạ để làm quen thăng bằng'],
   },
 
+  // Dumbbell (home training) — Phase 14
+  db_shrug: {
+    steps: [
+      'Đứng thẳng, mỗi tay cầm một tạ xuôi theo thân, lòng bàn tay hướng vào người',
+      'Nhún hai vai thẳng lên phía tai (không xoay vai vòng), giữ 1 giây ở đỉnh',
+      'Hạ vai từ từ về vị trí ban đầu',
+    ],
+    tips: ['Không dùng tay/khuỷu kéo tạ lên, lực chỉ đến từ vai', 'Không xoay vai theo vòng tròn — dễ gây chấn thương'],
+  },
+  db_suitcase_carry: {
+    steps: [
+      'Cầm một tạ ở một bên tay, đứng thẳng như đang xách vali',
+      'Đi bộ thẳng lưng, siết bụng để thân người không nghiêng về phía tạ',
+      'Đi hết thời gian/quãng đường rồi đổi tay',
+    ],
+    tips: ['Vai hai bên giữ ngang bằng, không so lệch bên cầm tạ', 'Bắt đầu quãng ngắn với tạ vừa sức vì cơ core phải làm việc liên tục'],
+  },
+  db_dead_bug: {
+    steps: [
+      'Nằm ngửa, hai tay cầm tạ (hoặc một tạ hai tay) đưa thẳng lên trần, hông và gối gập 90°',
+      'Ép lưng dưới sát sàn, duỗi thẳng một tay ra sau đầu đồng thời duỗi chân đối diện gần chạm sàn',
+      'Về lại vị trí ban đầu, đổi bên tay/chân',
+    ],
+    tips: ['Lưng dưới luôn ép sát sàn suốt động tác — hở lưng nghĩa là đang làm quá sức', 'Thở đều, không nín thở khi duỗi tay chân'],
+  },
+  db_zottman_curl: {
+    steps: [
+      'Đứng thẳng, hai tay cầm tạ, lòng bàn tay hướng lên (như curl thường)',
+      'Curl tạ lên đến vai, sau đó xoay cổ tay để lòng bàn tay hướng xuống ở đỉnh động tác',
+      'Hạ tạ xuống từ từ với lòng bàn tay vẫn úp xuống, xoay lại lòng bàn tay hướng lên khi về vị trí ban đầu',
+    ],
+    tips: ['Pha hạ (úp lòng bàn tay) là phần tập cẳng tay — hạ chậm, không thả rơi', 'Khuỷu tay giữ cố định sát thân suốt động tác'],
+  },
+
   // Sport (outdoor/team sports)
   sport_football: {
     steps: [
