@@ -14,6 +14,10 @@ on:
 jobs:
   remind:
     runs-on: ubuntu-latest
+    # Safety net on top of the process.exit() fix in telegram-reminder.mjs —
+    # this cron fires every 30 min, so a future hang (network stall, a new
+    # unclosed handle) would otherwise queue up runs instead of failing fast.
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
 

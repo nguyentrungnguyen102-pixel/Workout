@@ -77,6 +77,14 @@ export const SYSTEM_PRESETS: WorkoutPreset[] = [
   { id: 'db_curtsy_lunge',     name: 'Curtsy Lunge',       nameVi: 'Lunge chéo tạ (đùi trong/mông)', category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🦵', isCustom: false, usageCount: 0, muscleGroup: 'legs' },
   { id: 'db_single_leg_deadlift', name: 'Single Leg Deadlift', nameVi: 'Deadlift một chân tạ (thăng bằng/mông)', category: 'dumbbell', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '🧍', isCustom: false, usageCount: 0, muscleGroup: 'legs' },
 
+  // Dumbbell (home training) — Phase 14, 4 bài tạ đơn giản còn thiếu so với
+  // các app phổ biến (Strong/Hevy): nhún vai (traps), 2 bài core cầm tạ,
+  // 1 bài tay trước/cẳng tay kết hợp
+  { id: 'db_shrug',            name: 'Dumbbell Shrug',     nameVi: 'Nhún vai tạ (cầu vai)', category: 'dumbbell', unit: 'reps', defaultValue: 15, defaultSets: 3, icon: '🤷', isCustom: false, usageCount: 0, muscleGroup: 'shoulders' },
+  { id: 'db_suitcase_carry',   name: 'Suitcase Carry',     nameVi: 'Xách tạ một bên (core chống nghiêng)', category: 'dumbbell', unit: 'seconds', defaultValue: 40, defaultSets: 3, icon: '💼', isCustom: false, usageCount: 0, muscleGroup: 'core' },
+  { id: 'db_dead_bug',         name: 'Dumbbell Dead Bug',  nameVi: 'Dead bug tạ (bụng)', category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🐛', isCustom: false, usageCount: 0, muscleGroup: 'core' },
+  { id: 'db_zottman_curl',     name: 'Zottman Curl',       nameVi: 'Curl Zottman (bắp tay + cẳng tay)', category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🔁', isCustom: false, usageCount: 0, muscleGroup: 'arms' },
+
   // Sport (outdoor/team sports) — tracked separately from indoor cardio so
   // "sport frequency" stats/PRs/charts don't blend with treadmill running,
   // jump rope etc. Existing running/cycling stay in cardio (unchanged) —
