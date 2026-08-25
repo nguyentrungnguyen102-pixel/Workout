@@ -7,6 +7,7 @@ export interface TimelineItem {
   sortKey: number;
   name: string;
   ex: ExerciseEntry;
+  logId: string;
 }
 
 export function buildDayTimeline(logs: WorkoutLog[]): TimelineItem[] {
@@ -16,7 +17,7 @@ export function buildDayTimeline(logs: WorkoutLog[]): TimelineItem[] {
     const time = formatTime24(ts ?? null);
     const sortKey = ts?.toMillis() ?? 0;
     for (const ex of log.exercises) {
-      items.push({ time, sortKey, name: ex.name, ex });
+      items.push({ time, sortKey, name: ex.name, ex, logId: log.id });
     }
   }
   items.sort((a, b) => a.sortKey - b.sortKey);
