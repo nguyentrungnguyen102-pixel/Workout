@@ -9,10 +9,11 @@ import {
   serverTimestamp,
   increment,
   updateDoc,
+  deleteDoc,
   Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { DraftWorkout, WorkoutLog, WorkoutPreset, Intensity } from '../types/workout';
+import { DraftWorkout, ExerciseEntry, WorkoutLog, WorkoutPreset, Intensity } from '../types/workout';
 import { todayString, yesterdayString } from '../lib/date';
 import { exerciseMinutes, logKcal } from '../lib/energy';
 
@@ -21,6 +22,25 @@ function deriveIntensity(exercises: WorkoutLog['exercises']): { intensity: Inten
   if (totalSets >= 12) return { intensity: 'heavy', score: 8 };
   if (totalSets >= 6) return { intensity: 'moderate', score: 5 };
   return { intensity: 'light', score: 3 };
+}
+
+// Strips undefined optional fields before writing to Firestore (which
+// rejects `undefined` values) — shared by logWorkout (create) and updateLog.
+function sanitizeExercises(exercises: ExerciseEntry[]): Record<string, any>[] {
+  return exercises.map((e) => {
+    const c: Record<string, any> = {
+      presetId: e.presetId,
+      name: e.name,
+      category: e.category,
+      unit: e.unit,
+      sets: e.sets ?? 1,
+    };
+    if (e.reps !== undefined) c.reps = e.reps;
+    if (e.durationSeconds !== undefined) c.durationSeconds = e.durationSeconds;
+    if (e.weight !== undefined) c.weight = e.weight;
+    if (e.distance !== undefined) c.distance = e.distance;
+    return c;
+  });
 }
 
 export async function logWorkout(
@@ -54,20 +74,7 @@ export async function logWorkout(
     weightKg ?? 0
   );
 
-  const cleanExercises = draft.exercises.map((e) => {
-    const c: Record<string, any> = {
-      presetId: e.presetId,
-      name: e.name,
-      category: e.category,
-      unit: e.unit,
-      sets: e.sets ?? 1,
-    };
-    if (e.reps !== undefined) c.reps = e.reps;
-    if (e.durationSeconds !== undefined) c.durationSeconds = e.durationSeconds;
-    if (e.weight !== undefined) c.weight = e.weight;
-    if (e.distance !== undefined) c.distance = e.distance;
-    return c;
-  });
+  const cleanExercises = sanitizeExercises(draft.exercises);
 
   // Each log call creates a new document (multiple logs per day supported)
   const logRef = doc(collection(db, 'logs'));
@@ -170,6 +177,42 @@ export function buildDraftFromLog(log: WorkoutLog): DraftWorkout {
 export async function getLogById(logId: string): Promise<WorkoutLog | null> {
   const snap = await getDoc(doc(db, 'logs', logId));
   return snap.exists() ? (snap.data() as WorkoutLog) : null;
+}
+
+export interface LogEdit {
+  exercises: ExerciseEntry[];
+  notes: string;
+  location: string;
+}
+
+// Overwrites an already-saved log's exercises/notes/location (e.g. fixing a
+// typo'd rep count, or removing an exercise that was logged by mistake).
+// Recomputes duration/intensity/calories the same way logWorkout() does so
+// the edited log stays consistent with stats/PRs/goals derived from it.
+export async function updateLog(logId: string, edit: LogEdit, weightKg?: number): Promise<void> {
+  if (edit.exercises.length === 0) throw new Error('No exercises');
+
+  const totalDurationMinutes = Math.max(
+    1,
+    Math.round(edit.exercises.reduce((sum, e) => sum + exerciseMinutes(e), 0))
+  );
+  const { intensity, score } = deriveIntensity(edit.exercises);
+  const caloriesEstimate = logKcal({ exercises: edit.exercises } as WorkoutLog, weightKg ?? 0);
+
+  await updateDoc(doc(db, 'logs', logId), {
+    exercises: sanitizeExercises(edit.exercises),
+    totalDurationMinutes,
+    intensityScore: score,
+    intensity,
+    caloriesEstimate,
+    notes: edit.notes,
+    location: edit.location,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function deleteLog(logId: string): Promise<void> {
+  await deleteDoc(doc(db, 'logs', logId));
 }
 
 // Full unfiltered history for a user (data export/backup) — same

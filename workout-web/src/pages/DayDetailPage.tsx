@@ -116,15 +116,20 @@ export default function DayDetailPage() {
           </div>
           <div className="divide-y divide-border">
             {timeline.map((item, idx) => (
-              <div key={idx} className="flex items-center gap-3 px-4 py-3">
+              <button
+                key={idx}
+                onClick={() => navigate(`/history/${item.logId}`)}
+                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-card-2 transition-colors"
+              >
                 {item.time && (
                   <span className="text-xs font-bold text-primary flex-shrink-0 w-12">{item.time}</span>
                 )}
                 <span className="font-semibold text-text-main text-sm flex-1">{item.name}</span>
                 <span className="text-sm text-text-secondary">{formatAmount(item.ex)}</span>
-              </div>
+              </button>
             ))}
           </div>
+          <p className="px-4 py-2.5 text-xs text-text-muted border-t border-border">Bấm vào một bài để sửa hoặc xoá buổi tập chứa bài đó</p>
         </div>
       )}
     </div>
