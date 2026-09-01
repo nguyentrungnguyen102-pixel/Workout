@@ -14,6 +14,10 @@ on:
 jobs:
   remind:
     runs-on: ubuntu-latest
+    # Safety net: this job normally finishes in well under a minute — cap it
+    # so a stuck run (e.g. a hung network call) can't silently burn CI
+    # minutes for hours before someone notices.
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
 
