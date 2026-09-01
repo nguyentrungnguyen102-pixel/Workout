@@ -711,7 +711,16 @@ async function main() {
   await runLive();
 }
 
-main().catch((err) => {
-  console.error('Lỗi không xử lý được:', err);
-  process.exit(1);
-});
+main()
+  .then(() => {
+    // firebase-admin keeps its gRPC channels open after the last Firestore
+    // call resolves, which can leave the Node process alive past script end
+    // (a known firebase-admin/Node quirk) — exit explicitly so the CI job
+    // finishes as soon as work is done instead of relying on those handles
+    // to close on their own.
+    process.exit(0);
+  })
+  .catch((err) => {
+    console.error('Lỗi không xử lý được:', err);
+    process.exit(1);
+  });
