@@ -14,6 +14,10 @@ on:
 jobs:
   remind:
     runs-on: ubuntu-latest
+    # Backstop for a stuck network call the script's own timeouts didn't
+    # catch — without this the job can run up to GitHub's 360min default,
+    # blocking every later */30 tick from ever being queued.
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 

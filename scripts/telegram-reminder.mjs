@@ -32,6 +32,22 @@ const FIREBASE_SERVICE_ACCOUNT = process.env.FIREBASE_SERVICE_ACCOUNT;
 // an actual Saturday/Sunday.
 const TEST_ALL_VARIANTS = process.env.TEST_ALL_VARIANTS === 'true';
 
+// Hard caps so a single stuck network call (Telegram API or Firestore) can
+// never hang the job indefinitely — this was observed to run the GitHub
+// Actions job for hours (up to the 360min default), blocking later
+// scheduled ticks from ever queuing. Each await below this point is now
+// bounded; the job-level `timeout-minutes` in the workflow is the backstop.
+const TELEGRAM_FETCH_TIMEOUT_MS = 15_000;
+const FIRESTORE_QUERY_TIMEOUT_MS = 20_000;
+
+function withTimeout(promise, ms, label) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label} vượt quá ${ms}ms — huỷ chờ`)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
 // Mirrors src/lib/quotes.ts QUOTES — bilingual (en/vi) + author, same set
 // shown in the app's QuoteBanner so the Telegram message matches the app.
 const QUOTES = [
@@ -537,6 +553,8 @@ function resolveSlot(nowMinutes, morningStr, eveningStr) {
 }
 
 async function sendTelegramMessage(chatId, text) {
+  const controller = new AbortController();
+  const abortTimer = setTimeout(() => controller.abort(), TELEGRAM_FETCH_TIMEOUT_MS);
   try {
     const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
       method: 'POST',
@@ -547,6 +565,7 @@ async function sendTelegramMessage(chatId, text) {
         parse_mode: 'HTML',
         disable_web_page_preview: true,
       }),
+      signal: controller.signal,
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.ok) {
@@ -555,8 +574,14 @@ async function sendTelegramMessage(chatId, text) {
     }
     return true;
   } catch (err) {
-    console.error(`  Lỗi gọi Telegram API: ${err.message}`);
+    if (err.name === 'AbortError') {
+      console.error(`  Telegram API không phản hồi sau ${TELEGRAM_FETCH_TIMEOUT_MS}ms — bỏ qua, thử lại lần chạy sau`);
+    } else {
+      console.error(`  Lỗi gọi Telegram API: ${err.message}`);
+    }
     return false;
+  } finally {
+    clearTimeout(abortTimer);
   }
 }
 
@@ -586,7 +611,11 @@ async function processUser(db, uid, profile) {
 
   const goals = profile.exerciseGoals || [];
 
-  const logsSnap = await db.collection('logs').where('userId', '==', uid).get();
+  const logsSnap = await withTimeout(
+    db.collection('logs').where('userId', '==', uid).get(),
+    FIRESTORE_QUERY_TIMEOUT_MS,
+    `Firestore logs (user ${uid})`
+  );
   const allLogs = logsSnap.docs.map((d) => d.data());
 
   let message;
@@ -622,7 +651,11 @@ async function sendTestAllVariants(db, uid, profile) {
   const localToday = new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(now); // YYYY-MM-DD
 
   const goals = profile.exerciseGoals || [];
-  const logsSnap = await db.collection('logs').where('userId', '==', uid).get();
+  const logsSnap = await withTimeout(
+    db.collection('logs').where('userId', '==', uid).get(),
+    FIRESTORE_QUERY_TIMEOUT_MS,
+    `Firestore logs (user ${uid})`
+  );
   const allLogs = logsSnap.docs.map((d) => d.data());
 
   const variants = [
@@ -645,7 +678,11 @@ async function runLive() {
   admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
   const db = admin.firestore();
 
-  const usersSnap = await db.collection('users').where('reminderEnabled', '==', true).get();
+  const usersSnap = await withTimeout(
+    db.collection('users').where('reminderEnabled', '==', true).get(),
+    FIRESTORE_QUERY_TIMEOUT_MS,
+    'Firestore users query'
+  );
   console.log(`Tìm thấy ${usersSnap.size} user bật nhắc tập.`);
   if (TEST_ALL_VARIANTS) console.log('=== TEST MODE — gửi cả 4 mẫu tin, bỏ qua giờ/thứ/chống trùng ===');
 
