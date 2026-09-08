@@ -77,6 +77,14 @@ export const SYSTEM_PRESETS: WorkoutPreset[] = [
   { id: 'db_curtsy_lunge',     name: 'Curtsy Lunge',       nameVi: 'Lunge chéo tạ (đùi trong/mông)', category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🦵', isCustom: false, usageCount: 0, muscleGroup: 'legs' },
   { id: 'db_single_leg_deadlift', name: 'Single Leg Deadlift', nameVi: 'Deadlift một chân tạ (thăng bằng/mông)', category: 'dumbbell', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '🧍', isCustom: false, usageCount: 0, muscleGroup: 'legs' },
 
+  // Dumbbell (home training) — Phase 14, thêm 5 bài tạ đơn giản, phổ biến
+  // trong các app tập gym top lượt tải, dễ tập tại nhà với 1 đôi tạ
+  { id: 'db_zottman_curl',     name: 'Zottman Curl',       nameVi: 'Curl Zottman (bắp tay/cẳng tay)', category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '💪', isCustom: false, usageCount: 0, muscleGroup: 'arms' },
+  { id: 'db_push_press',       name: 'Dumbbell Push Press', nameVi: 'Đẩy tạ có đà chân (vai)', category: 'dumbbell', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '🚀', isCustom: false, usageCount: 0, muscleGroup: 'shoulders' },
+  { id: 'db_halo',             name: 'Dumbbell Halo',      nameVi: 'Xoay tạ quanh đầu (vai/core)', category: 'dumbbell', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '😇', isCustom: false, usageCount: 0, muscleGroup: 'shoulders' },
+  { id: 'db_waiters_carry',    name: "Waiter's Carry",     nameVi: 'Đi bộ đội tạ trên vai (toàn thân/vai)', category: 'dumbbell', unit: 'seconds', defaultValue: 30, defaultSets: 3, icon: '🧑‍🍳', isCustom: false, usageCount: 0, muscleGroup: 'fullBody' },
+  { id: 'db_russian_twist',    name: 'Dumbbell Russian Twist', nameVi: 'Xoay hông có tạ (bụng xiên)', category: 'dumbbell', unit: 'reps', defaultValue: 20, defaultSets: 3, icon: '🔄', isCustom: false, usageCount: 0, muscleGroup: 'core' },
+
   // Sport (outdoor/team sports) — tracked separately from indoor cardio so
   // "sport frequency" stats/PRs/charts don't blend with treadmill running,
   // jump rope etc. Existing running/cycling stay in cardio (unchanged) —
