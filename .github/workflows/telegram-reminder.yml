@@ -14,6 +14,14 @@ on:
 jobs:
   remind:
     runs-on: ubuntu-latest
+    # Hard backstop: GitHub Actions' default job timeout is 360 minutes, so a
+    # single stuck network call used to let one run occupy a job slot for up
+    # to 6 hours (the */30 cron would then queue/skip ticks behind it). The
+    # script itself now times out its network calls well under this (see
+    # WATCHDOG_TIMEOUT_MS in telegram-reminder.mjs) — this is the outer cap
+    # in case something outside the script's control hangs (checkout, npm
+    # install, node startup).
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
