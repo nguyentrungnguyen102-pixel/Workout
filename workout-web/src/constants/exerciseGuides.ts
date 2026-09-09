@@ -497,6 +497,48 @@ export const EXERCISE_GUIDES: Record<string, ExerciseGuide> = {
     tips: ['Giữ lưng thẳng suốt động tác, mắt nhìn xuống điểm cố định để giữ thăng bằng', 'Bắt đầu với tạ nhẹ hoặc không tạ để làm quen thăng bằng'],
   },
 
+  // Dumbbell (home training) — Phase 14
+  db_shrug: {
+    steps: [
+      'Đứng thẳng, hai tay cầm tạ xuôi theo thân, lòng bàn tay hướng vào người',
+      'Nhún hai vai thẳng lên cao hết cỡ, giữ tay duỗi thẳng (không gập khuỷu)',
+      'Hạ vai xuống chậm về vị trí ban đầu',
+    ],
+    tips: ['Nhún thẳng lên xuống, không xoay tròn vai', 'Không dùng đà thân người để hất tạ lên'],
+  },
+  db_zottman_curl: {
+    steps: [
+      'Đứng thẳng, hai tay cầm tạ, lòng bàn tay hướng lên như Bicep Curl thường',
+      'Cuộn tạ lên hết cỡ, sau đó xoay úp lòng bàn tay xuống ở đỉnh động tác',
+      'Hạ tạ xuống chậm với lòng bàn tay vẫn úp xuống, rồi xoay ngửa lại về vị trí ban đầu',
+    ],
+    tips: ['Pha hạ tạ (úp tay) nên chậm để tăng hiệu quả cho cẳng tay', 'Dùng tạ nhẹ hơn Bicep Curl thường vì cẳng tay yếu hơn bắp tay'],
+  },
+  db_push_press: {
+    steps: [
+      'Đứng thẳng, tạ để ngang vai, chân rộng bằng hông',
+      'Hơi chùng gối rồi bật nhẹ chân để tạo đà, đồng thời đẩy tạ thẳng lên qua đầu',
+      'Duỗi thẳng tay ở trên cùng, sau đó hạ tạ có kiểm soát về lại vai',
+    ],
+    tips: ['Đà chân chỉ hơi chùng gối, không squat sâu', 'Không ngả người ra sau khi đẩy tạ lên'],
+  },
+  db_halo: {
+    steps: [
+      'Đứng thẳng, hai tay cầm một đầu tạ, giữ tạ ngang trước ngực',
+      'Xoay tạ thành vòng tròn quanh đầu, giữ tạ gần đầu và thân người thẳng',
+      'Đi hết một vòng tính 1 lần, đổi chiều xoay sau mỗi hiệp',
+    ],
+    tips: ['Dùng tạ nhẹ vì đây là bài khởi động/bổ trợ vai, không phải bài tạ nặng', 'Siết bụng để thân người không xoay theo tạ'],
+  },
+  db_waiters_carry: {
+    steps: [
+      'Một tay đội tạ ngang vai, lòng bàn tay ngửa lên như bưng khay (tư thế bồi bàn)',
+      'Đi bộ thẳng lưng, vai không so lên tai, tay giữ tạ ổn định phía trên',
+      'Đi hết thời gian/quãng đường rồi đổi tay',
+    ],
+    tips: ["Khác Farmer's Carry ở chỗ tạ được đội trên vai chứ không xách thấp — đòi hỏi vai ổn định hơn", 'Bắt đầu với tạ nhẹ để làm quen giữ thăng bằng trên vai'],
+  },
+
   // Sport (outdoor/team sports)
   sport_football: {
     steps: [
