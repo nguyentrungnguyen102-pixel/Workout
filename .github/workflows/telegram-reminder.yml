@@ -14,6 +14,13 @@ on:
 jobs:
   remind:
     runs-on: ubuntu-latest
+    # Outer backstop: GitHub Actions' default job timeout is 360 minutes, so
+    # a single stuck network call (Telegram API or Firestore) could occupy a
+    # job slot for up to 6 hours, queuing up every */30 cron tick behind it.
+    # The script has its own per-call timeouts + watchdog (see
+    # telegram-reminder.mjs) — this caps the whole run in case something
+    # outside the script's control hangs (checkout, npm install, node boot).
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 

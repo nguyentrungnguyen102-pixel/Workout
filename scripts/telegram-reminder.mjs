@@ -32,6 +32,28 @@ const FIREBASE_SERVICE_ACCOUNT = process.env.FIREBASE_SERVICE_ACCOUNT;
 // an actual Saturday/Sunday.
 const TEST_ALL_VARIANTS = process.env.TEST_ALL_VARIANTS === 'true';
 
+// v2.26.1 hotfix — none of the network calls below (Telegram fetch,
+// Firestore reads/writes) had a timeout, and the job itself had no
+// timeout-minutes either. A single stalled connection could hang the job up
+// to GitHub's default 360-minute ceiling, burning Actions minutes every time
+// the */30 cron tick landed during the outage. These caps + the workflow's
+// timeout-minutes (see telegram-reminder.yml) bound the whole run to a few
+// minutes no matter what the network does.
+const TELEGRAM_FETCH_TIMEOUT_MS = 10_000;
+const FIRESTORE_TIMEOUT_MS = 20_000;
+const WATCHDOG_TIMEOUT_MS = 6 * 60 * 1000;
+
+// Races `promise` against a timer so a stalled network call rejects instead
+// of hanging forever. The underlying call isn't cancelled (Firestore SDK
+// calls aren't abortable), but the process moves on and reports it.
+function withTimeout(promise, ms, label) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`Timeout sau ${ms}ms: ${label}`)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
 // Mirrors src/lib/quotes.ts QUOTES — bilingual (en/vi) + author, same set
 // shown in the app's QuoteBanner so the Telegram message matches the app.
 const QUOTES = [
@@ -537,6 +559,8 @@ function resolveSlot(nowMinutes, morningStr, eveningStr) {
 }
 
 async function sendTelegramMessage(chatId, text) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TELEGRAM_FETCH_TIMEOUT_MS);
   try {
     const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
       method: 'POST',
@@ -547,6 +571,7 @@ async function sendTelegramMessage(chatId, text) {
         parse_mode: 'HTML',
         disable_web_page_preview: true,
       }),
+      signal: controller.signal,
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.ok) {
@@ -555,8 +580,14 @@ async function sendTelegramMessage(chatId, text) {
     }
     return true;
   } catch (err) {
-    console.error(`  Lỗi gọi Telegram API: ${err.message}`);
+    if (err.name === 'AbortError') {
+      console.error(`  Telegram API timeout sau ${TELEGRAM_FETCH_TIMEOUT_MS}ms`);
+    } else {
+      console.error(`  Lỗi gọi Telegram API: ${err.message}`);
+    }
     return false;
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -586,7 +617,11 @@ async function processUser(db, uid, profile) {
 
   const goals = profile.exerciseGoals || [];
 
-  const logsSnap = await db.collection('logs').where('userId', '==', uid).get();
+  const logsSnap = await withTimeout(
+    db.collection('logs').where('userId', '==', uid).get(),
+    FIRESTORE_TIMEOUT_MS,
+    `đọc logs của user ${uid}`
+  );
   const allLogs = logsSnap.docs.map((d) => d.data());
 
   let message;
@@ -602,9 +637,13 @@ async function processUser(db, uid, profile) {
 
   const ok = await sendTelegramMessage(profile.telegramChatId, message);
   if (ok) {
-    await db.collection('users').doc(uid).set(
-      { lastReminderSent: { [slot]: localToday } },
-      { merge: true }
+    await withTimeout(
+      db.collection('users').doc(uid).set(
+        { lastReminderSent: { [slot]: localToday } },
+        { merge: true }
+      ),
+      FIRESTORE_TIMEOUT_MS,
+      `ghi lastReminderSent cho user ${uid}`
     );
     console.log(`  Đã gửi (${slot}) cho user ${uid}`);
   } else {
@@ -622,7 +661,11 @@ async function sendTestAllVariants(db, uid, profile) {
   const localToday = new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(now); // YYYY-MM-DD
 
   const goals = profile.exerciseGoals || [];
-  const logsSnap = await db.collection('logs').where('userId', '==', uid).get();
+  const logsSnap = await withTimeout(
+    db.collection('logs').where('userId', '==', uid).get(),
+    FIRESTORE_TIMEOUT_MS,
+    `đọc logs của user ${uid}`
+  );
   const allLogs = logsSnap.docs.map((d) => d.data());
 
   const variants = [
@@ -645,7 +688,11 @@ async function runLive() {
   admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
   const db = admin.firestore();
 
-  const usersSnap = await db.collection('users').where('reminderEnabled', '==', true).get();
+  const usersSnap = await withTimeout(
+    db.collection('users').where('reminderEnabled', '==', true).get(),
+    FIRESTORE_TIMEOUT_MS,
+    'đọc danh sách user bật nhắc tập'
+  );
   console.log(`Tìm thấy ${usersSnap.size} user bật nhắc tập.`);
   if (TEST_ALL_VARIANTS) console.log('=== TEST MODE — gửi cả 4 mẫu tin, bỏ qua giờ/thứ/chống trùng ===');
 
@@ -708,7 +755,19 @@ async function main() {
     runDryRun();
     return;
   }
-  await runLive();
+  // Last-resort backstop: even with the per-call timeouts above, force-exit
+  // rather than let the job run indefinitely if something unforeseen hangs
+  // (e.g. firebase-admin's own connection setup, outside any withTimeout()
+  // call). Cleared on normal completion so it never delays a healthy run.
+  const watchdog = setTimeout(() => {
+    console.error(`Watchdog: script chạy quá ${WATCHDOG_TIMEOUT_MS / 1000}s — thoát cưỡng bức để tránh treo job.`);
+    process.exit(1);
+  }, WATCHDOG_TIMEOUT_MS);
+  try {
+    await runLive();
+  } finally {
+    clearTimeout(watchdog);
+  }
 }
 
 main().catch((err) => {
