@@ -14,6 +14,13 @@ on:
 jobs:
   remind:
     runs-on: ubuntu-latest
+    # Hard backstop against the job hanging indefinitely (observed: a stuck
+    # network call with no timeout can otherwise run until GitHub's own
+    # 360-minute default, burning Actions minutes and delaying every later
+    # run since cron ticks don't overlap). The script itself now also times
+    # out each network call — see NETWORK_TIMEOUT_MS in telegram-reminder.mjs
+    # — so this is defense in depth, not the primary fix.
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
 

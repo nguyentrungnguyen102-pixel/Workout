@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.26.0';
+export const APP_VERSION = '2.27.0';
 
 // Lich su phien ban chinh thuc (sau dot don nhanh 14/07/2026 — gop cac
 // nang cap tot nhat tu cac nhanh phien hang ngay vao mot ban duy nhat).
@@ -43,4 +43,6 @@ export const PHASE_HISTORY = [
   { version: '2.24.0', phase: 12, summary: 'Biểu đồ "Cân bằng nhóm cơ" ở Thống kê đổi từ radar theo loại bài tập (Tạ đơn/Cardio/Core...) sang cột ngang theo nhóm cơ giải phẫu thật (Ngực/Lưng/Vai/Tay/Chân/Bụng/Toàn thân — gắn tay cho toàn bộ bài tập, kể cả 30+ bài tạ đơn trước đây dồn chung 1 trục), tính theo số hiệp đã tập trong kỳ thay vì số phút' },
   { version: '2.25.0', phase: 13, summary: 'Điểm "Sức mạnh" nay lấy trung bình mức tốt nhất MỖI TUẦN trong 90 ngày gần đây (thay vì hard-code 1 buổi tốt nhất duy nhất) — mỗi tuần chỉ đóng góp 1 giá trị nên tuần tập nhiều buổi không lấn át tuần tập ít buổi, và vẫn so đúng nghĩa với bảng chuẩn ACSM/ExRx (đo 1 lần gắng sức, không phải tổng khối lượng)' },
   { version: '2.26.0', phase: 13, summary: 'Gọn giao diện Thống kê: bỏ dòng "Trọng số"/ghi chú phạm vi khỏi card Đánh giá thể lực + rút gọn phụ đề 3 biểu đồ (nội dung dồn vào khối mới "Phạm vi tính theo kỳ đang chọn" ở trang Tiêu chí & nguồn tham khảo); biểu đồ Cân bằng nhóm cơ nay hiện % trên tổng + dòng "🎯 Ít được tập nhất" nêu đích danh nhóm cơ yếu nhất trong kỳ; màn hình tóm tắt buổi tập trước khi lưu gộp tên bài + loại bài về 1 dòng' },
+  { version: '2.26.1', phase: 13, summary: 'Hotfix hạ tầng: nhắc tập Telegram — mọi lệnh gọi mạng (Telegram API, Firestore) trước đây không có timeout nên một kết nối treo có thể làm job GitHub Actions chạy vô thời hạn (tối đa 360 phút mặc định), bỏ lỡ toàn bộ tin nhắc trong ngày; nay mỗi lệnh gọi tự huỷ sau 15s (job vẫn tiếp tục xử lý user kế tiếp) + job có trần 5 phút làm lớp chặn dự phòng' },
+  { version: '2.27.0', phase: 14, summary: 'Thêm 3 bài tạ đơn đơn giản tại nhà cho người mới: Nhún vai (vai/thang), Suitcase Carry (đi bộ mang tạ một bên — bụng/cầm nắm), Dumbbell Swing (đá tạ kiểu kettlebell — toàn thân/mông) — kèm hướng dẫn cách tập, icon riêng, chọn được trong Ghi buổi tập/mục tiêu như mọi bài khác' },
 ] as const;
