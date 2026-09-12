@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.27.0';
+export const APP_VERSION = '2.28.0';
 
 // Lich su phien ban chinh thuc (sau dot don nhanh 14/07/2026 — gop cac
 // nang cap tot nhat tu cac nhanh phien hang ngay vao mot ban duy nhat).
@@ -44,4 +44,5 @@ export const PHASE_HISTORY = [
   { version: '2.25.0', phase: 13, summary: 'Điểm "Sức mạnh" nay lấy trung bình mức tốt nhất MỖI TUẦN trong 90 ngày gần đây (thay vì hard-code 1 buổi tốt nhất duy nhất) — mỗi tuần chỉ đóng góp 1 giá trị nên tuần tập nhiều buổi không lấn át tuần tập ít buổi, và vẫn so đúng nghĩa với bảng chuẩn ACSM/ExRx (đo 1 lần gắng sức, không phải tổng khối lượng)' },
   { version: '2.26.0', phase: 13, summary: 'Gọn giao diện Thống kê: bỏ dòng "Trọng số"/ghi chú phạm vi khỏi card Đánh giá thể lực + rút gọn phụ đề 3 biểu đồ (nội dung dồn vào khối mới "Phạm vi tính theo kỳ đang chọn" ở trang Tiêu chí & nguồn tham khảo); biểu đồ Cân bằng nhóm cơ nay hiện % trên tổng + dòng "🎯 Ít được tập nhất" nêu đích danh nhóm cơ yếu nhất trong kỳ; màn hình tóm tắt buổi tập trước khi lưu gộp tên bài + loại bài về 1 dòng' },
   { version: '2.27.0', phase: 14, summary: 'Hotfix nhắc tập Telegram: job GitHub Actions có thể treo vô thời hạn (firebase-admin giữ kênh gRPC mở nên tiến trình không tự thoát dù đã xử lý xong, cộng fetch() gọi Telegram không có timeout) khiến các lần chạy cron 30 phút sau đó bị dồn ứ/bỏ lỡ — nay gọi process.exit() rõ ràng sau khi xong việc, mọi lệnh gọi Telegram/Firestore đều có timeout (15-20s) tự huỷ, thêm watchdog 5 phút dự phòng, và ở tầng workflow: giới hạn job tối đa 10 phút + khoá không cho 2 lần chạy chồng nhau (huỷ lần cũ khi lần mới tới)' },
+  { version: '2.28.0', phase: 15, summary: 'Thêm chương trình "Tạ Đơn Tại Nhà - Chỉ Cần 1 Quả Tạ": dành riêng cho người mới chỉ có 1 quả tạ đơn (không cần tạ đôi) — toàn thân 2 buổi/tuần, ít bài + số hiệp thấp, chỉ dùng bài tập đổi tay/1 bên sẵn có trong kho (squat ôm tạ, kéo tạ một tay, đi bộ mang tạ, lunge chéo, curl tập trung, nghiêng hông)' },
 ] as const;
