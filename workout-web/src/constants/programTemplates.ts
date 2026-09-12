@@ -471,6 +471,42 @@ export const PROGRAM_TEMPLATES: WorkoutProgram[] = [
       },
     ],
   },
+  {
+    id: 'dumbbell_single_beginner',
+    nameVi: 'Tạ Đơn Tại Nhà - Chỉ Cần 1 Quả Tạ',
+    descriptionVi: 'Dành cho người mới chỉ có 1 quả tạ đơn ở nhà (không cần tạ đôi). Ít bài, số hiệp thấp, đổi tay đều 2 bên, tập được ngay ở phòng khách, 2 buổi/tuần.',
+    emoji: '🏠',
+    daysPerWeek: 2,
+    difficulty: 'beginner',
+    focus: 'strength',
+    estimatedMinutes: 20,
+    days: [
+      {
+        id: 'db1_day1',
+        order: 1,
+        nameVi: 'Buổi A',
+        focusVi: 'Toàn thân · 1 tạ',
+        emoji: '🏠',
+        exercises: [
+          { presetId: 'db_goblet_squat',    nameVi: 'Squat ôm tạ (đùi)',        sets: 2, reps: 12, unit: 'reps' },
+          { presetId: 'db_single_arm_row',  nameVi: 'Kéo tạ một tay (lưng)',    sets: 2, reps: 10, unit: 'reps' },
+          { presetId: 'db_farmers_carry',   nameVi: 'Đi bộ mang tạ (toàn thân)', sets: 2, durationSeconds: 30, unit: 'seconds' },
+        ],
+      },
+      {
+        id: 'db1_day2',
+        order: 2,
+        nameVi: 'Buổi B',
+        focusVi: 'Toàn thân · 1 tạ',
+        emoji: '🏠',
+        exercises: [
+          { presetId: 'db_curtsy_lunge',      nameVi: 'Lunge chéo tạ (đùi trong/mông)', sets: 2, reps: 10, unit: 'reps' },
+          { presetId: 'db_concentration_curl',nameVi: 'Curl tập trung (bắp tay)',       sets: 2, reps: 10, unit: 'reps' },
+          { presetId: 'db_side_bend',         nameVi: 'Nghiêng hông tạ (eo)',           sets: 2, reps: 12, unit: 'reps' },
+        ],
+      },
+    ],
+  },
 ];
 
 export const DIFFICULTY_LABELS: Record<string, string> = {
