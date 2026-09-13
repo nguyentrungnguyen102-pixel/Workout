@@ -471,6 +471,45 @@ export const PROGRAM_TEMPLATES: WorkoutProgram[] = [
       },
     ],
   },
+
+  {
+    id: 'dumbbell_home_single_2x',
+    nameVi: 'Tạ Đơn Tại Nhà - Chỉ Cần 1 Quả Tạ',
+    descriptionVi: 'Dành cho người mới chỉ có đúng 1 quả tạ đơn ở nhà (không cần tạ đôi). Toàn bộ bài đều tập được với 1 tạ — đổi tay/đổi bên giữa hiệp, 2 buổi/tuần, ít bài + số hiệp thấp để làm quen dần.',
+    emoji: '🏠',
+    daysPerWeek: 2,
+    difficulty: 'beginner',
+    focus: 'strength',
+    estimatedMinutes: 20,
+    days: [
+      {
+        id: 'dbs_day1',
+        order: 1,
+        nameVi: 'Buổi A · Kéo & Chân',
+        focusVi: 'Lưng · Tay trước · Đùi · Toàn thân',
+        emoji: '🏠',
+        exercises: [
+          { presetId: 'db_goblet_squat',      nameVi: 'Squat ôm tạ (đùi)',              sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'db_single_arm_row',    nameVi: 'Kéo tạ một tay (lưng, đổi bên)', sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_concentration_curl',nameVi: 'Curl tập trung (bắp tay, đổi bên)', sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_farmers_carry',     nameVi: 'Đi bộ mang tạ (toàn thân, đổi bên)', sets: 3, durationSeconds: 30, unit: 'seconds' },
+        ],
+      },
+      {
+        id: 'dbs_day2',
+        order: 2,
+        nameVi: 'Buổi B · Đẩy & Toàn thân',
+        focusVi: 'Đùi · Tay sau · Thăng bằng · Bụng',
+        emoji: '🏠',
+        exercises: [
+          { presetId: 'db_curtsy_lunge',        nameVi: 'Lunge chéo tạ (đùi trong/mông, đổi bên)', sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_tricep_ext',          nameVi: 'Giơ tạ sau đầu (tay sau, 1 tạ 2 tay)',     sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_single_leg_deadlift', nameVi: 'Deadlift một chân tạ (thăng bằng, đổi bên)', sets: 3, reps: 10, unit: 'reps' },
+          { presetId: 'db_side_bend',           nameVi: 'Nghiêng hông tạ (eo, đổi bên)',            sets: 3, reps: 15, unit: 'reps' },
+        ],
+      },
+    ],
+  },
 ];
 
 export const DIFFICULTY_LABELS: Record<string, string> = {
