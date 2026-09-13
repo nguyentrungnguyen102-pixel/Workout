@@ -14,6 +14,11 @@ on:
 jobs:
   remind:
     runs-on: ubuntu-latest
+    # Mặc định của GitHub Actions là 360 phút — nếu script treo (mạng/API
+    # đứng) thì job chiếm runner cả 6 tiếng. Job này chạy mỗi 30 phút và bản
+    # thân script đã có timeout cho từng lệnh gọi mạng, nên 5 phút là dư dả
+    # cho lần chạy bình thường và là lưới an toàn thứ 2 nếu code có sót.
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
 

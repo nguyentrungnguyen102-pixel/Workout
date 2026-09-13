@@ -536,7 +536,25 @@ function resolveSlot(nowMinutes, morningStr, eveningStr) {
   return null;
 }
 
+// Bao nhiêu ms tối đa cho 1 lệnh gọi mạng (Telegram API hoặc Firestore) trước
+// khi coi là treo và bỏ qua — tránh job chạy vô thời hạn khi mạng/API bị đứng
+// (trước đây fetch không có timeout nên 1 request treo là cả job treo tới khi
+// GitHub Actions tự huỷ sau 360 phút mặc định).
+const NETWORK_TIMEOUT_MS = 15_000;
+
+// Chạy 1 promise kèm hạn chót: nếu quá `ms` mà chưa xong thì reject với lỗi
+// rõ ràng thay vì để job treo vô thời hạn.
+function withTimeout(promise, ms, label) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label} quá ${ms}ms (timeout)`)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
 async function sendTelegramMessage(chatId, text) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), NETWORK_TIMEOUT_MS);
   try {
     const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
       method: 'POST',
@@ -547,6 +565,7 @@ async function sendTelegramMessage(chatId, text) {
         parse_mode: 'HTML',
         disable_web_page_preview: true,
       }),
+      signal: controller.signal,
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.ok) {
@@ -555,8 +574,11 @@ async function sendTelegramMessage(chatId, text) {
     }
     return true;
   } catch (err) {
-    console.error(`  Lỗi gọi Telegram API: ${err.message}`);
+    const reason = err.name === 'AbortError' ? `quá ${NETWORK_TIMEOUT_MS}ms (timeout)` : err.message;
+    console.error(`  Lỗi gọi Telegram API: ${reason}`);
     return false;
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -586,7 +608,11 @@ async function processUser(db, uid, profile) {
 
   const goals = profile.exerciseGoals || [];
 
-  const logsSnap = await db.collection('logs').where('userId', '==', uid).get();
+  const logsSnap = await withTimeout(
+    db.collection('logs').where('userId', '==', uid).get(),
+    NETWORK_TIMEOUT_MS,
+    `Đọc logs của user ${uid}`
+  );
   const allLogs = logsSnap.docs.map((d) => d.data());
 
   let message;
@@ -602,9 +628,13 @@ async function processUser(db, uid, profile) {
 
   const ok = await sendTelegramMessage(profile.telegramChatId, message);
   if (ok) {
-    await db.collection('users').doc(uid).set(
-      { lastReminderSent: { [slot]: localToday } },
-      { merge: true }
+    await withTimeout(
+      db.collection('users').doc(uid).set(
+        { lastReminderSent: { [slot]: localToday } },
+        { merge: true }
+      ),
+      NETWORK_TIMEOUT_MS,
+      `Ghi lastReminderSent của user ${uid}`
     );
     console.log(`  Đã gửi (${slot}) cho user ${uid}`);
   } else {
@@ -622,7 +652,11 @@ async function sendTestAllVariants(db, uid, profile) {
   const localToday = new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(now); // YYYY-MM-DD
 
   const goals = profile.exerciseGoals || [];
-  const logsSnap = await db.collection('logs').where('userId', '==', uid).get();
+  const logsSnap = await withTimeout(
+    db.collection('logs').where('userId', '==', uid).get(),
+    NETWORK_TIMEOUT_MS,
+    `Đọc logs của user ${uid}`
+  );
   const allLogs = logsSnap.docs.map((d) => d.data());
 
   const variants = [
@@ -645,7 +679,11 @@ async function runLive() {
   admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
   const db = admin.firestore();
 
-  const usersSnap = await db.collection('users').where('reminderEnabled', '==', true).get();
+  const usersSnap = await withTimeout(
+    db.collection('users').where('reminderEnabled', '==', true).get(),
+    NETWORK_TIMEOUT_MS,
+    'Đọc danh sách user bật nhắc tập'
+  );
   console.log(`Tìm thấy ${usersSnap.size} user bật nhắc tập.`);
   if (TEST_ALL_VARIANTS) console.log('=== TEST MODE — gửi cả 4 mẫu tin, bỏ qua giờ/thứ/chống trùng ===');
 
