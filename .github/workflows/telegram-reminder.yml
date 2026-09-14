@@ -14,6 +14,10 @@ on:
 jobs:
   remind:
     runs-on: ubuntu-latest
+    # Không có timeout thì 1 job treo (mạng treo, API không phản hồi) sẽ
+    # chiếm slot cho tới giới hạn mặc định của GitHub (360 phút) — với
+    # lịch chạy mỗi 30 phút, coi như mất nhắc tập cả nửa ngày.
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 

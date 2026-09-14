@@ -536,7 +536,15 @@ function resolveSlot(nowMinutes, morningStr, eveningStr) {
   return null;
 }
 
+// fetch() không tự có timeout — nếu Telegram API không phản hồi (mạng treo,
+// server không rơi hẳn), await sẽ treo vô thời hạn và kéo theo cả job GitHub
+// Actions treo tới khi hết giờ mặc định. AbortController ép request thất bại
+// nhanh sau 15s thay vì treo, để job luôn kết thúc và lịch chạy sau không bị lỡ.
+const TELEGRAM_REQUEST_TIMEOUT_MS = 15_000;
+
 async function sendTelegramMessage(chatId, text) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), TELEGRAM_REQUEST_TIMEOUT_MS);
   try {
     const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
       method: 'POST',
@@ -547,6 +555,7 @@ async function sendTelegramMessage(chatId, text) {
         parse_mode: 'HTML',
         disable_web_page_preview: true,
       }),
+      signal: controller.signal,
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.ok) {
@@ -555,8 +564,14 @@ async function sendTelegramMessage(chatId, text) {
     }
     return true;
   } catch (err) {
-    console.error(`  Lỗi gọi Telegram API: ${err.message}`);
+    if (err.name === 'AbortError') {
+      console.error(`  Lỗi gọi Telegram API: timeout sau ${TELEGRAM_REQUEST_TIMEOUT_MS / 1000}s`);
+    } else {
+      console.error(`  Lỗi gọi Telegram API: ${err.message}`);
+    }
     return false;
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 
