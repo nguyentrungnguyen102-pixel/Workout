@@ -14,6 +14,10 @@ on:
 jobs:
   remind:
     runs-on: ubuntu-latest
+    # Without a timeout, one hung job (network stall, unresponsive API)
+    # holds the runner until GitHub's default limit (360 min) — with a
+    # 30-minute cron, that can wipe out most of a day's reminders.
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 

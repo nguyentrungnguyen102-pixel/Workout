@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.26.0';
+export const APP_VERSION = '2.27.0';
 
 // Lich su phien ban chinh thuc (sau dot don nhanh 14/07/2026 — gop cac
 // nang cap tot nhat tu cac nhanh phien hang ngay vao mot ban duy nhat).
@@ -43,4 +43,5 @@ export const PHASE_HISTORY = [
   { version: '2.24.0', phase: 12, summary: 'Biểu đồ "Cân bằng nhóm cơ" ở Thống kê đổi từ radar theo loại bài tập (Tạ đơn/Cardio/Core...) sang cột ngang theo nhóm cơ giải phẫu thật (Ngực/Lưng/Vai/Tay/Chân/Bụng/Toàn thân — gắn tay cho toàn bộ bài tập, kể cả 30+ bài tạ đơn trước đây dồn chung 1 trục), tính theo số hiệp đã tập trong kỳ thay vì số phút' },
   { version: '2.25.0', phase: 13, summary: 'Điểm "Sức mạnh" nay lấy trung bình mức tốt nhất MỖI TUẦN trong 90 ngày gần đây (thay vì hard-code 1 buổi tốt nhất duy nhất) — mỗi tuần chỉ đóng góp 1 giá trị nên tuần tập nhiều buổi không lấn át tuần tập ít buổi, và vẫn so đúng nghĩa với bảng chuẩn ACSM/ExRx (đo 1 lần gắng sức, không phải tổng khối lượng)' },
   { version: '2.26.0', phase: 13, summary: 'Gọn giao diện Thống kê: bỏ dòng "Trọng số"/ghi chú phạm vi khỏi card Đánh giá thể lực + rút gọn phụ đề 3 biểu đồ (nội dung dồn vào khối mới "Phạm vi tính theo kỳ đang chọn" ở trang Tiêu chí & nguồn tham khảo); biểu đồ Cân bằng nhóm cơ nay hiện % trên tổng + dòng "🎯 Ít được tập nhất" nêu đích danh nhóm cơ yếu nhất trong kỳ; màn hình tóm tắt buổi tập trước khi lưu gộp tên bài + loại bài về 1 dòng' },
+  { version: '2.27.0', phase: 14, summary: 'Hotfix hạ tầng: chặn workflow nhắc tập Telegram treo vô thời hạn (AbortController timeout 15s cho request gọi Telegram API + timeout-minutes: 10 cho job GitHub Actions) — trước đây 1 lần mạng treo có thể chiếm job tới 360 phút mặc định (giới hạn của GitHub), làm lỡ nhiều lượt nhắc liên tiếp vì lịch chạy mỗi 30 phút; thêm chương trình "Tạ Đơn Tại Nhà - Chỉ 1 Quả Tạ" (3 buổi/tuần, toàn bộ bài chỉ cần 1 quả tạ — đổi bên giữa các hiệp, không dùng bài đẩy/kéo tạ đôi) cho người ở nhà chỉ có đúng 1 quả tạ' },
 ] as const;

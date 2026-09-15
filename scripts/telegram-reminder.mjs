@@ -536,7 +536,16 @@ function resolveSlot(nowMinutes, morningStr, eveningStr) {
   return null;
 }
 
+// fetch() has no timeout of its own — if the Telegram API never responds
+// (network stall, not an outright failure), the await hangs forever and
+// takes the whole GitHub Actions job down with it until the platform's
+// default limit kicks in. AbortController forces the request to fail fast
+// so the job always finishes and the next scheduled run isn't skipped.
+const TELEGRAM_REQUEST_TIMEOUT_MS = 15_000;
+
 async function sendTelegramMessage(chatId, text) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), TELEGRAM_REQUEST_TIMEOUT_MS);
   try {
     const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
       method: 'POST',
@@ -547,6 +556,7 @@ async function sendTelegramMessage(chatId, text) {
         parse_mode: 'HTML',
         disable_web_page_preview: true,
       }),
+      signal: controller.signal,
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.ok) {
@@ -555,8 +565,14 @@ async function sendTelegramMessage(chatId, text) {
     }
     return true;
   } catch (err) {
-    console.error(`  Lỗi gọi Telegram API: ${err.message}`);
+    if (err.name === 'AbortError') {
+      console.error(`  Lỗi gọi Telegram API: timeout sau ${TELEGRAM_REQUEST_TIMEOUT_MS / 1000}s`);
+    } else {
+      console.error(`  Lỗi gọi Telegram API: ${err.message}`);
+    }
     return false;
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 
