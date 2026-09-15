@@ -471,6 +471,58 @@ export const PROGRAM_TEMPLATES: WorkoutProgram[] = [
       },
     ],
   },
+
+  {
+    id: 'dumbbell_home_single_3x',
+    nameVi: 'Tạ Đơn Tại Nhà - Chỉ 1 Quả Tạ',
+    descriptionVi: 'Dành cho ai chỉ có đúng 1 quả tạ đơn ở nhà (không cần cả cặp). Toàn bộ bài đều tập được với 1 tay/1 quả, đổi bên giữa các hiệp, toàn thân 3 buổi/tuần.',
+    emoji: '🔘',
+    daysPerWeek: 3,
+    difficulty: 'beginner',
+    focus: 'strength',
+    estimatedMinutes: 30,
+    days: [
+      {
+        id: 'dbs_day1',
+        order: 1,
+        nameVi: 'Buổi A · Thân dưới',
+        focusVi: 'Đùi · Mông · Bắp chân',
+        emoji: '🦵',
+        exercises: [
+          { presetId: 'db_goblet_squat',        nameVi: 'Squat ôm tạ (đùi)',                       sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'db_single_leg_deadlift', nameVi: 'Deadlift một chân tạ (thăng bằng/mông)', sets: 3, reps: 8,  unit: 'reps' },
+          { presetId: 'db_calf_raise',          nameVi: 'Nâng gót tạ (bắp chân)',                  sets: 3, reps: 20, unit: 'reps' },
+          { presetId: 'db_side_bend',           nameVi: 'Nghiêng hông tạ (eo)',                    sets: 3, reps: 15, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'dbs_day2',
+        order: 2,
+        nameVi: 'Buổi B · Thân trên',
+        focusVi: 'Lưng · Tay · Ngực (từng bên)',
+        emoji: '💪',
+        exercises: [
+          { presetId: 'db_single_arm_row',    nameVi: 'Kéo tạ một tay (lưng)',      sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_pullover',          nameVi: 'Kéo tạ qua đầu (ngực/xô)',   sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_concentration_curl',nameVi: 'Curl tập trung (bắp tay)',   sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_tricep_kick',       nameVi: 'Đá tay sau (tricep)',        sets: 3, reps: 12, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'dbs_day3',
+        order: 3,
+        nameVi: 'Buổi C · Toàn thân',
+        focusVi: 'Đùi · Mông · Cầm nắm · Core',
+        emoji: '🔘',
+        exercises: [
+          { presetId: 'db_step_up',        nameVi: 'Bước lên bục có tạ (đùi mông)', sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_curtsy_lunge',   nameVi: 'Lunge chéo tạ (đùi trong/mông)', sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_hip_thrust',     nameVi: 'Hip thrust tạ (mông)',          sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'db_farmers_carry',  nameVi: 'Đi bộ mang tạ (cầm nắm, đổi tay giữa hiệp)', sets: 3, durationSeconds: 30, unit: 'seconds' },
+        ],
+      },
+    ],
+  },
 ];
 
 export const DIFFICULTY_LABELS: Record<string, string> = {
