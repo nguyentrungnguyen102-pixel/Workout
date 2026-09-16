@@ -536,7 +536,25 @@ function resolveSlot(nowMinutes, morningStr, eveningStr) {
   return null;
 }
 
+const TELEGRAM_REQUEST_TIMEOUT_MS = 15_000;
+// firebase-admin's gRPC channel doesn't always release cleanly, so a plain
+// `db.collection(...).get()`/`.set()` can hang past the point Telegram's own
+// call would have failed — same "await never resolves" class of bug, just a
+// different SDK. Race every Firestore call against this so one bad call
+// can't stall the whole job.
+const FIRESTORE_CALL_TIMEOUT_MS = 20_000;
+
+function withTimeout(promise, ms, label) {
+  let timeoutId;
+  const timeout = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(`Timeout sau ${ms}ms: ${label}`)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
+}
+
 async function sendTelegramMessage(chatId, text) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), TELEGRAM_REQUEST_TIMEOUT_MS);
   try {
     const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
       method: 'POST',
@@ -547,6 +565,7 @@ async function sendTelegramMessage(chatId, text) {
         parse_mode: 'HTML',
         disable_web_page_preview: true,
       }),
+      signal: controller.signal,
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.ok) {
@@ -555,8 +574,14 @@ async function sendTelegramMessage(chatId, text) {
     }
     return true;
   } catch (err) {
-    console.error(`  Lỗi gọi Telegram API: ${err.message}`);
+    if (err.name === 'AbortError') {
+      console.error(`  Lỗi gọi Telegram API: timeout sau ${TELEGRAM_REQUEST_TIMEOUT_MS / 1000}s`);
+    } else {
+      console.error(`  Lỗi gọi Telegram API: ${err.message}`);
+    }
     return false;
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 
@@ -586,7 +611,11 @@ async function processUser(db, uid, profile) {
 
   const goals = profile.exerciseGoals || [];
 
-  const logsSnap = await db.collection('logs').where('userId', '==', uid).get();
+  const logsSnap = await withTimeout(
+    db.collection('logs').where('userId', '==', uid).get(),
+    FIRESTORE_CALL_TIMEOUT_MS,
+    `logs.get(${uid})`
+  );
   const allLogs = logsSnap.docs.map((d) => d.data());
 
   let message;
@@ -602,9 +631,13 @@ async function processUser(db, uid, profile) {
 
   const ok = await sendTelegramMessage(profile.telegramChatId, message);
   if (ok) {
-    await db.collection('users').doc(uid).set(
-      { lastReminderSent: { [slot]: localToday } },
-      { merge: true }
+    await withTimeout(
+      db.collection('users').doc(uid).set(
+        { lastReminderSent: { [slot]: localToday } },
+        { merge: true }
+      ),
+      FIRESTORE_CALL_TIMEOUT_MS,
+      `users.set(${uid})`
     );
     console.log(`  Đã gửi (${slot}) cho user ${uid}`);
   } else {
@@ -622,7 +655,11 @@ async function sendTestAllVariants(db, uid, profile) {
   const localToday = new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(now); // YYYY-MM-DD
 
   const goals = profile.exerciseGoals || [];
-  const logsSnap = await db.collection('logs').where('userId', '==', uid).get();
+  const logsSnap = await withTimeout(
+    db.collection('logs').where('userId', '==', uid).get(),
+    FIRESTORE_CALL_TIMEOUT_MS,
+    `logs.get(${uid})`
+  );
   const allLogs = logsSnap.docs.map((d) => d.data());
 
   const variants = [
@@ -645,7 +682,11 @@ async function runLive() {
   admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
   const db = admin.firestore();
 
-  const usersSnap = await db.collection('users').where('reminderEnabled', '==', true).get();
+  const usersSnap = await withTimeout(
+    db.collection('users').where('reminderEnabled', '==', true).get(),
+    FIRESTORE_CALL_TIMEOUT_MS,
+    'users.get(reminderEnabled)'
+  );
   console.log(`Tìm thấy ${usersSnap.size} user bật nhắc tập.`);
   if (TEST_ALL_VARIANTS) console.log('=== TEST MODE — gửi cả 4 mẫu tin, bỏ qua giờ/thứ/chống trùng ===');
 
@@ -711,7 +752,28 @@ async function main() {
   await runLive();
 }
 
-main().catch((err) => {
-  console.error('Lỗi không xử lý được:', err);
+// firebase-admin opens a gRPC channel that doesn't always release its
+// handles after the last Firestore call resolves, so Node can sit forever
+// waiting for the event loop to empty even though the script's own work is
+// done — the process never naturally exits, and the CI job hangs until
+// GitHub's 360-minute default job timeout. Force an explicit exit once
+// main() settles instead of relying on natural process exit.
+//
+// Backstop: if something we didn't anticipate still hangs (a Firestore call
+// or timer that never resolves/fires), this watchdog forces the process to
+// exit well before the workflow's own `timeout-minutes: 10` kills the
+// runner, so we get a clear "watchdog" log line instead of a silent runner
+// timeout with no diagnostic.
+const GLOBAL_WATCHDOG_MS = 5 * 60 * 1000;
+const watchdog = setTimeout(() => {
+  console.error(`Watchdog: job chạy quá ${GLOBAL_WATCHDOG_MS / 1000}s — buộc thoát để tránh treo vô thời hạn.`);
   process.exit(1);
-});
+}, GLOBAL_WATCHDOG_MS);
+watchdog.unref();
+
+main()
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error('Lỗi không xử lý được:', err);
+    process.exit(1);
+  });
