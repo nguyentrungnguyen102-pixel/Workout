@@ -110,4 +110,17 @@ describe('computeAchievements', () => {
     const achievements = computeAchievements([], makeProfile(0));
     expect(achievements.filter((a) => a.unlocked).length).toBe(0);
   });
+
+  it('counts only logs with a dumbbell-category exercise for the dumbbell group', () => {
+    const logs = [
+      makeLog(0, { presetId: 'db_bicep_curl', category: 'dumbbell', reps: 12, weight: 5 }),
+      makeLog(1, { presetId: 'db_goblet_squat', category: 'dumbbell', reps: 15, weight: 10 }),
+      makeLog(2, { presetId: 'pushup', category: 'strength' }),
+    ];
+    const achievements = computeAchievements(logs, makeProfile(0));
+
+    expect(find(achievements, 'dumbbell', 1).unlocked).toBe(true);
+    expect(find(achievements, 'dumbbell', 1).current).toBe(2);
+    expect(find(achievements, 'dumbbell', 10).unlocked).toBe(false);
+  });
 });

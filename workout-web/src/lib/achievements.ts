@@ -69,6 +69,13 @@ const GROUPS: GroupDef[] = [
     title: (n) => `Tập ${n}/6 nhóm cơ`,
     desc: (n) => `Đã luyện tập ${n}/6 nhóm bài tập khác nhau`,
   },
+  {
+    group: 'dumbbell',
+    icon: '💪',
+    thresholds: [1, 10, 25, 50, 100],
+    title: (n) => `${n} buổi tạ đơn`,
+    desc: (n) => `Hoàn thành ${n} buổi tập có bài tạ đơn tại nhà`,
+  },
 ];
 
 // Current progress value for a group, computed from data already available
@@ -105,6 +112,9 @@ function currentValueFor(group: string, logs: WorkoutLog[], profile: UserProfile
       logs.forEach((l) => l.exercises.forEach((e) => categories.add(e.category)));
       return categories.size;
     }
+
+    case 'dumbbell':
+      return logs.filter((l) => l.exercises.some((e) => e.category === 'dumbbell')).length;
 
     default:
       return 0;
