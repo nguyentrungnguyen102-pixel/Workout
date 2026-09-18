@@ -18,6 +18,7 @@ import { buildSuggestions, roundNice } from '../lib/suggestions';
 import { toggleFavorite, sortWithFavoritesFirst } from '../lib/favorites';
 import { sumThisWeek } from '../lib/dayTimeline';
 import { todayString } from '../lib/date';
+import { buildRecoveryInsight } from '../lib/recovery';
 import WeeklyPlanCard from '../components/WeeklyPlanCard';
 import QuoteBanner from '../components/QuoteBanner';
 import ExerciseIcon from '../components/ExerciseIcon';
@@ -921,6 +922,33 @@ function RecentSessionCard({ log, presets, onRepeat }: RecentSessionCardProps) {
   );
 }
 
+// "Nghỉ ngơi thông minh" — nudges a rest day after a long unbroken training
+// streak (recovery-style signal from Strava/Whoop/Garmin). Renders nothing
+// once the streak is short or already broken (see lib/recovery.ts).
+interface RecoveryBannerProps {
+  recentLogs: WorkoutLog[];
+  todayDateStr: string;
+}
+
+function RecoveryBanner({ recentLogs, todayDateStr }: RecoveryBannerProps) {
+  const insight = buildRecoveryInsight(recentLogs, todayDateStr);
+  if (!insight) return null;
+
+  const strong = insight.level === 'strong';
+  return (
+    <div
+      className={`flex items-start gap-2.5 rounded-2xl border mb-3 px-3 py-2.5 ${
+        strong ? 'bg-danger-light border-danger/30' : 'bg-primary-light border-primary/30'
+      }`}
+    >
+      <span className="text-lg leading-none flex-shrink-0">🔋</span>
+      <p className={`text-xs font-bold leading-snug ${strong ? 'text-danger' : 'text-primary'}`}>
+        {insight.message}
+      </p>
+    </div>
+  );
+}
+
 interface ProgramSuggestionCardProps {
   templates: WorkoutProgram[];
 }
@@ -1226,6 +1254,9 @@ export default function QuickAddPage() {
           </div>
         </div>
       )}
+
+      {/* Recovery nudge — only renders once a rest day is actually worth suggesting */}
+      <RecoveryBanner recentLogs={recentLogs} todayDateStr={todayDateStr} />
 
       {/* Weekly plan score: this week vs last week + breakdown + tip */}
       <WeeklyPlanCard logs={recentLogs} profile={profile} />
