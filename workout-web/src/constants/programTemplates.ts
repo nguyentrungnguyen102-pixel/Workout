@@ -405,6 +405,43 @@ export const PROGRAM_TEMPLATES: WorkoutProgram[] = [
   },
 
   {
+    id: 'dumbbell_home_simple_2x',
+    nameVi: 'Tạ Đơn Tại Nhà - Siêu Đơn Giản 2x',
+    descriptionVi: 'Cho người mới hoàn toàn, chỉ cần 1 quả tạ và đứng tại chỗ — không cần nằm sàn hay dụng cụ thêm. 3 bài/buổi, 2 buổi/tuần.',
+    emoji: '🌱',
+    daysPerWeek: 2,
+    difficulty: 'beginner',
+    focus: 'strength',
+    estimatedMinutes: 15,
+    days: [
+      {
+        id: 'dbs_day1',
+        order: 1,
+        nameVi: 'Buổi A',
+        focusVi: 'Vai · Bắp tay · Cầu vai',
+        emoji: '🌱',
+        exercises: [
+          { presetId: 'db_bicep_curl', nameVi: 'Curl tạ đơn (bắp tay)', sets: 2, reps: 12, unit: 'reps' },
+          { presetId: 'db_shrug',      nameVi: 'Nhún vai tạ (cầu vai)', sets: 2, reps: 15, unit: 'reps' },
+          { presetId: 'db_halo',       nameVi: 'Xoay tạ quanh đầu (vai/core)', sets: 2, reps: 10, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'dbs_day2',
+        order: 2,
+        nameVi: 'Buổi B',
+        focusVi: 'Chân · Core · Cầm nắm',
+        emoji: '🌱',
+        exercises: [
+          { presetId: 'db_goblet_squat',    nameVi: 'Squat ôm tạ (đùi)',       sets: 2, reps: 12, unit: 'reps' },
+          { presetId: 'db_standing_twist',  nameVi: 'Xoay hông cầm tạ (eo)',   sets: 2, reps: 20, unit: 'reps' },
+          { presetId: 'db_suitcase_carry',  nameVi: 'Xách tạ một tay (core/cầm nắm)', sets: 2, durationSeconds: 30, unit: 'seconds' },
+        ],
+      },
+    ],
+  },
+
+  {
     id: 'dumbbell_home_intermediate_4x',
     nameVi: 'Tạ Đơn Tại Nhà - Trung Cấp 4x',
     descriptionVi: 'Chương trình nối tiếp sau khi quen tạ đơn. Chia Thân trên/Thân dưới, tăng khối lượng và độ khó, 4 buổi/tuần.',

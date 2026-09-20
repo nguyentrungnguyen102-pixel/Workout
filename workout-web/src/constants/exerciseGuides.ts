@@ -497,6 +497,41 @@ export const EXERCISE_GUIDES: Record<string, ExerciseGuide> = {
     tips: ['Giữ lưng thẳng suốt động tác, mắt nhìn xuống điểm cố định để giữ thăng bằng', 'Bắt đầu với tạ nhẹ hoặc không tạ để làm quen thăng bằng'],
   },
 
+  // Dumbbell (home training) — Phase 14, bài đơn giản cho người mới hoàn
+  // toàn, chỉ cần 1 quả tạ và đứng tại chỗ
+  db_halo: {
+    steps: [
+      'Đứng thẳng, hai tay cầm chung một đầu tạ trước ngực',
+      'Xoay tạ thành vòng tròn quanh đầu, giữ đầu và thân người cố định',
+      'Đi hết 1 vòng tính 1 lần, đổi chiều xoay sau mỗi hiệp',
+    ],
+    tips: ['Xoay chậm, kiểm soát — không giật tạ', 'Siết bụng để thân người không lắc theo tạ'],
+  },
+  db_suitcase_carry: {
+    steps: [
+      'Đứng thẳng, một tay xách tạ sát thân như xách vali, tay còn lại tự nhiên',
+      'Đi bộ thẳng người trong thời gian quy định, vai giữ ngang bằng (không nghiêng theo bên cầm tạ)',
+      'Đổi tay sau mỗi hiệp',
+    ],
+    tips: ['Siết bụng bên đối diện tay cầm tạ để chống nghiêng người', 'Bước đều, không cần đi nhanh'],
+  },
+  db_shrug: {
+    steps: [
+      'Đứng thẳng, mỗi tay cầm một tạ xuôi theo thân, lòng bàn tay hướng vào người',
+      'Nhún hai vai thẳng lên cao hết mức, giữ tay duỗi thẳng',
+      'Hạ vai từ từ về vị trí ban đầu',
+    ],
+    tips: ['Không xoay vai vòng tròn, chỉ nhún thẳng lên-xuống', 'Không dùng tay/khuỷu để đẩy tạ lên'],
+  },
+  db_standing_twist: {
+    steps: [
+      'Đứng thẳng, hai chân rộng bằng vai, hai tay cầm chung một tạ trước bụng',
+      'Xoay thân trên sang một bên hết mức có thể, hông giữ cố định hướng thẳng',
+      'Xoay trở lại giữa rồi sang bên còn lại — tính 1 lần khi xoay đủ 2 bên',
+    ],
+    tips: ['Xoay bằng phần thân trên, không xoay bằng cách vặn gối/hông', 'Dùng tạ nhẹ để tập trung vào biên độ xoay thay vì sức nặng'],
+  },
+
   // Sport (outdoor/team sports)
   sport_football: {
     steps: [

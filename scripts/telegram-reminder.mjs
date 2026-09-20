@@ -711,7 +711,14 @@ async function main() {
   await runLive();
 }
 
-main().catch((err) => {
-  console.error('Lỗi không xử lý được:', err);
-  process.exit(1);
-});
+// firebase-admin's Firestore client keeps its gRPC channel (and its
+// keep-alive sockets) open after the last request resolves, so main()
+// finishing does NOT make the Node process exit on its own — the CI job
+// then hangs until GitHub Actions kills it hours later. An explicit
+// process.exit() on both paths forces a clean shutdown.
+main()
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error('Lỗi không xử lý được:', err);
+    process.exit(1);
+  });

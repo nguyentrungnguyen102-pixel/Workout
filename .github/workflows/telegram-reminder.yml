@@ -14,6 +14,10 @@ on:
 jobs:
   remind:
     runs-on: ubuntu-latest
+    # Safety net: the script always exits itself now (see telegram-reminder.mjs),
+    # but this caps any future regression instead of letting a run hang for
+    # hours (GitHub's own default is 360 minutes).
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
