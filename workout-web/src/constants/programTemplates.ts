@@ -346,6 +346,7 @@ export const PROGRAM_TEMPLATES: WorkoutProgram[] = [
         emoji: '🤸',
         exercises: [
           { presetId: 'db_bent_row',    nameVi: 'Kéo tạ cúi người (lưng)', sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_shrug',       nameVi: 'Nâng vai tạ (cơ thang)',  sets: 3, reps: 15, unit: 'reps' },
           { presetId: 'db_bicep_curl',  nameVi: 'Curl tạ đơn (bắp tay)',   sets: 3, reps: 12, unit: 'reps' },
           { presetId: 'db_hammer_curl', nameVi: 'Curl búa (bắp tay)',      sets: 3, reps: 12, unit: 'reps' },
           { presetId: 'plank',          nameVi: 'Plank',                   sets: 3, durationSeconds: 45, unit: 'seconds' },
