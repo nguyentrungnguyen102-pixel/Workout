@@ -497,6 +497,24 @@ export const EXERCISE_GUIDES: Record<string, ExerciseGuide> = {
     tips: ['Giữ lưng thẳng suốt động tác, mắt nhìn xuống điểm cố định để giữ thăng bằng', 'Bắt đầu với tạ nhẹ hoặc không tạ để làm quen thăng bằng'],
   },
 
+  // Dumbbell (home training) — Phase 14
+  db_shrug: {
+    steps: [
+      'Đứng thẳng, mỗi tay cầm một tạ xuôi theo thân, lòng bàn tay hướng vào người',
+      'Nhún hai vai thẳng lên cao hết cỡ về phía tai, giữ tay thẳng',
+      'Hạ vai xuống từ từ về vị trí ban đầu, kiểm soát tốc độ',
+    ],
+    tips: ['Chỉ nhún vai lên-xuống, không xoay tròn vai', 'Không dùng tay/khuỷu để lấy đà kéo tạ lên'],
+  },
+  db_squat: {
+    steps: [
+      'Đứng thẳng, mỗi tay cầm một tạ xuôi theo thân, chân rộng bằng vai',
+      'Đẩy hông ra sau và hạ xuống như ngồi ghế, lưng thẳng, tạ vẫn xuôi hai bên',
+      'Đầu gối hướng theo mũi chân, xuống đến khi đùi song song sàn rồi đứng lên',
+    ],
+    tips: ['Giữ gót chân chạm sàn suốt động tác', 'Bắt đầu với tạ nhẹ để giữ đúng form trước khi tăng tải'],
+  },
+
   // Sport (outdoor/team sports)
   sport_football: {
     steps: [

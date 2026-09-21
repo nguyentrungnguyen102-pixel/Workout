@@ -77,6 +77,13 @@ export const SYSTEM_PRESETS: WorkoutPreset[] = [
   { id: 'db_curtsy_lunge',     name: 'Curtsy Lunge',       nameVi: 'Lunge chéo tạ (đùi trong/mông)', category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🦵', isCustom: false, usageCount: 0, muscleGroup: 'legs' },
   { id: 'db_single_leg_deadlift', name: 'Single Leg Deadlift', nameVi: 'Deadlift một chân tạ (thăng bằng/mông)', category: 'dumbbell', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '🧍', isCustom: false, usageCount: 0, muscleGroup: 'legs' },
 
+  // Dumbbell (home training) — Phase 14, 2 bài tạ đơn cơ bản tại nhà còn
+  // thiếu so với các app tập luyện phổ biến: Shrug (nhóm cơ thang/traps,
+  // hiện chưa có bài nào nhắm riêng) và Squat tạ hai bên (biến thể đơn
+  // giản hơn Goblet Squat cho người mới cầm tạ nặng)
+  { id: 'db_shrug',            name: 'Dumbbell Shrug',     nameVi: 'Nâng vai tạ (cơ thang)', category: 'dumbbell', unit: 'reps', defaultValue: 15, defaultSets: 3, icon: '🤷', isCustom: false, usageCount: 0, muscleGroup: 'shoulders' },
+  { id: 'db_squat',            name: 'Dumbbell Squat',     nameVi: 'Squat tạ hai bên (đùi)', category: 'dumbbell', unit: 'reps', defaultValue: 15, defaultSets: 3, icon: '🏋️', isCustom: false, usageCount: 0, muscleGroup: 'legs' },
+
   // Sport (outdoor/team sports) — tracked separately from indoor cardio so
   // "sport frequency" stats/PRs/charts don't blend with treadmill running,
   // jump rope etc. Existing running/cycling stay in cardio (unchanged) —
