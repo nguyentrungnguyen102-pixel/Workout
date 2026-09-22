@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.30.0';
+export const APP_VERSION = '2.31.0';
 
 // Lich su phien ban chinh thuc (sau dot don nhanh 14/07/2026 — gop cac
 // nang cap tot nhat tu cac nhanh phien hang ngay vao mot ban duy nhat).
@@ -47,4 +47,5 @@ export const PHASE_HISTORY = [
   { version: '2.28.0', phase: 14, summary: 'Gộp 14 bài tạ đơn mới (nhún vai, squat 2 tạ, xoay bụng, xách tạ, dead bug, Zottman curl, push press, halo, waiter\'s carry, gập bụng có tạ, Svend press, good morning, woodchopper, xoay hông đứng) + 4 chương trình mới (Siêu Cơ Bản 3x, Siêu Đơn Giản 2x, Đẩy/Kéo/Chân 3x, Chỉ 1 Quả Tạ 3x) — gộp từ 14 nhánh nâng cấp song song, mỗi bài/chương trình trùng ý tưởng chỉ giữ 1 bản' },
   { version: '2.29.0', phase: 14, summary: 'Chế độ tối (Dark mode) — chọn Sáng/Tối/Theo hệ thống ở Cài đặt, áp dụng toàn app kể cả biểu đồ (màu trục/tooltip/lưới đổi theo theme); đồng hồ đếm giờ trực tiếp kiểu Strong/Hevy trên nút "Log workout" khi đang ghi buổi tập' },
   { version: '2.30.0', phase: 15, summary: 'Sửa/Xoá buổi tập đã lưu ngay từ trang chi tiết — Sửa mở lại màn hình Ghi buổi tập với dữ liệu cũ để chỉnh; Xoá dùng soft-delete kèm nút "Hoàn tác" 4 giây trước khi biến mất hẳn; thêm nút Chia sẻ buổi tập (Web Share API, tự copy vào clipboard nếu trình duyệt không hỗ trợ)' },
+  { version: '2.31.0', phase: 15, summary: 'Chương trình tự tạo (Custom Program Builder) — tự đặt tên/emoji/độ khó, chọn bài cho từng buổi, lưu vào hồ sơ riêng bên cạnh chương trình có sẵn, Sửa/Xoá được; buổi tập dang dở (đã thêm bài nhưng chưa lưu) nay tự lưu qua localStorage, khôi phục lại kèm banner nhắc nếu lỡ tải lại trang hoặc đóng tab' },
 ] as const;

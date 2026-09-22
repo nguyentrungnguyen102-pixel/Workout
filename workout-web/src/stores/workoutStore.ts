@@ -12,6 +12,7 @@ import { computeNewPRs, PersonalRecord } from '../services/prService';
 import { todayString, yesterdayString } from '../lib/date';
 import { aggregateExercises } from '../lib/dayTimeline';
 import { exerciseMinutes } from '../lib/energy';
+import { loadPersistedDraft, savePersistedDraft } from '../lib/draftPersistence';
 
 interface WorkoutStore {
   draft: DraftWorkout;
@@ -20,6 +21,10 @@ interface WorkoutStore {
   // logWorkout() branches to update that doc in place instead of creating a
   // new one. Null means "logging a brand-new workout", the default flow.
   editingLogId: string | null;
+  // True only right after an unfinished draft was restored from a previous
+  // browser session (see draftPersistence.ts) — lets the UI tell the user
+  // why exercises already appear before they've added anything themselves.
+  draftResumed: boolean;
 
   yesterdayLog: WorkoutLog | null;
   todayLog: WorkoutLog | null;
@@ -38,6 +43,7 @@ interface WorkoutStore {
   setLocation: (location: string) => void;
   setStartedAt: (date: Date) => void;
   resetDraft: () => void;
+  dismissDraftResumed: () => void;
 
   logWorkout: (uid: string) => Promise<void>;
   clearNewPRs: () => void;
@@ -70,10 +76,13 @@ function mergeExercises(logs: WorkoutLog[]): WorkoutLog['exercises'] {
   return merged;
 }
 
+const initialPersistedDraft = loadPersistedDraft();
+
 export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
-  draft: emptyDraft(),
+  draft: initialPersistedDraft ?? emptyDraft(),
   isLogging: false,
   editingLogId: null,
+  draftResumed: initialPersistedDraft !== null,
   yesterdayLog: null,
   todayLog: null,
   recentLogs: [],
@@ -122,6 +131,10 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
         notes: '',
         location: '',
       },
+      // This replaces the draft outright (e.g. "Tập lại") — not the same
+      // draft the resumed-session banner was describing, so it must not
+      // keep claiming this fresh one was "restored from last time".
+      draftResumed: false,
     }),
 
   // Unlike setDraftFromLog (used for "repeat this workout" — a fresh session
@@ -139,7 +152,7 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
       },
     }),
 
-  cancelEdit: () => set({ editingLogId: null, draft: emptyDraft() }),
+  cancelEdit: () => set({ editingLogId: null, draft: emptyDraft(), draftResumed: false }),
 
   setIntensity: (intensity) =>
     set((s) => ({ draft: { ...s.draft, intensity } })),
@@ -153,7 +166,9 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
   setStartedAt: (date) =>
     set((s) => ({ draft: { ...s.draft, startedAt: date } })),
 
-  resetDraft: () => set({ draft: emptyDraft() }),
+  resetDraft: () => set({ draft: emptyDraft(), draftResumed: false }),
+
+  dismissDraftResumed: () => set({ draftResumed: false }),
 
   logWorkout: async (uid) => {
     const { draft, editingLogId } = get();
@@ -171,7 +186,7 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
         // possibly-changed set of exercises) risks awarding or revoking a PR
         // for a session the user isn't actively completing right now.
         await updateWorkoutLog(editingLogId, draft, latestMetric?.weight);
-        set({ draft: emptyDraft(), isLogging: false, editingLogId: null });
+        set({ draft: emptyDraft(), isLogging: false, editingLogId: null, draftResumed: false });
         await get().loadRecentLogs(uid);
         return;
       }
@@ -185,7 +200,7 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
       const newPRs = computeNewPRs(existingLogs, savedLog);
       await updateStreakAfterLog(uid);
       await updateWeeklyMinutes(uid, draft.exercises.reduce((sum, e) => sum + exerciseMinutes(e), 0));
-      set({ draft: emptyDraft(), isLogging: false, newPRs });
+      set({ draft: emptyDraft(), isLogging: false, draftResumed: false, newPRs });
       await get().loadRecentLogs(uid);
     } catch (err) {
       set({ isLogging: false });
@@ -206,6 +221,7 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
         notes: '',
         location: '',
       },
+      draftResumed: false,
     });
   },
 
@@ -241,3 +257,13 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
   loadYesterdayLog: async (uid) => { await get().loadRecentLogs(uid); },
   loadTodayLog: async (uid) => { await get().loadRecentLogs(uid); },
 }));
+
+// Mirror `draft` into localStorage on every change so an in-progress workout
+// (exercises added but not yet saved) survives an accidental tab close or
+// refresh instead of silently vanishing — the store has no persist
+// middleware, this is the entire persistence path. Runs off a plain
+// subscribe rather than folding into every setter above so no individual
+// action can forget to persist.
+useWorkoutStore.subscribe((state, prevState) => {
+  if (state.draft !== prevState.draft) savePersistedDraft(state.draft);
+});
