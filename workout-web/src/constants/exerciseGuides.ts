@@ -497,6 +497,120 @@ export const EXERCISE_GUIDES: Record<string, ExerciseGuide> = {
     tips: ['Giữ lưng thẳng suốt động tác, mắt nhìn xuống điểm cố định để giữ thăng bằng', 'Bắt đầu với tạ nhẹ hoặc không tạ để làm quen thăng bằng'],
   },
 
+  // Dumbbell (home training) — Phase 14
+  db_shrug: {
+    steps: [
+      'Đứng thẳng, mỗi tay cầm một tạ xuôi theo thân, hai tay thả lỏng',
+      'Nhún hai vai thẳng lên cao hết mức, giữ 1 giây ở đỉnh',
+      'Hạ vai xuống từ từ về vị trí ban đầu',
+    ],
+    tips: ['Chỉ nhún lên-xuống theo chiều thẳng đứng, không xoay tròn vai', 'Không dùng đà hoặc gập khuỷu tay để kéo tạ lên'],
+  },
+  db_squat: {
+    steps: [
+      'Đứng thẳng, chân rộng bằng vai, mỗi tay cầm một tạ xuôi hai bên đùi',
+      'Đẩy hông ra sau và hạ xuống như ngồi ghế, lưng thẳng, tạ theo sát hai bên đùi',
+      'Xuống đến khi đùi song song sàn rồi đẩy gót chân để đứng thẳng dậy',
+    ],
+    tips: ['Dễ giữ thăng bằng hơn Goblet Squat vì tạ ở hai bên thay vì ôm trước ngực — phù hợp người mới cầm tạ lần đầu', 'Không để đầu gối đổ vào trong, gót chân chạm sàn suốt động tác'],
+  },
+  db_russian_twist: {
+    steps: [
+      'Ngồi trên sàn, gối gập, hơi ngả thân trên ra sau, hai tay cầm một tạ trước bụng',
+      'Xoay thân và tạ sang một bên chạm sàn (hoặc gần chạm), giữ hông ổn định',
+      'Xoay ngược lại sang bên kia, tính 1 lần khi xoay đủ hai bên',
+    ],
+    tips: ['Xoay bằng phần thân trên, không chỉ vung tay', 'Nâng hai chân khỏi sàn để tăng độ khó khi đã quen'],
+  },
+  db_suitcase_carry: {
+    steps: [
+      'Đứng thẳng, một tay xách tạ sát thân như xách vali, tay còn lại tự nhiên',
+      'Đi bộ thẳng người trong thời gian quy định, vai giữ ngang bằng (không nghiêng theo bên cầm tạ)',
+      'Đổi tay sau mỗi hiệp',
+    ],
+    tips: ['Siết bụng bên đối diện tay cầm tạ để chống nghiêng người', 'Bước đều, không cần đi nhanh'],
+  },
+  db_dead_bug: {
+    steps: [
+      'Nằm ngửa, hai tay giơ thẳng cầm tạ trên vai, gối gập 90° trên hông',
+      'Duỗi thẳng đồng thời một tay ra sau đầu và chân đối diện xuống sàn, lưng vẫn ép sát sàn',
+      'Thu tay và chân về vị trí ban đầu, đổi bên',
+    ],
+    tips: ['Siết bụng ép cột sống sát sàn suốt động tác, không để lưng dưới ưỡn lên', 'Có thể bỏ tạ, chỉ tập tay không nếu mới bắt đầu'],
+  },
+  db_zottman_curl: {
+    steps: [
+      'Đứng thẳng, hai tay cầm tạ, lòng bàn tay hướng lên như Bicep Curl thường',
+      'Cuộn tạ lên hết cỡ, sau đó xoay úp lòng bàn tay xuống ở đỉnh động tác',
+      'Hạ tạ xuống chậm với lòng bàn tay vẫn úp xuống, rồi xoay ngửa lại về vị trí ban đầu',
+    ],
+    tips: ['Pha hạ tạ (úp tay) nên chậm để tăng hiệu quả cho cẳng tay', 'Dùng tạ nhẹ hơn Bicep Curl thường vì cẳng tay yếu hơn bắp tay'],
+  },
+  db_push_press: {
+    steps: [
+      'Đứng thẳng, tạ để ngang vai, chân rộng bằng hông',
+      'Hơi chùng gối rồi bật nhẹ chân để tạo đà, đồng thời đẩy tạ thẳng lên qua đầu',
+      'Duỗi thẳng tay ở trên cùng, sau đó hạ tạ có kiểm soát về lại vai',
+    ],
+    tips: ['Đà chân chỉ hơi chùng gối, không squat sâu', 'Không ngả người ra sau khi đẩy tạ lên'],
+  },
+  db_halo: {
+    steps: [
+      'Đứng thẳng, hai tay cầm một đầu tạ, giữ tạ ngang trước ngực',
+      'Xoay tạ thành vòng tròn quanh đầu, giữ tạ gần đầu và thân người thẳng',
+      'Đi hết một vòng tính 1 lần, đổi chiều xoay sau mỗi hiệp',
+    ],
+    tips: ['Dùng tạ nhẹ vì đây là bài khởi động/bổ trợ vai, không phải bài tạ nặng', 'Siết bụng để thân người không xoay theo tạ'],
+  },
+  db_waiters_carry: {
+    steps: [
+      "Một tay đội tạ ngang vai, lòng bàn tay ngửa lên như bưng khay (tư thế bồi bàn)",
+      'Đi bộ thẳng lưng, vai không so lên tai, tay giữ tạ ổn định phía trên',
+      'Đi hết thời gian/quãng đường rồi đổi tay',
+    ],
+    tips: ["Khác Farmer's Carry ở chỗ tạ được đội trên vai chứ không xách thấp — đòi hỏi vai ổn định hơn", 'Bắt đầu với tạ nhẹ để làm quen giữ thăng bằng trên vai'],
+  },
+  db_situp: {
+    steps: [
+      'Nằm ngửa, gối gập, bàn chân cố định trên sàn, hai tay ôm tạ trước ngực',
+      'Siết bụng, ngồi dậy đến khi thân trên gần vuông góc với sàn',
+      'Hạ xuống từ từ về vị trí ban đầu',
+    ],
+    tips: ['Giữ tạ sát ngực suốt động tác, không đưa tạ ra xa làm mất thăng bằng', 'Không giật người bằng đà'],
+  },
+  db_svend_press: {
+    steps: [
+      'Đứng thẳng, hai lòng bàn tay ép chặt hai đầu tạ (hoặc một tạ đĩa) trước ngực',
+      'Duỗi thẳng tay đẩy tạ ra trước, giữ lực ép hai tay vào nhau suốt động tác',
+      'Kéo tạ trở lại sát ngực, không ngừng siết ép',
+    ],
+    tips: ['Lực ép hai tay vào nhau quan trọng hơn trọng lượng tạ', 'Giữ vai thả lỏng xuống, không nhún vai'],
+  },
+  db_good_morning: {
+    steps: [
+      'Đứng thẳng, tạ đặt trên vai (như đòn tạ) hoặc ôm trước ngực, chân rộng bằng hông',
+      'Gập hông đẩy mông ra sau, hạ thân trên xuống gần song song sàn, gối hơi chùng',
+      'Siết mông và cơ sau đùi kéo thân người thẳng dậy trở lại',
+    ],
+    tips: ['Giữ lưng thẳng suốt động tác, không gù hoặc võng lưng', 'Bắt đầu với tạ nhẹ — đây là bài tập kỹ thuật, sai form dễ ảnh hưởng lưng dưới'],
+  },
+  db_woodchopper: {
+    steps: [
+      'Đứng chân rộng bằng vai, hai tay cầm một tạ đưa chéo xuống ngoài hông bên này',
+      'Xoay thân và kéo tạ chéo lên cao qua phía đối diện, như động tác chặt củi ngược',
+      'Hạ tạ về vị trí ban đầu theo đúng đường chéo, hết hiệp thì đổi bên',
+    ],
+    tips: ['Lực xoay đến từ hông và core, không chỉ vung tay', 'Giữ tay duỗi tương đối thẳng suốt đường di chuyển của tạ'],
+  },
+  db_standing_twist: {
+    steps: [
+      'Đứng thẳng, hai chân rộng bằng vai, hai tay cầm chung một tạ trước bụng',
+      'Xoay thân trên sang một bên hết mức có thể, hông giữ cố định hướng thẳng',
+      'Xoay trở lại giữa rồi sang bên còn lại — tính 1 lần khi xoay đủ 2 bên',
+    ],
+    tips: ['Xoay bằng phần thân trên, không xoay bằng cách vặn gối/hông', 'Dùng tạ nhẹ để tập trung vào biên độ xoay thay vì sức nặng'],
+  },
+
   // Sport (outdoor/team sports)
   sport_football: {
     steps: [
