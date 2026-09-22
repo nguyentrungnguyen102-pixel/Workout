@@ -37,66 +37,66 @@ const TEST_ALL_VARIANTS = process.env.TEST_ALL_VARIANTS === 'true';
 const QUOTES = [
   { en: 'The body achieves what the mind believes.', vi: 'Cơ thể làm được điều mà tâm trí tin tưởng.', author: 'Napoleon Hill' },
   { en: 'The pain you feel today will be the strength you feel tomorrow.', vi: 'Nỗi đau hôm nay sẽ là sức mạnh của ngày mai.', author: 'Arnold Schwarzenegger' },
-  { en: "Take care of your body. It's the only place you have to live.", vi: 'Hãy chăm sóc cơ thể — đó là nơi duy nhất bạn phải sống.', author: 'Jim Rohn' },
+  { en: 'Take care of your body. It\'s the only place you have to live.', vi: 'Hãy chăm sóc cơ thể — đó là nơi duy nhất bạn phải sống.', author: 'Jim Rohn' },
   { en: 'Discipline is choosing between what you want now and what you want most.', vi: 'Kỷ luật là chọn giữa điều bạn muốn bây giờ và điều bạn muốn nhất.', author: 'Abraham Lincoln' },
   { en: 'A journey of a thousand miles begins with a single step.', vi: 'Hành trình vạn dặm bắt đầu từ một bước chân.', author: 'Lão Tử' },
-  { en: "It's not that I'm so smart, it's just that I stay with problems longer.", vi: 'Không phải tôi thông minh hơn, chỉ là tôi kiên trì với vấn đề lâu hơn.', author: 'Albert Einstein' },
-  { en: "The only bad workout is the one that didn't happen.", vi: 'Buổi tập tệ nhất là buổi tập không diễn ra.', author: 'Ngạn ngữ' },
+  { en: 'It\'s not that I\'m so smart, it\'s just that I stay with problems longer.', vi: 'Không phải tôi thông minh hơn, chỉ là tôi kiên trì với vấn đề lâu hơn.', author: 'Albert Einstein' },
+  { en: 'The only bad workout is the one that didn\'t happen.', vi: 'Buổi tập tệ nhất là buổi tập không diễn ra.', author: 'Ngạn ngữ' },
   { en: 'Success is the sum of small efforts repeated day in and day out.', vi: 'Thành công là tổng của những nỗ lực nhỏ lặp lại mỗi ngày.', author: 'Robert Collier' },
   { en: 'Strength does not come from winning. Your struggles develop your strengths.', vi: 'Sức mạnh không đến từ chiến thắng. Chính khó khăn rèn nên sức mạnh của bạn.', author: 'Arnold Schwarzenegger' },
   { en: 'He who has a why to live can bear almost any how.', vi: 'Người có lý do để sống có thể chịu đựng gần như mọi cách sống.', author: 'Friedrich Nietzsche' },
   { en: 'Well done is better than well said.', vi: 'Làm tốt hơn là nói hay.', author: 'Benjamin Franklin' },
   { en: 'Slow progress is still progress.', vi: 'Tiến bộ chậm vẫn là tiến bộ.', author: 'Ngạn ngữ' },
-  { en: "You don't have to be great to start, but you have to start to be great.", vi: 'Không cần giỏi mới bắt đầu, nhưng phải bắt đầu mới giỏi được.', author: 'Zig Ziglar' },
+  { en: 'You don\'t have to be great to start, but you have to start to be great.', vi: 'Không cần giỏi mới bắt đầu, nhưng phải bắt đầu mới giỏi được.', author: 'Zig Ziglar' },
   { en: 'What we do now echoes in eternity.', vi: 'Những gì ta làm hôm nay sẽ vang vọng mãi về sau.', author: 'Marcus Aurelius' },
   { en: 'The groundwork for all happiness is good health.', vi: 'Nền tảng của mọi hạnh phúc là sức khỏe tốt.', author: 'Leigh Hunt' },
   { en: 'Success is not final, failure is not fatal: it is the courage to continue that counts.', vi: 'Thành công không phải đích cuối, thất bại không phải dấu chấm hết: quan trọng là can đảm tiếp tục.', author: 'Winston Churchill' },
   { en: 'It does not matter how slowly you go as long as you do not stop.', vi: 'Đi chậm thế nào cũng không sao, miễn là đừng dừng lại.', author: 'Khổng Tử' },
   { en: 'The pain of discipline is far less than the pain of regret.', vi: 'Nỗi đau của kỷ luật nhỏ hơn nhiều so với nỗi đau của hối tiếc.', author: 'Ngạn ngữ' },
   { en: 'Motivation is what gets you started. Habit is what keeps you going.', vi: 'Động lực giúp bạn bắt đầu. Thói quen giúp bạn duy trì.', author: 'Jim Ryun' },
-  { en: "You miss 100% of the shots you don't take.", vi: 'Bạn bỏ lỡ 100% những cú ném mình không thực hiện.', author: 'Wayne Gretzky' },
-  { en: "The difference between the impossible and the possible lies in a person's determination.", vi: 'Ranh giới giữa điều không thể và có thể nằm ở quyết tâm của mỗi người.', author: 'Tommy Lasorda' },
+  { en: 'You miss 100% of the shots you don\'t take.', vi: 'Bạn bỏ lỡ 100% những cú ném mình không thực hiện.', author: 'Wayne Gretzky' },
+  { en: 'The difference between the impossible and the possible lies in a person\'s determination.', vi: 'Ranh giới giữa điều không thể và có thể nằm ở quyết tâm của mỗi người.', author: 'Tommy Lasorda' },
   { en: 'Push yourself, because no one else is going to do it for you.', vi: 'Hãy tự thúc đẩy bản thân, vì không ai làm điều đó thay bạn.', author: 'Khuyết danh' },
   { en: 'Sweat is just fat crying.', vi: 'Mồ hôi chỉ là mỡ đang khóc.', author: 'Khuyết danh' },
-  { en: "Strength grows in the moments when you think you can't go on but you keep going anyway.", vi: 'Sức mạnh lớn lên đúng lúc bạn nghĩ mình không thể tiếp tục nhưng vẫn cứ bước.', author: 'Khuyết danh' },
+  { en: 'Strength grows in the moments when you think you can\'t go on but you keep going anyway.', vi: 'Sức mạnh lớn lên đúng lúc bạn nghĩ mình không thể tiếp tục nhưng vẫn cứ bước.', author: 'Khuyết danh' },
   { en: 'A year from now you may wish you had started today.', vi: 'Một năm nữa nhìn lại, bạn sẽ ước gì mình đã bắt đầu từ hôm nay.', author: 'Karen Lamb' },
   { en: 'The only way to define your limits is by going beyond them.', vi: 'Cách duy nhất để biết giới hạn của mình là vượt qua nó.', author: 'Arthur C. Clarke' },
   { en: 'Discipline equals freedom.', vi: 'Kỷ luật chính là tự do.', author: 'Jocko Willink' },
-  { en: "You don't get what you wish for. You get what you work for.", vi: 'Bạn không nhận được điều mình ước, mà nhận được điều mình bỏ công sức.', author: 'Khuyết danh' },
-  { en: "Don't count the days, make the days count.", vi: 'Đừng đếm số ngày đã qua, hãy làm cho mỗi ngày đáng giá.', author: 'Muhammad Ali' },
+  { en: 'You don\'t get what you wish for. You get what you work for.', vi: 'Bạn không nhận được điều mình ước, mà nhận được điều mình bỏ công sức.', author: 'Khuyết danh' },
+  { en: 'Don\'t count the days, make the days count.', vi: 'Đừng đếm số ngày đã qua, hãy làm cho mỗi ngày đáng giá.', author: 'Muhammad Ali' },
   { en: 'Champions keep playing until they get it right.', vi: 'Nhà vô địch cứ chơi tiếp cho đến khi làm đúng.', author: 'Billie Jean King' },
   { en: 'The mind is the limit — as long as the mind can envision something, you can do it.', vi: 'Tâm trí chính là giới hạn — chỉ cần tâm trí hình dung được, bạn sẽ làm được.', author: 'Arnold Schwarzenegger' },
   { en: 'Nothing will work unless you do.', vi: 'Không gì tự vận hành nếu bạn không hành động.', author: 'Maya Angelou' },
   { en: 'Energy and persistence conquer all things.', vi: 'Năng lượng và sự kiên trì chinh phục mọi thứ.', author: 'Benjamin Franklin' },
-  { en: "It always seems impossible until it's done.", vi: 'Mọi thứ luôn có vẻ bất khả thi cho đến khi nó được hoàn thành.', author: 'Nelson Mandela' },
+  { en: 'It always seems impossible until it\'s done.', vi: 'Mọi thứ luôn có vẻ bất khả thi cho đến khi nó được hoàn thành.', author: 'Nelson Mandela' },
   { en: 'Fall seven times, stand up eight.', vi: 'Ngã bảy lần, đứng dậy tám lần.', author: 'Ngạn ngữ Nhật' },
   { en: 'Small daily improvements are the key to staggering long-term results.', vi: 'Những cải thiện nhỏ mỗi ngày là chìa khoá cho kết quả lớn về lâu dài.', author: 'Khuyết danh' },
   { en: 'What hurts today makes you stronger tomorrow.', vi: 'Điều làm bạn đau hôm nay sẽ khiến bạn mạnh mẽ hơn vào ngày mai.', author: 'Jay Cutler' },
-  { en: "Your body can stand almost anything. It's your mind you have to convince.", vi: 'Cơ thể bạn chịu đựng được gần như mọi thứ — chỉ cần thuyết phục được tâm trí.', author: 'Khuyết danh' },
+  { en: 'Your body can stand almost anything. It\'s your mind you have to convince.', vi: 'Cơ thể bạn chịu đựng được gần như mọi thứ — chỉ cần thuyết phục được tâm trí.', author: 'Khuyết danh' },
   { en: 'The clock is ticking — are you becoming the person you want to be?', vi: 'Đồng hồ vẫn đang chạy — bạn có đang trở thành người mình muốn không?', author: 'Greg Plitt' },
-  { en: "If it doesn't challenge you, it doesn't change you.", vi: 'Nếu nó không thách thức bạn, nó sẽ không thể thay đổi bạn.', author: 'Fred DeVito' },
+  { en: 'If it doesn\'t challenge you, it doesn\'t change you.', vi: 'Nếu nó không thách thức bạn, nó sẽ không thể thay đổi bạn.', author: 'Fred DeVito' },
   { en: 'Good things come to those who sweat.', vi: 'Điều tốt đẹp đến với những ai chịu đổ mồ hôi.', author: 'Khuyết danh' },
-  { en: "Excuses don't burn calories.", vi: 'Lời bào chữa không đốt được calo nào.', author: 'Khuyết danh' },
-  { en: "The hard days are the best because that's when champions are made.", vi: 'Những ngày khó khăn nhất là ngày tốt nhất, vì đó là lúc nhà vô địch được tạo ra.', author: 'Gabby Douglas' },
-  { en: "You don't have to be extreme, just consistent.", vi: 'Bạn không cần cực đoan, chỉ cần đều đặn.', author: 'Khuyết danh' },
+  { en: 'Excuses don\'t burn calories.', vi: 'Lời bào chữa không đốt được calo nào.', author: 'Khuyết danh' },
+  { en: 'The hard days are the best because that\'s when champions are made.', vi: 'Những ngày khó khăn nhất là ngày tốt nhất, vì đó là lúc nhà vô địch được tạo ra.', author: 'Gabby Douglas' },
+  { en: 'You don\'t have to be extreme, just consistent.', vi: 'Bạn không cần cực đoan, chỉ cần đều đặn.', author: 'Khuyết danh' },
   { en: 'We are what we repeatedly do. Excellence, then, is not an act, but a habit.', vi: 'Chúng ta là những gì mình lặp lại mỗi ngày. Sự xuất sắc không phải là hành động, mà là thói quen.', author: 'Aristotle' },
   { en: 'The best time to plant a tree was 20 years ago. The second best time is now.', vi: 'Thời điểm tốt nhất để trồng cây là 20 năm trước. Thời điểm tốt thứ nhì là ngay bây giờ.', author: 'Ngạn ngữ' },
   { en: 'Whether you think you can, or you think you cannot — you are right.', vi: 'Dù bạn nghĩ mình làm được, hay nghĩ mình không làm được — bạn đều đúng.', author: 'Henry Ford' },
   { en: 'The man who moves a mountain begins by carrying away small stones.', vi: 'Người dời được cả ngọn núi bắt đầu từ việc mang đi từng viên đá nhỏ.', author: 'Khổng Tử' },
   { en: 'Perseverance is not a long race; it is many short races one after the other.', vi: 'Kiên trì không phải một chặng đua dài, mà là nhiều chặng đua ngắn nối tiếp nhau.', author: 'Walter Elliot' },
   { en: 'The struggle you are in today is developing the strength you need for tomorrow.', vi: 'Cuộc chiến bạn đang trải qua hôm nay đang rèn nên sức mạnh bạn cần cho ngày mai.', author: 'Robert Tew' },
-  { en: "Don't limit your challenges, challenge your limits.", vi: 'Đừng giới hạn thử thách của mình, hãy thử thách giới hạn của mình.', author: 'Khuyết danh' },
+  { en: 'Don\'t limit your challenges, challenge your limits.', vi: 'Đừng giới hạn thử thách của mình, hãy thử thách giới hạn của mình.', author: 'Khuyết danh' },
   { en: 'Wake up with determination, go to bed with satisfaction.', vi: 'Thức dậy với quyết tâm, đi ngủ với sự hài lòng.', author: 'Khuyết danh' },
   { en: 'Difficult roads often lead to beautiful destinations.', vi: 'Con đường gian nan thường dẫn đến những đích đến đẹp đẽ.', author: 'Khuyết danh' },
   { en: 'Once you learn to quit, it becomes a habit.', vi: 'Một khi bạn học được cách bỏ cuộc, nó sẽ trở thành thói quen.', author: 'Vince Lombardi' },
-  { en: "It's not whether you get knocked down, it's whether you get up.", vi: 'Vấn đề không phải là bạn có bị quật ngã hay không, mà là bạn có đứng dậy hay không.', author: 'Vince Lombardi' },
+  { en: 'It\'s not whether you get knocked down, it\'s whether you get up.', vi: 'Vấn đề không phải là bạn có bị quật ngã hay không, mà là bạn có đứng dậy hay không.', author: 'Vince Lombardi' },
   { en: 'The only place where success comes before work is in the dictionary.', vi: 'Chỉ trong từ điển thì "thành công" mới đứng trước "làm việc".', author: 'Vince Lombardi' },
   { en: 'Far and away the best prize that life offers is the chance to work hard at work worth doing.', vi: 'Phần thưởng lớn nhất mà cuộc sống mang lại là cơ hội được nỗ lực hết mình cho điều đáng làm.', author: 'Theodore Roosevelt' },
   { en: 'Believe you can and you are halfway there.', vi: 'Tin rằng mình làm được, coi như bạn đã đi được nửa chặng đường.', author: 'Theodore Roosevelt' },
   { en: 'Do the hard jobs first. The easy jobs will take care of themselves.', vi: 'Hãy làm việc khó trước. Việc dễ sẽ tự lo được.', author: 'Dale Carnegie' },
   { en: 'Amateurs sit and wait for inspiration, the rest of us just get up and go to work.', vi: 'Người nghiệp dư ngồi chờ cảm hứng, còn chúng ta thì đứng dậy và bắt tay vào làm.', author: 'Stephen King' },
   { en: 'Continuous effort — not strength or intelligence — is the key to unlocking our potential.', vi: 'Nỗ lực bền bỉ — chứ không phải sức mạnh hay trí thông minh — mới là chìa khoá mở ra tiềm năng của chúng ta.', author: 'Winston Churchill' },
-  { en: "Set your goals high, and don't stop till you get there.", vi: 'Đặt mục tiêu thật cao, và đừng dừng lại cho đến khi đạt được.', author: 'Bo Jackson' },
+  { en: 'Set your goals high, and don\'t stop till you get there.', vi: 'Đặt mục tiêu thật cao, và đừng dừng lại cho đến khi đạt được.', author: 'Bo Jackson' },
   { en: 'There is no elevator to success. You have to take the stairs.', vi: 'Không có thang máy đến thành công. Bạn phải tự leo từng bậc thang bộ.', author: 'Khuyết danh' },
   { en: 'Somewhere, someone else is training when you are not — and when you race them, they will win.', vi: 'Ở đâu đó, có người vẫn đang tập khi bạn nghỉ — và khi đối đầu, người đó sẽ thắng.', author: 'Khuyết danh' },
   { en: 'The pain you feel now is nothing compared to the pain of regret.', vi: 'Nỗi đau bạn chịu bây giờ chẳng thấm gì so với nỗi đau của sự hối tiếc sau này.', author: 'Khuyết danh' },
@@ -105,9 +105,9 @@ const QUOTES = [
   { en: 'Your only limit is you.', vi: 'Giới hạn duy nhất của bạn chính là bạn.', author: 'Khuyết danh' },
   { en: 'Train insane or remain the same.', vi: 'Tập điên cuồng, hoặc mãi mãi giậm chân tại chỗ.', author: 'Khuyết danh' },
   { en: 'What seems impossible today will one day become your warm-up.', vi: 'Điều tưởng chừng bất khả thi hôm nay, một ngày nào đó sẽ chỉ là bài khởi động của bạn.', author: 'Khuyết danh' },
-  { en: "Don't wish for it, work for it.", vi: 'Đừng chỉ ước, hãy bắt tay vào làm.', author: 'Khuyết danh' },
+  { en: 'Don\'t wish for it, work for it.', vi: 'Đừng chỉ ước, hãy bắt tay vào làm.', author: 'Khuyết danh' },
   { en: 'The body achieves what the mind believes and the will sustains.', vi: 'Cơ thể đạt được điều tâm trí tin tưởng và ý chí duy trì.', author: 'Khuyết danh' },
-  { en: "Rome wasn't built in a day, but they worked on it every single day.", vi: 'La Mã không được xây trong một ngày, nhưng người ta xây nó mỗi ngày không nghỉ.', author: 'Khuyết danh' },
+  { en: 'Rome wasn\'t built in a day, but they worked on it every single day.', vi: 'La Mã không được xây trong một ngày, nhưng người ta xây nó mỗi ngày không nghỉ.', author: 'Khuyết danh' },
   { en: 'You are stronger than you think.', vi: 'Bạn mạnh mẽ hơn mình nghĩ rất nhiều.', author: 'Khuyết danh' },
   { en: 'Every accomplishment starts with the decision to try.', vi: 'Mọi thành tựu đều bắt đầu từ quyết định thử sức.', author: 'Khuyết danh' },
   { en: 'Sore today, strong tomorrow.', vi: 'Đau hôm nay, mạnh mẽ ngày mai.', author: 'Khuyết danh' },
@@ -143,7 +143,7 @@ const QUOTES = [
   { en: 'Strength is the product of struggle.', vi: 'Sức mạnh là sản phẩm của sự đấu tranh.', author: 'Ngạn ngữ' },
   { en: 'You are your own worst enemy and your own best friend.', vi: 'Bạn vừa là kẻ thù lớn nhất, vừa là người bạn tốt nhất của chính mình.', author: 'Khuyết danh' },
   { en: 'Fitness is not about being better than someone else. It is about being better than you used to be.', vi: 'Thể lực không phải để hơn người khác, mà để hơn chính mình trước đây.', author: 'Khuyết danh' },
-  { en: "Champions aren't made in the gyms. Champions are made from something they have deep inside them.", vi: 'Nhà vô địch không được tạo ra trong phòng gym, mà từ điều gì đó sâu bên trong họ.', author: 'Muhammad Ali' },
+  { en: 'Champions aren\'t made in the gyms. Champions are made from something they have deep inside them.', vi: 'Nhà vô địch không được tạo ra trong phòng gym, mà từ điều gì đó sâu bên trong họ.', author: 'Muhammad Ali' },
   { en: 'The successful warrior is the average man, with laser-like focus.', vi: 'Chiến binh thành công chỉ là người bình thường với sự tập trung như tia laser.', author: 'Bruce Lee' },
   { en: 'I fear not the man who has practiced 10,000 kicks once, but the man who has practiced one kick 10,000 times.', vi: 'Tôi không sợ người tập 10.000 cú đá một lần, mà sợ người tập một cú đá 10.000 lần.', author: 'Bruce Lee' },
   { en: 'There is no royal road to anything. One thing at a time, all things in succession.', vi: 'Không có con đường tắt cho bất cứ điều gì. Từng việc một, theo đúng trình tự.', author: 'Ngạn ngữ' },
@@ -155,7 +155,7 @@ const QUOTES = [
   { en: 'First say to yourself what you would be, and then do what you have to do.', vi: 'Trước tiên hãy xác định bạn muốn trở thành ai, rồi làm những gì cần làm.', author: 'Epictetus' },
   { en: 'Well begun is half done.', vi: 'Bắt đầu tốt coi như đã xong một nửa.', author: 'Aristotle' },
   { en: 'Give me six hours to chop down a tree and I will spend the first four sharpening the axe.', vi: 'Cho tôi sáu giờ để chặt một cái cây, tôi sẽ dùng bốn giờ đầu để mài rìu.', author: 'Abraham Lincoln' },
-  { en: "I'm a great believer in luck, and I find the harder I work the more I have of it.", vi: 'Tôi rất tin vào may mắn, và càng chăm chỉ tôi càng thấy mình may mắn hơn.', author: 'Thomas Jefferson' },
+  { en: 'I\'m a great believer in luck, and I find the harder I work the more I have of it.', vi: 'Tôi rất tin vào may mắn, và càng chăm chỉ tôi càng thấy mình may mắn hơn.', author: 'Thomas Jefferson' },
   { en: 'Genius is one percent inspiration and ninety-nine percent perspiration.', vi: 'Thiên tài là một phần cảm hứng và chín mươi chín phần mồ hôi.', author: 'Thomas Edison' },
   { en: 'I have not failed. I have just found 10,000 ways that will not work.', vi: 'Tôi không thất bại. Tôi chỉ vừa tìm ra 10.000 cách không hiệu quả.', author: 'Thomas Edison' },
   { en: 'The way to get started is to quit talking and begin doing.', vi: 'Cách để bắt đầu là ngừng nói và bắt tay vào làm.', author: 'Walt Disney' },
@@ -183,7 +183,7 @@ const QUOTES = [
   { en: 'Whatever the mind can conceive and believe, it can achieve.', vi: 'Bất cứ điều gì tâm trí có thể hình dung và tin tưởng, nó có thể đạt được.', author: 'Napoleon Hill' },
   { en: 'Strength does not come from physical capacity. It comes from an indomitable will.', vi: 'Sức mạnh không đến từ thể chất. Nó đến từ ý chí bất khuất.', author: 'Mahatma Gandhi' },
   { en: 'Be the change you wish to see in yourself.', vi: 'Hãy là sự thay đổi mà bạn muốn thấy ở chính mình.', author: 'Khuyết danh' },
-  { en: 'A river cuts through rock not because of its power but its persistence.', vi: 'Dòng sông xẻ được đá không phải nhờ sức mạnh, mà nhờ sự bền bỉ.', author: 'James N. Watkins' },
+  { en: 'Success is not about the destination, it\'s about who you become along the way.', vi: 'Thành công không nằm ở đích đến, mà ở con người bạn trở thành trên hành trình.', author: 'Zig Ziglar' },
   { en: 'Champions train, losers complain.', vi: 'Nhà vô địch thì tập luyện, kẻ thua cuộc thì than vãn.', author: 'Khuyết danh' },
   { en: 'Pain is temporary. Quitting lasts forever.', vi: 'Đau đớn chỉ là tạm thời. Bỏ cuộc mới kéo dài mãi mãi.', author: 'Lance Armstrong' },
   { en: 'It never gets easier, you just get better.', vi: 'Nó không bao giờ dễ hơn, chỉ là bạn giỏi hơn.', author: 'Khuyết danh' },
@@ -199,7 +199,7 @@ const QUOTES = [
   { en: 'Dreams do not work unless you do.', vi: 'Ước mơ không tự thành hiện thực nếu bạn không hành động.', author: 'John C. Maxwell' },
   { en: 'A little progress each day adds up to big results over time.', vi: 'Một chút tiến bộ mỗi ngày, theo thời gian, sẽ cộng dồn thành kết quả lớn.', author: 'Khuyết danh' },
   { en: 'What defines us is how well we rise after falling.', vi: 'Điều định nghĩa chúng ta là cách ta đứng dậy sau khi ngã.', author: 'Khuyết danh' },
-  { en: "Someone else's opinion of you is none of your business.", vi: 'Ý kiến của người khác về bạn không phải việc của bạn.', author: 'Khuyết danh' },
+  { en: 'Someone else\'s opinion of you is none of your business.', vi: 'Ý kiến của người khác về bạn không phải việc của bạn.', author: 'Khuyết danh' },
   { en: 'Winners are not people who never fail, but people who never quit.', vi: 'Người chiến thắng không phải người chưa từng thất bại, mà là người chưa từng bỏ cuộc.', author: 'Khuyết danh' },
   { en: 'The body benefits from movement, and the mind benefits from stillness.', vi: 'Cơ thể được lợi từ vận động, còn tâm trí được lợi từ tĩnh lặng.', author: 'Sakyong Mipham' },
   { en: 'Health is not valued until sickness comes.', vi: 'Sức khoẻ chỉ được trân trọng khi bệnh tật ập đến.', author: 'Thomas Fuller' },
@@ -207,7 +207,7 @@ const QUOTES = [
   { en: 'A healthy body is a guest-chamber for the soul, a sick body is a prison.', vi: 'Một cơ thể khoẻ mạnh là phòng khách cho tâm hồn, cơ thể bệnh tật là nhà tù.', author: 'Francis Bacon' },
   { en: 'Rest and self-care are so important. When you take time to replenish your spirit, it allows you to serve others from the overflow.', vi: 'Nghỉ ngơi và chăm sóc bản thân rất quan trọng — khi bạn nạp lại năng lượng, bạn mới có dư để cho đi.', author: 'Eleanor Brownn' },
   { en: 'It is not about having time, it is about making time.', vi: 'Vấn đề không phải là có thời gian, mà là tạo ra thời gian.', author: 'Khuyết danh' },
-  { en: 'Success is the sum of small efforts, repeated day in and day out.', vi: 'Thành công là tổng của những nỗ lực nhỏ, lặp đi lặp lại mỗi ngày.', author: 'Robert Collier' },
+  { en: 'The successful warrior is the one who never stops training, even after the medal.', vi: 'Chiến binh thành công là người không bao giờ ngừng luyện tập, kể cả sau khi đã có huy chương.', author: 'Khuyết danh' },
   { en: 'Do not stop when you are tired. Stop when you are done.', vi: 'Đừng dừng lại khi bạn mệt. Hãy dừng lại khi bạn đã hoàn thành.', author: 'David Goggins' },
   { en: 'We are addicted to our thoughts. We cannot change anything if we cannot change our thinking.', vi: 'Ta bị nghiện chính suy nghĩ của mình. Ta không thể thay đổi gì nếu không thay đổi cách nghĩ.', author: 'Santosh Kalwar' },
   { en: 'Comfort is the enemy of progress.', vi: 'Sự thoải mái là kẻ thù của tiến bộ.', author: 'P.T. Barnum' },
@@ -216,11 +216,11 @@ const QUOTES = [
   { en: 'When you feel like quitting, think about why you started.', vi: 'Khi bạn muốn bỏ cuộc, hãy nhớ lại lý do bạn bắt đầu.', author: 'Khuyết danh' },
   { en: 'You will never always be motivated, so you must learn to be disciplined.', vi: 'Bạn sẽ không phải lúc nào cũng có động lực, vậy nên phải học cách kỷ luật.', author: 'Khuyết danh' },
   { en: 'Strive for progress, not perfection.', vi: 'Hãy phấn đấu vì sự tiến bộ, không phải sự hoàn hảo.', author: 'Khuyết danh' },
-  { en: 'Fall down seven times, get up eight.', vi: 'Ngã bảy lần, đứng dậy tám lần.', author: 'Ngạn ngữ Nhật' },
+  { en: 'Strength is the product of struggle. You must do what others don\'t to achieve what others won\'t.', vi: 'Sức mạnh là sản phẩm của sự đấu tranh. Bạn phải làm điều người khác không làm để đạt điều người khác không đạt được.', author: 'Jerzy Gregorek' },
   { en: 'The greatest pleasure in life is doing what people say you cannot do.', vi: 'Niềm vui lớn nhất trong đời là làm được điều người khác nói bạn không thể.', author: 'Walter Bagehot' },
   { en: 'Push yourself again and again. Do not give an inch until the final buzzer sounds.', vi: 'Hãy dấn thân hết mình, đừng lùi bước dù chỉ một chút cho đến hồi còi cuối cùng.', author: 'Larry Bird' },
   { en: 'Hard work beats talent when talent does not work hard.', vi: 'Chăm chỉ đánh bại tài năng khi tài năng không chịu chăm chỉ.', author: 'Tim Notke' },
-  { en: 'Excellence is not a singular act but a habit. You are what you repeatedly do.', vi: 'Sự xuất sắc không phải một hành động đơn lẻ mà là một thói quen. Bạn chính là những gì bạn lặp lại.', author: "Shaquille O'Neal" },
+  { en: 'Excellence is not a singular act but a habit. You are what you repeatedly do.', vi: 'Sự xuất sắc không phải một hành động đơn lẻ mà là một thói quen. Bạn chính là những gì bạn lặp lại.', author: 'Shaquille O\'Neal' },
   { en: 'The road to success and the road to failure are almost exactly the same.', vi: 'Con đường dẫn đến thành công và con đường dẫn đến thất bại gần như là một.', author: 'Colin R. Davis' },
   { en: 'Setting goals is the first step in turning the invisible into the visible.', vi: 'Đặt mục tiêu là bước đầu tiên biến điều vô hình thành hiện thực.', author: 'Tony Robbins' },
   { en: 'The only way to do great work is to love what you do.', vi: 'Cách duy nhất để làm việc lớn là yêu thích công việc mình làm.', author: 'Steve Jobs' },
@@ -236,19 +236,140 @@ const QUOTES = [
   { en: 'Your health is an investment, not an expense.', vi: 'Sức khoẻ là một khoản đầu tư, không phải một khoản chi tiêu.', author: 'Khuyết danh' },
   { en: 'Sore muscles today, stronger body tomorrow.', vi: 'Cơ bắp đau hôm nay, cơ thể mạnh mẽ hơn ngày mai.', author: 'Khuyết danh' },
   { en: 'Do something today that your future self will thank you for.', vi: 'Hãy làm điều gì đó hôm nay để bản thân tương lai phải cảm ơn bạn.', author: 'Sean Patrick Flanery' },
-  { en: 'A year from now you will wish you had started today.', vi: 'Một năm nữa nhìn lại, bạn sẽ ước gì mình đã bắt đầu từ hôm nay.', author: 'Karen Lamb' },
+  { en: 'A body in motion stays in motion.', vi: 'Một cơ thể đang chuyển động sẽ tiếp tục chuyển động.', author: 'Isaac Newton' },
   { en: 'Great things never come from comfort zones.', vi: 'Những điều vĩ đại chưa bao giờ đến từ vùng an toàn.', author: 'Khuyết danh' },
   { en: 'Sometimes later becomes never. Do it now.', vi: 'Đôi khi "để sau" sẽ thành "không bao giờ". Hãy làm ngay bây giờ.', author: 'Khuyết danh' },
-  { en: 'Difficult roads often lead to beautiful destinations.', vi: 'Những con đường gian nan thường dẫn đến những đích đến tuyệt đẹp.', author: 'Khuyết danh' },
+  { en: 'Done is better than perfect.', vi: 'Xong việc tốt hơn là hoàn hảo.', author: 'Sheryl Sandberg' },
   { en: 'Do not wish it were easier, wish you were better.', vi: 'Đừng ước nó dễ dàng hơn, hãy ước mình giỏi hơn.', author: 'Jim Rohn' },
   { en: 'The successful person makes a habit of doing what the failing person does not like to do.', vi: 'Người thành công có thói quen làm điều mà người thất bại không thích làm.', author: 'Thomas Edison' },
   { en: 'Effort never betrays you.', vi: 'Nỗ lực không bao giờ phản bội bạn.', author: 'Ngạn ngữ Nhật' },
   { en: 'Fall in love with the process, and the results will come.', vi: 'Hãy yêu lấy quá trình, kết quả rồi sẽ đến.', author: 'Eric Thomas' },
   { en: 'When you want to succeed as bad as you want to breathe, then you will be successful.', vi: 'Khi bạn muốn thành công mãnh liệt như muốn hít thở, bạn sẽ thành công.', author: 'Eric Thomas' },
+  { en: 'The obstacle is the way.', vi: 'Chướng ngại vật chính là con đường.', author: 'Marcus Aurelius' },
+  { en: 'The only limit to our realization of tomorrow will be our doubts of today.', vi: 'Giới hạn duy nhất cho việc hiện thực hoá ngày mai chính là sự nghi ngờ của ngày hôm nay.', author: 'Franklin D. Roosevelt' },
+  { en: 'You have power over your own state of mind, always, no matter the circumstances.', vi: 'Bạn luôn có quyền kiểm soát trạng thái tâm trí của chính mình, bất kể hoàn cảnh nào.', author: 'Marcus Aurelius' },
+  { en: 'Do what you can, with what you have, where you are.', vi: 'Hãy làm những gì bạn có thể, với những gì bạn có, ở nơi bạn đang đứng.', author: 'Theodore Roosevelt' },
+  { en: 'A dream doesn\'t become reality through magic; it takes sweat, determination and hard work.', vi: 'Giấc mơ không biến thành hiện thực nhờ phép màu; nó cần mồ hôi, quyết tâm và sự chăm chỉ.', author: 'Colin Powell' },
+  { en: 'I have not failed. I\'ve just found 10,000 ways that won\'t work.', vi: 'Tôi không thất bại. Tôi chỉ tìm ra 10.000 cách không hiệu quả.', author: 'Thomas Edison' },
+  { en: 'There are no secrets to success. It is the result of preparation, hard work, and learning from failure.', vi: 'Không có bí quyết nào cho thành công. Đó là kết quả của sự chuẩn bị, chăm chỉ và học từ thất bại.', author: 'Colin Powell' },
+  { en: 'The body achieves what the mind believes — but only if the hands show up.', vi: 'Cơ thể đạt được điều tâm trí tin tưởng — nhưng chỉ khi đôi tay chịu bắt tay vào việc.', author: 'Khuyết danh' },
+  { en: 'Motivation gets you started. Habit keeps you going.', vi: 'Động lực giúp bạn bắt đầu. Thói quen giúp bạn tiếp tục.', author: 'Jim Ryun' },
+  { en: 'You are your only limit.', vi: 'Bạn là giới hạn duy nhất của chính mình.', author: 'Khuyết danh' },
+  { en: 'Little by little, one travels far.', vi: 'Từng chút một, người ta đi được thật xa.', author: 'J.R.R. Tolkien' },
+  { en: 'Waste no more time arguing about what a good man should be. Be one.', vi: 'Đừng phí thời gian tranh luận người tốt nên như thế nào. Hãy trở thành một người như vậy.', author: 'Marcus Aurelius' },
+  { en: 'Your time is limited, so don\'t waste it living someone else\'s life.', vi: 'Thời gian của bạn có hạn, đừng lãng phí nó để sống cuộc đời của người khác.', author: 'Steve Jobs' },
+  { en: '做而不言 — Actions speak louder than declared intentions.', vi: 'Hành động nói lên nhiều hơn mọi lời tuyên bố.', author: 'Ngạn ngữ Trung Hoa' },
+  { en: 'Life isn\'t about finding yourself. Life is about creating yourself.', vi: 'Cuộc sống không phải để tìm ra chính mình. Cuộc sống là để tạo nên chính mình.', author: 'George Bernard Shaw' },
+  { en: 'The future belongs to those who believe in the beauty of their dreams.', vi: 'Tương lai thuộc về những ai tin vào vẻ đẹp trong giấc mơ của họ.', author: 'Eleanor Roosevelt' },
+  { en: 'Accept the challenges so that you can feel the exhilaration of victory.', vi: 'Hãy đón nhận thử thách để cảm nhận niềm hân hoan của chiến thắng.', author: 'George S. Patton' },
+  { en: 'Excellence is never an accident. It is the result of high intention and sincere effort.', vi: 'Sự xuất sắc không bao giờ là tình cờ. Đó là kết quả của ý định cao cả và nỗ lực chân thành.', author: 'Aristotle' },
+  { en: 'A one-hour workout is 4% of your day. No excuses.', vi: 'Một giờ tập chỉ chiếm 4% ngày của bạn. Không có lý do gì để bào chữa.', author: 'Khuyết danh' },
+  { en: 'The roots of education are bitter, but the fruit is sweet.', vi: 'Gốc rễ của giáo dục thì đắng, nhưng trái ngọt.', author: 'Aristotle' },
+  { en: 'Difficulties strengthen the mind, as labor does the body.', vi: 'Khó khăn rèn luyện tâm trí, như lao động rèn luyện thể chất.', author: 'Seneca' },
+  { en: 'The difference between try and triumph is a little umph.', vi: 'Khác biệt giữa "thử" và "chiến thắng" chỉ là một chút nỗ lực thêm.', author: 'Khuyết danh' },
+  { en: 'Every new beginning comes from some other beginning\'s end.', vi: 'Mọi khởi đầu mới đều đến từ sự kết thúc của một khởi đầu khác.', author: 'Seneca' },
+  { en: 'Do not let what you cannot do interfere with what you can do.', vi: 'Đừng để điều bạn không làm được cản trở điều bạn có thể làm.', author: 'John Wooden' },
+  { en: 'Pain is inevitable. Suffering is optional.', vi: 'Đau đớn là không thể tránh khỏi. Khổ sở là một lựa chọn.', author: 'Haruki Murakami' },
+  { en: 'The body is a barometer of lifestyle.', vi: 'Cơ thể chính là phong vũ biểu của lối sống.', author: 'Bryant McGill' },
+  { en: 'There is no traffic jam along the extra mile.', vi: 'Không có kẹt xe trên đoạn đường bạn cố gắng thêm.', author: 'Roger Staubach' },
+  { en: 'Success usually comes to those who are too busy to be looking for it.', vi: 'Thành công thường đến với những người quá bận rộn để đi tìm nó.', author: 'Henry David Thoreau' },
+  { en: 'Effort only fully releases its reward after a person refuses to quit.', vi: 'Nỗ lực chỉ thật sự đem lại thành quả sau khi con người từ chối bỏ cuộc.', author: 'Napoleon Hill' },
+  { en: 'It\'s what you learn after you know it all that counts.', vi: 'Điều quan trọng là những gì bạn học được sau khi đã tưởng mình biết hết.', author: 'John Wooden' },
+  { en: 'Believe you can and you\'re halfway there.', vi: 'Tin rằng bạn có thể, và bạn đã đi được nửa chặng đường.', author: 'Theodore Roosevelt' },
+  { en: 'Nothing worth having comes easy.', vi: 'Không có điều gì đáng giá lại đến dễ dàng.', author: 'Theodore Roosevelt' },
+  { en: 'Luck is what happens when preparation meets opportunity.', vi: 'May mắn là khi sự chuẩn bị gặp gỡ cơ hội.', author: 'Seneca' },
+  { en: 'Fitness is not about being better than someone else. It\'s about being better than you used to be.', vi: 'Thể lực không phải là giỏi hơn ai khác. Đó là giỏi hơn chính bạn của trước đây.', author: 'Khuyết danh' },
+  { en: 'Don\'t watch the clock; do what it does. Keep going.', vi: 'Đừng nhìn đồng hồ; hãy làm như nó — cứ tiếp tục chạy.', author: 'Sam Levenson' },
+  { en: 'The hardest lift of all is lifting your butt off the couch.', vi: 'Bài tập nặng nhất chính là nhấc mông ra khỏi ghế sofa.', author: 'Khuyết danh' },
+  { en: 'You didn\'t come this far to only come this far.', vi: 'Bạn đã không đi xa đến vậy chỉ để dừng lại ở đây.', author: 'Khuyết danh' },
+  { en: 'Expect the best, plan for the worst, and prepare to be surprised.', vi: 'Kỳ vọng điều tốt nhất, chuẩn bị cho điều tệ nhất, và sẵn sàng đón nhận bất ngờ.', author: 'Denis Waitley' },
+  { en: 'The successful man will profit from his mistakes and try again in a different way.', vi: 'Người thành công rút kinh nghiệm từ sai lầm và thử lại theo cách khác.', author: 'Dale Carnegie' },
+  { en: 'Whether you think you can or you think you can\'t, you\'re right.', vi: 'Dù bạn nghĩ mình có thể hay không thể, bạn đều đúng.', author: 'Henry Ford' },
+  { en: 'All our dreams can come true, if we have the courage to pursue them.', vi: 'Mọi giấc mơ đều có thể thành hiện thực, nếu ta đủ can đảm theo đuổi chúng.', author: 'Walt Disney' },
+  { en: 'If you can dream it, you can do it.', vi: 'Nếu bạn có thể mơ về nó, bạn có thể làm được nó.', author: 'Walt Disney' },
+  { en: 'The best revenge is massive success.', vi: 'Sự trả thù tốt nhất là thành công vang dội.', author: 'Frank Sinatra' },
+  { en: 'Toughness is in the soul and spirit, not in muscles.', vi: 'Sự cứng cỏi nằm ở tâm hồn và tinh thần, không phải ở bắp thịt.', author: 'Muhammad Ali' },
+  { en: 'Float like a butterfly, sting like a bee.', vi: 'Bay như bướm, chích như ong.', author: 'Muhammad Ali' },
+  { en: 'Too many of us are not living our dreams because we are living our fears.', vi: 'Quá nhiều người trong chúng ta không sống với ước mơ vì đang sống trong nỗi sợ.', author: 'Les Brown' },
+  { en: 'Don\'t live the same year 75 times and call it a life.', vi: 'Đừng sống lặp lại một năm 75 lần rồi gọi đó là một cuộc đời.', author: 'Robin Sharma' },
+  { en: 'Know yourself and you will win every battle.', vi: 'Biết mình thì trăm trận trăm thắng.', author: 'Tôn Tử' },
+  { en: 'Success is not the key to happiness. Happiness is the key to success.', vi: 'Thành công không phải chìa khoá của hạnh phúc. Hạnh phúc mới là chìa khoá của thành công.', author: 'Albert Schweitzer' },
+  { en: 'The fight is won or lost far away from witnesses — behind the lines, in the gym.', vi: 'Trận đấu được thắng hay thua từ rất lâu trước khi có khán giả — phía sau hậu trường, trong phòng tập.', author: 'Muhammad Ali' },
+  { en: 'Smooth seas do not make skillful sailors.', vi: 'Biển lặng không tạo nên những thuỷ thủ giỏi.', author: 'Ngạn ngữ Phi Châu' },
+  { en: 'He who is not courageous enough to take risks will accomplish nothing in life.', vi: 'Người không đủ can đảm chấp nhận rủi ro sẽ chẳng làm nên trò trống gì trong đời.', author: 'Muhammad Ali' },
+  { en: 'I hated every minute of training, but I said, don\'t quit. Suffer now and live the rest of your life as a champion.', vi: 'Tôi ghét từng phút tập luyện, nhưng tôi tự nhủ đừng bỏ cuộc. Chịu khổ bây giờ để sống cả đời còn lại như một nhà vô địch.', author: 'Muhammad Ali' },
+  { en: 'Champions aren\'t made in the gyms. Champions are made from something deep inside — a desire, a dream, a vision.', vi: 'Nhà vô địch không được tạo ra trong phòng gym. Họ được tạo ra từ sâu bên trong — một khát khao, một giấc mơ, một tầm nhìn.', author: 'Muhammad Ali' },
+  { en: 'Obstacles don\'t have to stop you. If you run into a wall, don\'t turn around and give up.', vi: 'Chướng ngại không nhất thiết phải cản được bạn. Nếu đâm phải bức tường, đừng quay lưng bỏ cuộc.', author: 'Michael Jordan' },
+  { en: 'I\'ve failed over and over and over again in my life. And that is why I succeed.', vi: 'Tôi đã thất bại hết lần này đến lần khác trong đời. Và đó là lý do tôi thành công.', author: 'Michael Jordan' },
+  { en: 'Some people want it to happen, some wish it would happen, others make it happen.', vi: 'Có người muốn điều đó xảy ra, có người ước điều đó xảy ra, có người khiến nó xảy ra.', author: 'Michael Jordan' },
+  { en: 'You have to expect things of yourself before you can do them.', vi: 'Bạn phải kỳ vọng ở chính mình trước khi có thể làm được điều đó.', author: 'Michael Jordan' },
+  { en: 'Talent wins games, but teamwork and intelligence win championships.', vi: 'Tài năng thắng trận đấu, nhưng tinh thần đồng đội và trí tuệ thắng chức vô địch.', author: 'Michael Jordan' },
+  { en: 'The strongest people are not those who show strength in front of us, but those who win battles we know nothing about.', vi: 'Người mạnh mẽ nhất không phải người thể hiện sức mạnh trước mặt ta, mà là người thắng những trận chiến ta không hề hay biết.', author: 'Khuyết danh' },
+  { en: 'If you want to lift your spirits, lift a barbell.', vi: 'Nếu muốn nâng cao tinh thần, hãy nâng một thanh tạ.', author: 'Khuyết danh' },
+  { en: 'Character is what you do when no one is watching.', vi: 'Nhân cách là điều bạn làm khi không ai nhìn thấy.', author: 'John Wooden' },
+  { en: 'To keep the body in good health is a duty, otherwise we shall not be able to keep our mind strong and clear.', vi: 'Giữ gìn cơ thể khoẻ mạnh là một bổn phận, nếu không tâm trí ta cũng khó mà mạnh mẽ và sáng suốt.', author: 'Đức Phật' },
+  { en: 'One workout at a time.', vi: 'Từng buổi tập một.', author: 'Khuyết danh' },
+  { en: 'Earn your body.', vi: 'Hãy tự tay tạo nên cơ thể của mình.', author: 'Khuyết danh' },
+  { en: 'Respect your body. It\'s the only one you get.', vi: 'Hãy tôn trọng cơ thể mình. Đó là cơ thể duy nhất bạn có.', author: 'Khuyết danh' },
+  { en: 'Take care of your body. It\'s the only place you have to live in.', vi: 'Chăm sóc cơ thể mình — đó là nơi duy nhất bạn có để sống.', author: 'Jim Rohn' },
+  { en: 'Be stronger than your strongest excuse.', vi: 'Hãy mạnh mẽ hơn cả lý do bào chữa mạnh nhất của bạn.', author: 'Khuyết danh' },
+  { en: 'Take care of your body. It\'s the only place you have.', vi: 'Hãy chăm sóc cơ thể bạn. Đó là nơi duy nhất bạn sở hữu.', author: 'Khuyết danh' },
+  { en: 'You can\'t build a great building on a weak foundation.', vi: 'Bạn không thể xây một toà nhà lớn trên nền móng yếu.', author: 'Gordon B. Hinckley' },
+  { en: 'The pain you feel in training is nothing compared to the pain of living life with unused potential.', vi: 'Nỗi đau khi tập luyện chẳng là gì so với nỗi đau sống một đời không dùng hết tiềm năng.', author: 'Khuyết danh' },
+  { en: 'The gym is my therapy.', vi: 'Phòng gym chính là liệu pháp tinh thần của tôi.', author: 'Khuyết danh' },
+  { en: 'The palest ink is better than the best memory.', vi: 'Mực nhạt nhất vẫn tốt hơn trí nhớ tốt nhất.', author: 'Ngạn ngữ Trung Hoa' },
+  { en: 'Results happen over time, not overnight. Work hard, stay consistent, and be patient.', vi: 'Kết quả đến theo thời gian, không phải sau một đêm. Hãy chăm chỉ, kiên trì và nhẫn nại.', author: 'Khuyết danh' },
+  { en: 'If you want to go fast, go alone. If you want to go far, go together.', vi: 'Muốn đi nhanh, hãy đi một mình. Muốn đi xa, hãy đi cùng nhau.', author: 'Ngạn ngữ Châu Phi' },
+  { en: 'The will to win is not nearly as important as the will to prepare to win.', vi: 'Ý chí muốn thắng không quan trọng bằng ý chí chuẩn bị để thắng.', author: 'Vince Lombardi' },
+  { en: 'Winners never quit and quitters never win.', vi: 'Người chiến thắng không bao giờ bỏ cuộc, kẻ bỏ cuộc không bao giờ chiến thắng.', author: 'Vince Lombardi' },
+  { en: 'A gem cannot be polished without friction, nor a person perfected without trials.', vi: 'Viên ngọc không thể mài giũa mà không có ma sát, con người không thể hoàn thiện mà không trải qua thử thách.', author: 'Khổng Tử' },
+  { en: 'Discomfort is the price of admission to a meaningful life.', vi: 'Sự khó chịu là cái giá để có một cuộc sống ý nghĩa.', author: 'Susan David' },
+  { en: 'Fear is a reaction. Courage is a decision.', vi: 'Sợ hãi là một phản ứng. Can đảm là một quyết định.', author: 'Khuyết danh' },
+  { en: 'What we plant in the soil of contemplation, we shall reap in the harvest of action.', vi: 'Những gì ta gieo trong mảnh đất suy tư, ta sẽ gặt hái trong mùa vụ hành động.', author: 'Meister Eckhart' },
+  { en: 'You cannot always control what goes on outside. But you can always control what goes on inside.', vi: 'Bạn không phải lúc nào cũng kiểm soát được điều xảy ra bên ngoài. Nhưng bạn luôn kiểm soát được điều diễn ra bên trong.', author: 'Wayne Dyer' },
+  { en: 'The only person you should try to be better than is the person you were yesterday.', vi: 'Người duy nhất bạn nên cố gắng vượt qua là chính bạn của ngày hôm qua.', author: 'Khuyết danh' },
+  { en: 'You don\'t need to be great to start, but you need to start to be great.', vi: 'Bạn không cần giỏi để bắt đầu, nhưng bạn cần bắt đầu để trở nên giỏi.', author: 'Zig Ziglar' },
+  { en: 'You can\'t build a reputation on what you are going to do.', vi: 'Bạn không thể xây dựng danh tiếng bằng những điều mình định làm.', author: 'Henry Ford' },
+  { en: 'A ship in harbor is safe, but that is not what ships are built for.', vi: 'Con tàu ở cảng thì an toàn, nhưng đó không phải mục đích người ta đóng ra nó.', author: 'John A. Shedd' },
+  { en: 'The comeback is always stronger than the setback — if you keep training.', vi: 'Sự trở lại luôn mạnh mẽ hơn cú vấp ngã — nếu bạn vẫn tiếp tục tập luyện.', author: 'Khuyết danh' },
+  { en: 'If you\'re going through hell, keep going.', vi: 'Nếu bạn đang đi qua địa ngục, cứ tiếp tục bước.', author: 'Winston Churchill' },
+  { en: 'Not the cry, but the flight of a wild duck, leads the flock to fly and follow.', vi: 'Không phải tiếng kêu, mà là đường bay của con vịt trời dẫn cả đàn bay theo.', author: 'Trung Hoa cổ ngữ' },
+  { en: 'Every workout is a step closer to the person you want to become.', vi: 'Mỗi buổi tập là một bước gần hơn tới con người bạn muốn trở thành.', author: 'Khuyết danh' },
 ];
 
-function pickQuote() {
-  return QUOTES[Math.floor(Math.random() * QUOTES.length)];
+// Deterministic per-day (+ per-message-type) quote index — cycles through
+// every quote before repeating, instead of the old Math.random() (no
+// memory of what was sent before, so the same quote could — and did —
+// resurface a day or two later purely by chance). A fixed pseudo-random
+// permutation of all quote indices (seeded once at module load, NOT via
+// Math.random() so the order is stable across runs) is walked one step per
+// (day, message-slot) pair — 4 slots/day (weekday sáng=0, weekday tối=1,
+// T7 sáng=2, CN tối=3) so the two possible sends on the same weekday never
+// show the same quote, and the app cycles through all 300 quotes before
+// any repeat (≥100 days at the real-world max of 2 sends/weekday).
+function seededShuffle(n, seed) {
+  let s = seed >>> 0;
+  const next = () => {
+    s = (s * 1103515245 + 12345) >>> 0;
+    return s / 4294967296;
+  };
+  const arr = Array.from({ length: n }, (_, i) => i);
+  for (let i = n - 1; i > 0; i--) {
+    const j = Math.floor(next() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+const QUOTE_CYCLE = seededShuffle(QUOTES.length, 20260101);
+
+function daysSinceEpoch(dateStr) {
+  return Math.floor(new Date(dateStr + 'T00:00:00Z').getTime() / 86_400_000);
+}
+
+// slot: 0 = weekday sáng, 1 = weekday tối, 2 = T7 sáng, 3 = CN tối.
+function pickQuote(localToday, slot) {
+  const pos = (daysSinceEpoch(localToday) * 4 + slot) % QUOTE_CYCLE.length;
+  return QUOTES[QUOTE_CYCLE[pos]];
 }
 
 // Matches QuoteBanner.tsx layout: EN italic, VI bold, then "— Author".
@@ -421,7 +542,7 @@ function buildWeekdayMorningMessage(profile, goals, allLogs, localToday) {
   const lines = [];
   lines.push(`☀️ <b>Chào buổi sáng, ${escapeHtml(profile.displayName || 'bạn')}!</b>`);
   lines.push('');
-  lines.push(`💬 ${formatQuote(pickQuote())}`);
+  lines.push(`💬 ${formatQuote(pickQuote(localToday, 0))}`);
   lines.push('');
 
   if (enabledGoals.length === 0) {
@@ -455,7 +576,7 @@ function buildWeekdayEveningMessage(profile, goals, allLogs, localToday) {
   const lines = [];
   lines.push(`🌙 <b>Tối rồi, ${escapeHtml(profile.displayName || 'bạn')}!</b>`);
   lines.push('');
-  lines.push(`💬 ${formatQuote(pickQuote())}`);
+  lines.push(`💬 ${formatQuote(pickQuote(localToday, 1))}`);
   lines.push('');
 
   if (enabledGoals.length === 0) {
@@ -481,7 +602,7 @@ function buildSaturdayMorningMessage(profile, goals, allLogs, localToday) {
   const lines = [];
   lines.push(`☀️ <b>Chào buổi sáng, ${escapeHtml(profile.displayName || 'bạn')}!</b>`);
   lines.push('');
-  lines.push(`💬 ${formatQuote(pickQuote())}`);
+  lines.push(`💬 ${formatQuote(pickQuote(localToday, 2))}`);
   lines.push('');
 
   if (enabledGoals.length === 0) {
@@ -500,7 +621,7 @@ function buildSundayEveningMessage(profile, goals, allLogs, localToday) {
   const lines = [];
   lines.push(`🌙 <b>Tối rồi, ${escapeHtml(profile.displayName || 'bạn')}!</b>`);
   lines.push('');
-  lines.push(`💬 ${formatQuote(pickQuote())}`);
+  lines.push(`💬 ${formatQuote(pickQuote(localToday, 3))}`);
   lines.push('');
 
   if (enabledGoals.length === 0) {
