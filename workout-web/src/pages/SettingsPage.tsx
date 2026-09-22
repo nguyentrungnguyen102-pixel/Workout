@@ -13,6 +13,8 @@ import { BodyMetric } from '../types/body';
 import ExerciseIcon from '../components/ExerciseIcon';
 import { logsToCSV, buildBackupPayload, downloadTextFile } from '../lib/exportData';
 import { todayString } from '../lib/date';
+import { useThemeStore } from '../stores/themeStore';
+import { Theme } from '../lib/theme';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -21,6 +23,10 @@ export default function SettingsPage() {
   const [sheetsId, setSheetsId] = useState(profile?.sheetsId || '');
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState('');
+
+  // Appearance (dark mode) — global, not per-user profile: stored locally
+  // via themeStore/lib/theme.ts (localStorage), applied instantly.
+  const { theme, setTheme } = useThemeStore();
 
   // Physical-profile fields (sex/birthYear/heightCm) — used by the
   // fitness-assessment feature (lib/energy.ts + lib/standards.ts) for
@@ -288,6 +294,29 @@ export default function SettingsPage() {
           {streak > 0 && (
             <p className="text-xs text-primary font-semibold mt-0.5">🔥 {streak} ngày liên tiếp</p>
           )}
+        </div>
+      </div>
+
+      {/* Appearance */}
+      <div className="bg-card rounded-2xl border border-border p-4 mb-4">
+        <p className="text-xs font-semibold text-text-secondary mb-3">GIAO DIỆN</p>
+        <div className="flex gap-1 p-1 bg-card-2 rounded-xl">
+          {([
+            { key: 'light', label: '☀️ Sáng' },
+            { key: 'dark', label: '🌙 Tối' },
+            { key: 'system', label: '💻 Hệ thống' },
+          ] as { key: Theme; label: string }[]).map((opt) => (
+            <button
+              key={opt.key}
+              type="button"
+              onClick={() => setTheme(opt.key)}
+              className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${
+                theme === opt.key ? 'bg-card shadow-sm text-primary' : 'text-text-secondary'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
         </div>
       </div>
 

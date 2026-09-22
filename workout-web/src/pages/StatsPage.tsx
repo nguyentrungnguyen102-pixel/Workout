@@ -382,7 +382,7 @@ export default function StatsPage() {
           {(['week', 'month', 'quarter'] as const).map(p => (
             <button key={p} onClick={() => { setPeriod(p); setPeriodOffset(0); }}
               className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                period === p ? 'bg-white shadow-sm text-primary' : 'text-text-secondary'}`}>
+                period === p ? 'bg-card shadow-sm text-primary' : 'text-text-secondary'}`}>
               {p === 'week' ? 'Tuần' : p === 'month' ? 'Tháng' : '3 tháng'}
             </button>
           ))}

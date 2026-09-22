@@ -3,6 +3,7 @@ import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveCo
 import { WorkoutLog } from '../../types/workout';
 import { MUSCLE_GROUP_LABELS, MUSCLE_GROUP_KEYS, PRESET_MUSCLE_GROUP } from '../../constants/exercises';
 import { seriesColor } from '../../constants/chartColors';
+import { useChartTheme } from '../../lib/chartTheme';
 
 // Replaces the old radar chart (7 ExerciseCategory axes — an equipment/
 // discipline grouping like "Tạ đơn"/"Cardio", not an anatomical one) with a
@@ -15,6 +16,7 @@ interface MuscleBalanceChartProps {
 }
 
 export default function MuscleBalanceChart({ periodLogs }: MuscleBalanceChartProps) {
+  const chartTheme = useChartTheme();
   const { chartData, total, weakest } = useMemo(() => {
     const setsByGroup = new Map<string, number>();
     for (const log of periodLogs) {
@@ -51,11 +53,11 @@ export default function MuscleBalanceChart({ periodLogs }: MuscleBalanceChartPro
         <>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 16, bottom: 0, left: 4 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E8E7E2" horizontal={false} />
-              <XAxis type="number" allowDecimals={false} tick={{ fontSize: 10, fill: '#8A8A8A' }} />
-              <YAxis type="category" dataKey="label" width={56} tick={{ fontSize: 11, fill: '#111111', fontWeight: 700 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} horizontal={false} />
+              <XAxis type="number" allowDecimals={false} tick={{ fontSize: 10, fill: chartTheme.tick }} />
+              <YAxis type="category" dataKey="label" width={56} tick={{ fontSize: 11, fill: chartTheme.tickStrong, fontWeight: 700 }} />
               <Tooltip
-                contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #E8E7E2' }}
+                contentStyle={{ fontSize: 12, borderRadius: 8, border: `1px solid ${chartTheme.tooltipBorder}`, backgroundColor: chartTheme.tooltipBg, color: chartTheme.tooltipText }}
                 formatter={(v: number, _name: string, props: any) => [`${v} hiệp · ${props.payload.pct}%`, 'Số hiệp']}
               />
               <Bar dataKey="sets" radius={[0, 4, 4, 0]} barSize={16}>
