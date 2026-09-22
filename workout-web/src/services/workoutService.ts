@@ -9,19 +9,13 @@ import {
   serverTimestamp,
   increment,
   updateDoc,
+  deleteField,
   Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { DraftWorkout, WorkoutLog, WorkoutPreset, Intensity } from '../types/workout';
+import { DraftWorkout, WorkoutLog, WorkoutPreset } from '../types/workout';
 import { todayString, yesterdayString } from '../lib/date';
-import { exerciseMinutes, logKcal } from '../lib/energy';
-
-function deriveIntensity(exercises: WorkoutLog['exercises']): { intensity: Intensity; score: number } {
-  const totalSets = exercises.reduce((s, e) => s + e.sets, 0);
-  if (totalSets >= 12) return { intensity: 'heavy', score: 8 };
-  if (totalSets >= 6) return { intensity: 'moderate', score: 5 };
-  return { intensity: 'light', score: 3 };
-}
+import { computeLogMetrics } from '../lib/logMetrics';
 
 export async function logWorkout(
   uid: string,
@@ -30,56 +24,19 @@ export async function logWorkout(
 ): Promise<WorkoutLog> {
   if (draft.exercises.length === 0) throw new Error('No exercises');
 
-  // Date is derived from the (possibly back-dated) startedAt so the log lands
-  // on the correct calendar day when the user forgot to record in realtime.
-  const when = draft.startedAt ?? new Date();
-  const pad = (n: number) => String(n).padStart(2, '0');
-  const date = `${when.getFullYear()}-${pad(when.getMonth() + 1)}-${pad(when.getDate())}`;
-
-  // Always sum exercise times — elapsed-since-start is meaningless once the
-  // user can back-date startedAt. Minutes/calories now come from the
-  // MET-based model in lib/energy.ts (see there for sourcing) instead of the
-  // old flat "reps = 3 min, kcal = minutes * 7" guesses.
-  const totalDurationMinutes = Math.max(
-    1,
-    Math.round(draft.exercises.reduce((sum, e) => sum + exerciseMinutes(e), 0))
-  );
-
-  const { intensity, score } = deriveIntensity(draft.exercises);
-  // weightKg may be unknown (undefined -> 0): logKcal() falls back to
-  // DEFAULT_WEIGHT_KG in that case since this is a brand-new log with no
-  // prior caloriesEstimate to fall back to instead.
-  const caloriesEstimate = logKcal(
-    { exercises: draft.exercises } as WorkoutLog,
-    weightKg ?? 0
-  );
-
-  const cleanExercises = draft.exercises.map((e) => {
-    const c: Record<string, any> = {
-      presetId: e.presetId,
-      name: e.name,
-      category: e.category,
-      unit: e.unit,
-      sets: e.sets ?? 1,
-    };
-    if (e.reps !== undefined) c.reps = e.reps;
-    if (e.durationSeconds !== undefined) c.durationSeconds = e.durationSeconds;
-    if (e.weight !== undefined) c.weight = e.weight;
-    if (e.distance !== undefined) c.distance = e.distance;
-    return c;
-  });
+  const metrics = computeLogMetrics(draft.exercises, draft.startedAt, draft.intensity, weightKg);
 
   // Each log call creates a new document (multiple logs per day supported)
   const logRef = doc(collection(db, 'logs'));
   const logData: Record<string, any> = {
     id: logRef.id,
     userId: uid,
-    date,
-    exercises: cleanExercises,
-    totalDurationMinutes: Math.round(totalDurationMinutes),
-    intensityScore: score,
-    intensity: draft.intensity || intensity,
-    caloriesEstimate,
+    date: metrics.date,
+    exercises: metrics.exercises,
+    totalDurationMinutes: metrics.totalDurationMinutes,
+    intensityScore: metrics.intensityScore,
+    intensity: metrics.intensity,
+    caloriesEstimate: metrics.caloriesEstimate,
     source: 'manual',
     syncedToSheets: false,
     createdAt: serverTimestamp(),
@@ -104,15 +61,61 @@ export async function logWorkout(
   return {
     id: logRef.id,
     userId: uid,
-    date,
-    exercises: draft.exercises,
-    totalDurationMinutes: Math.round(totalDurationMinutes),
-    intensityScore: score,
-    intensity: draft.intensity || intensity,
-    caloriesEstimate,
+    date: metrics.date,
+    exercises: metrics.exercises,
+    totalDurationMinutes: metrics.totalDurationMinutes,
+    intensityScore: metrics.intensityScore,
+    intensity: metrics.intensity,
+    caloriesEstimate: metrics.caloriesEstimate,
     source: 'manual',
     syncedToSheets: false,
   };
+}
+
+// Edits an already-saved log in place (wrong reps typed, forgot an exercise,
+// wrong date/time...) instead of leaving the user stuck with a bad entry or
+// forced to delete + redo the whole thing. Recomputes every derived field
+// (date/duration/intensity/calories) the same way logWorkout() does via
+// computeLogMetrics() so an edited log is indistinguishable from a fresh one.
+// Does NOT touch preset usageCount/lastUsedAt or streak/PR bookkeeping — those
+// were already applied once when the log was first created.
+export async function updateWorkoutLog(
+  logId: string,
+  draft: DraftWorkout,
+  weightKg?: number
+): Promise<void> {
+  if (draft.exercises.length === 0) throw new Error('No exercises');
+
+  const metrics = computeLogMetrics(draft.exercises, draft.startedAt, draft.intensity, weightKg);
+
+  await updateDoc(doc(db, 'logs', logId), {
+    date: metrics.date,
+    exercises: metrics.exercises,
+    totalDurationMinutes: metrics.totalDurationMinutes,
+    intensityScore: metrics.intensityScore,
+    intensity: metrics.intensity,
+    caloriesEstimate: metrics.caloriesEstimate,
+    notes: draft.notes ? draft.notes : deleteField(),
+    location: draft.location ? draft.location : deleteField(),
+    startedAt: draft.startedAt ? Timestamp.fromDate(draft.startedAt) : deleteField(),
+    updatedAt: serverTimestamp(),
+  });
+}
+
+// Soft delete: Firestore Rules for `logs/{logId}` only grant `update`, not
+// `delete` (see workout-tracker/firestore.rules — shared project), and a hard
+// delete would need a rules change + manual deploy. Flagging `deleted: true`
+// instead needs no rules change and every read function below already
+// filters it out client-side (same "no server-side where on a
+// maybe-missing field" reasoning as the date/orderBy notes above: an
+// equality `where('deleted','==',false)` would silently exclude every log
+// written before this field existed).
+export async function softDeleteLog(logId: string): Promise<void> {
+  await updateDoc(doc(db, 'logs', logId), { deleted: true, deletedAt: serverTimestamp() });
+}
+
+export async function restoreLog(logId: string): Promise<void> {
+  await updateDoc(doc(db, 'logs', logId), { deleted: false, deletedAt: deleteField() });
 }
 
 // ⚠️ Server-side orderBy/date-range is intentionally NOT used in the queries
@@ -138,6 +141,7 @@ export async function getRecentLogs(uid: string, count = 10): Promise<WorkoutLog
   const snap = await getDocs(q);
   return snap.docs
     .map((d) => d.data() as WorkoutLog)
+    .filter((log) => !log.deleted)
     .sort((a, b) => {
       const d = (b.date || '').localeCompare(a.date || '');
       return d !== 0 ? d : (b.createdAt?.toMillis() ?? Date.now()) - (a.createdAt?.toMillis() ?? Date.now());
@@ -153,7 +157,7 @@ export async function getLogsForHeatmap(uid: string, startDate: string): Promise
   const snap = await getDocs(q);
   return snap.docs
     .map((d) => d.data() as WorkoutLog)
-    .filter((log) => log.date >= startDate)
+    .filter((log) => !log.deleted && log.date >= startDate)
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 
@@ -167,9 +171,14 @@ export function buildDraftFromLog(log: WorkoutLog): DraftWorkout {
   };
 }
 
+// Returns null for a soft-deleted log too — a stale deep link (bookmark,
+// browser back button after deleting) should behave like the log is gone,
+// not resurrect it in the detail view.
 export async function getLogById(logId: string): Promise<WorkoutLog | null> {
   const snap = await getDoc(doc(db, 'logs', logId));
-  return snap.exists() ? (snap.data() as WorkoutLog) : null;
+  if (!snap.exists()) return null;
+  const log = snap.data() as WorkoutLog;
+  return log.deleted ? null : log;
 }
 
 // Full unfiltered history for a user (data export/backup) — same
@@ -180,6 +189,7 @@ export async function getAllLogs(uid: string): Promise<WorkoutLog[]> {
   const snap = await getDocs(q);
   return snap.docs
     .map((d) => d.data() as WorkoutLog)
+    .filter((log) => !log.deleted)
     .sort((a, b) => (a.date || '').localeCompare(b.date || ''));
 }
 
@@ -188,7 +198,7 @@ export async function getLogsForExercise(uid: string, presetId: string): Promise
   const snap = await getDocs(q);
   return snap.docs
     .map((d) => d.data() as WorkoutLog)
-    .filter((log) => log.exercises.some((e) => e.presetId === presetId))
+    .filter((log) => !log.deleted && log.exercises.some((e) => e.presetId === presetId))
     .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 }
 
@@ -197,6 +207,6 @@ export async function getLogsForDate(uid: string, date: string): Promise<Workout
   const snap = await getDocs(q);
   return snap.docs
     .map((d) => d.data() as WorkoutLog)
-    .filter((log) => log.date === date)
+    .filter((log) => !log.deleted && log.date === date)
     .sort((a, b) => (b.createdAt?.toMillis() ?? Date.now()) - (a.createdAt?.toMillis() ?? Date.now()));
 }

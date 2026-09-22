@@ -56,6 +56,11 @@ export interface WorkoutLog {
   syncedToSheets: boolean;
   createdAt?: Timestamp;
   startedAt?: Timestamp;
+  // Soft-delete flag — see workoutService.softDeleteLog(). Every read
+  // function filters these out client-side; absent (undefined) on all
+  // pre-existing logs, which the `!log.deleted` checks treat as "not deleted".
+  deleted?: boolean;
+  deletedAt?: Timestamp;
 }
 
 // Draft built up during Quick Add session in Zustand
