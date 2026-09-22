@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Play, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { ArrowLeft, Play, CheckCircle, ChevronDown, ChevronUp, Pencil, Trash2 } from 'lucide-react';
 import { useUserStore } from '../stores/userStore';
 import { useProgramStore } from '../stores/programStore';
 import { PROGRAM_TEMPLATES, DIFFICULTY_LABELS } from '../constants/programTemplates';
+import { findProgramById, removeCustomProgram } from '../lib/customProgram';
 
 const DIFFICULTY_COLORS: Record<string, { text: string; bg: string }> = {
   beginner:     { text: '#059669', bg: '#ECFDF5' },
@@ -21,18 +22,20 @@ function formatExerciseValue(ex: { sets: number; reps?: number; durationSeconds?
 export default function ProgramDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { firebaseUser } = useUserStore();
+  const { firebaseUser, profile, updateProfile } = useUserStore();
   const { activeState, loading, loadActiveProgram, activate, advanceDay, deactivate } = useProgramStore();
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
   const [activating, setActivating] = useState(false);
   const [advancing, setAdvancing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [toast, setToast] = useState('');
   // Ref (not state) holds the pending timer so a fast second toast can clear
   // the first toast's timeout before it fires and clears the newer message.
   const toastTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
   const uid = firebaseUser?.uid;
-  const program = PROGRAM_TEMPLATES.find((p) => p.id === id);
+  const customPrograms = profile?.customPrograms ?? [];
+  const program = findProgramById(id, PROGRAM_TEMPLATES, customPrograms);
   const isActive = activeState?.programId === id;
   const currentDayIndex = activeState?.currentDayIndex || 0;
 
@@ -79,7 +82,7 @@ export default function ProgramDetailPage() {
     if (!uid) return;
     setAdvancing(true);
     try {
-      await advanceDay(uid);
+      await advanceDay(uid, customPrograms);
       showToast('Hoàn thành buổi tập! 🎉');
     } catch {
       showToast('Lỗi');
@@ -99,6 +102,20 @@ export default function ProgramDetailPage() {
     }
   };
 
+  const handleDeleteCustom = async () => {
+    if (!uid || !program) return;
+    if (!confirm(`Xoá chương trình "${program.nameVi}"? Không thể hoàn tác.`)) return;
+    setDeleting(true);
+    try {
+      if (isActive) await deactivate(uid);
+      await updateProfile(uid, { customPrograms: removeCustomProgram(customPrograms, program.id) });
+      navigate('/programs');
+    } catch {
+      showToast('Lỗi xoá chương trình');
+      setDeleting(false);
+    }
+  };
+
   return (
     <div className="px-4 md:px-8 pt-6 md:pt-8 pb-28">
       {toast && (
@@ -113,6 +130,20 @@ export default function ProgramDetailPage() {
           <ArrowLeft size={20} className="text-text-secondary" />
         </button>
         <h1 className="text-xl font-black text-text-main flex-1 truncate">{program.nameVi}</h1>
+        {program.isCustom && (
+          <>
+            <Link to={`/programs/builder/${program.id}`}
+              className="p-2 rounded-xl text-text-secondary hover:text-primary hover:bg-primary-light transition-colors"
+              aria-label="Sửa chương trình">
+              <Pencil size={18} />
+            </Link>
+            <button onClick={handleDeleteCustom} disabled={deleting}
+              className="p-2 rounded-xl text-text-secondary hover:text-danger hover:bg-danger-light transition-colors disabled:opacity-50"
+              aria-label="Xoá chương trình">
+              <Trash2 size={18} />
+            </button>
+          </>
+        )}
       </div>
 
       <div className="bg-card rounded-2xl border border-border p-4 mb-4">
@@ -132,7 +163,7 @@ export default function ProgramDetailPage() {
             </div>
           </div>
         </div>
-        <p className="text-sm text-text-secondary leading-relaxed mb-3">{program.descriptionVi}</p>
+        <p className="text-sm text-text-secondary leading-relaxed mb-3">{program.descriptionVi || '—'}</p>
         <div className="flex gap-4 text-xs text-text-secondary">
           <span>📅 {program.daysPerWeek} ngày/tuần</span>
           <span>⏱ ~{program.estimatedMinutes} phút/buổi</span>
