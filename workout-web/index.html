@@ -12,6 +12,18 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <script>
+      // Applies the saved/system theme to <html> before first paint so
+      // there's no flash of the wrong theme while the React bundle loads.
+      // Mirrors the resolution logic in src/lib/theme.ts.
+      (function () {
+        try {
+          var stored = localStorage.getItem('theme');
+          var dark = stored === 'dark' || (stored !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (dark) document.documentElement.classList.add('dark');
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body class="bg-background">
     <div id="root"></div>

@@ -5,6 +5,7 @@ import {
 import { WorkoutLog } from '../../types/workout';
 import { exerciseMinutes } from '../../lib/energy';
 import { seriesColor } from '../../constants/chartColors';
+import { useChartTheme } from '../../lib/chartTheme';
 
 // Cap on overlaid lines so the chart doesn't turn into spaghetti (dataviz
 // guidance: avoid more than ~6 overlaid series).
@@ -28,6 +29,7 @@ interface SeriesMeta {
 
 export default function DailyExerciseChart({ periodLogs }: DailyExerciseChartProps) {
   const [hidden, setHidden] = useState<Set<string>>(new Set());
+  const chartTheme = useChartTheme();
 
   const { chartData, series, truncated } = useMemo(() => {
     interface DayBucket { totalMinutes: number; reps: Map<string, number> }
@@ -99,26 +101,26 @@ export default function DailyExerciseChart({ periodLogs }: DailyExerciseChartPro
       ) : (
         <ResponsiveContainer width="100%" height={280}>
           <ComposedChart data={chartData} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#E8E7E2" vertical={false} />
-            <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#8A8A8A' }} />
+            <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} vertical={false} />
+            <XAxis dataKey="date" tick={{ fontSize: 10, fill: chartTheme.tick }} />
             <YAxis
               yAxisId="left"
-              tick={{ fontSize: 10, fill: '#8A8A8A' }}
-              label={{ value: 'cái', angle: -90, position: 'insideLeft', fontSize: 10, fill: '#8A8A8A' }}
+              tick={{ fontSize: 10, fill: chartTheme.tick }}
+              label={{ value: 'cái', angle: -90, position: 'insideLeft', fontSize: 10, fill: chartTheme.tick }}
             />
             <YAxis
               yAxisId="right"
               orientation="right"
-              tick={{ fontSize: 10, fill: '#8A8A8A' }}
-              label={{ value: 'phút', angle: 90, position: 'insideRight', fontSize: 10, fill: '#8A8A8A' }}
+              tick={{ fontSize: 10, fill: chartTheme.tick }}
+              label={{ value: 'phút', angle: 90, position: 'insideRight', fontSize: 10, fill: chartTheme.tick }}
             />
-            <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #E8E7E2' }} />
-            <Legend wrapperStyle={{ fontSize: 11 }} onClick={(e) => e?.dataKey && toggle(String(e.dataKey))} />
+            <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: `1px solid ${chartTheme.tooltipBorder}`, backgroundColor: chartTheme.tooltipBg, color: chartTheme.tooltipText }} />
+            <Legend wrapperStyle={{ fontSize: 11, color: chartTheme.tickStrong }} onClick={(e) => e?.dataKey && toggle(String(e.dataKey))} />
             <Bar
               yAxisId="right"
               dataKey="totalMinutes"
               name="Tổng số phút"
-              fill="#DEDCD5"
+              fill={chartTheme.barMuted}
               radius={[4, 4, 0, 0]}
               barSize={14}
               hide={hidden.has('totalMinutes')}

@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.28.0';
+export const APP_VERSION = '2.29.0';
 
 // Lich su phien ban chinh thuc (sau dot don nhanh 14/07/2026 — gop cac
 // nang cap tot nhat tu cac nhanh phien hang ngay vao mot ban duy nhat).
@@ -45,4 +45,5 @@ export const PHASE_HISTORY = [
   { version: '2.26.0', phase: 13, summary: 'Gọn giao diện Thống kê: bỏ dòng "Trọng số"/ghi chú phạm vi khỏi card Đánh giá thể lực + rút gọn phụ đề 3 biểu đồ (nội dung dồn vào khối mới "Phạm vi tính theo kỳ đang chọn" ở trang Tiêu chí & nguồn tham khảo); biểu đồ Cân bằng nhóm cơ nay hiện % trên tổng + dòng "🎯 Ít được tập nhất" nêu đích danh nhóm cơ yếu nhất trong kỳ; màn hình tóm tắt buổi tập trước khi lưu gộp tên bài + loại bài về 1 dòng' },
   { version: '2.27.0', phase: 14, summary: 'Fix lỗi hạ tầng: job nhắc tập Telegram (GitHub Actions cron) treo vô thời hạn — nguyên nhân gốc là firebase-admin giữ kết nối gRPC khiến event loop không tự thoát; nay ép process.exit() sau khi chạy xong + timeout riêng cho từng lệnh gọi Firestore/Telegram + watchdog dự phòng + concurrency guard chặn chạy chồng' },
   { version: '2.28.0', phase: 14, summary: 'Gộp 14 bài tạ đơn mới (nhún vai, squat 2 tạ, xoay bụng, xách tạ, dead bug, Zottman curl, push press, halo, waiter\'s carry, gập bụng có tạ, Svend press, good morning, woodchopper, xoay hông đứng) + 4 chương trình mới (Siêu Cơ Bản 3x, Siêu Đơn Giản 2x, Đẩy/Kéo/Chân 3x, Chỉ 1 Quả Tạ 3x) — gộp từ 14 nhánh nâng cấp song song, mỗi bài/chương trình trùng ý tưởng chỉ giữ 1 bản' },
+  { version: '2.29.0', phase: 14, summary: 'Chế độ tối (Dark mode) — chọn Sáng/Tối/Theo hệ thống ở Cài đặt, áp dụng toàn app kể cả biểu đồ (màu trục/tooltip/lưới đổi theo theme); đồng hồ đếm giờ trực tiếp kiểu Strong/Hevy trên nút "Log workout" khi đang ghi buổi tập' },
 ] as const;

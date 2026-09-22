@@ -5,6 +5,7 @@ import { exerciseMinutes } from '../../lib/energy';
 import { getWeekLabel, todayString } from '../../lib/date';
 import { CATEGORY_LABELS } from '../../constants/exercises';
 import { CATEGORY_CHART_COLORS } from '../../constants/chartColors';
+import { useChartTheme } from '../../lib/chartTheme';
 
 // Trend window — last N weeks, computed from the full log history (not the
 // Tuần/Tháng/Quý period filter) so the weekly trend stays visible even when
@@ -31,6 +32,7 @@ interface WeeklyVolumeChartProps {
 }
 
 export default function WeeklyVolumeChart({ logs }: WeeklyVolumeChartProps) {
+  const chartTheme = useChartTheme();
   const chartData = useMemo(() => {
     const curMonday = mondayOfDate(todayString());
     const weeks: { start: string; end: string; label: string }[] = [];
@@ -68,16 +70,16 @@ export default function WeeklyVolumeChart({ logs }: WeeklyVolumeChartProps) {
       ) : (
         <ResponsiveContainer width="100%" height={240}>
           <BarChart data={chartData} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#E8E7E2" vertical={false} />
-            <XAxis dataKey="label" tick={{ fontSize: 9, fill: '#8A8A8A' }} interval={0} />
+            <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} vertical={false} />
+            <XAxis dataKey="label" tick={{ fontSize: 9, fill: chartTheme.tick }} interval={0} />
             <YAxis
-              tick={{ fontSize: 10, fill: '#8A8A8A' }}
-              label={{ value: 'phút', angle: -90, position: 'insideLeft', fontSize: 10, fill: '#8A8A8A' }}
+              tick={{ fontSize: 10, fill: chartTheme.tick }}
+              label={{ value: 'phút', angle: -90, position: 'insideLeft', fontSize: 10, fill: chartTheme.tick }}
             />
-            <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #E8E7E2' }} />
-            <Legend wrapperStyle={{ fontSize: 11 }} />
+            <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: `1px solid ${chartTheme.tooltipBorder}`, backgroundColor: chartTheme.tooltipBg, color: chartTheme.tooltipText }} />
+            <Legend wrapperStyle={{ fontSize: 11, color: chartTheme.tickStrong }} />
             {CATEGORY_KEYS.map((cat) => (
-              <Bar key={cat} dataKey={cat} stackId="v" name={CATEGORY_LABELS[cat] || cat} fill={CATEGORY_CHART_COLORS[cat] || '#8A8A8A'} />
+              <Bar key={cat} dataKey={cat} stackId="v" name={CATEGORY_LABELS[cat] || cat} fill={CATEGORY_CHART_COLORS[cat] || chartTheme.tick} />
             ))}
           </BarChart>
         </ResponsiveContainer>
