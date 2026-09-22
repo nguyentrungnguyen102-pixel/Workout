@@ -23,6 +23,7 @@ import WeeklyPlanCard from '../components/WeeklyPlanCard';
 import QuoteBanner from '../components/QuoteBanner';
 import ExerciseIcon from '../components/ExerciseIcon';
 import MuscleRecoveryCard from '../components/MuscleRecoveryCard';
+import RestTimerWidget from '../components/RestTimerWidget';
 
 // Strips Vietnamese diacritics for accent-insensitive search matching
 // (e.g. "gap bung" should still find "Gập bụng").
@@ -1470,6 +1471,11 @@ export default function QuickAddPage() {
       {!activeState && recommendedTemplates.length > 0 && (
         <ProgramSuggestionCard templates={recommendedTemplates} />
       )}
+
+      {/* Manual rest-between-sets countdown (Strong/Hevy-style) — only makes
+          sense while a session is actively being built, same gate as the
+          elapsed clock on the Log workout bar below. */}
+      <RestTimerWidget visible={draft.exercises.length > 0} />
 
       {draft.exercises.length > 0 && (
         <div className="fixed bottom-16 md:bottom-6 left-0 right-0 md:left-56 lg:left-60 max-w-md md:max-w-3xl lg:max-w-5xl mx-auto px-4 z-40">
