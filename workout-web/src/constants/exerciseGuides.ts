@@ -610,6 +610,70 @@ export const EXERCISE_GUIDES: Record<string, ExerciseGuide> = {
     ],
     tips: ['Xoay bằng phần thân trên, không xoay bằng cách vặn gối/hông', 'Dùng tạ nhẹ để tập trung vào biên độ xoay thay vì sức nặng'],
   },
+  db_reverse_lunge: {
+    steps: [
+      'Đứng thẳng, hai tay cầm tạ xuôi hai bên, chân rộng bằng hông',
+      'Bước một chân ra sau, hạ hông cho đến khi hai gối gần vuông góc',
+      'Đạp gót chân trước đứng lên về vị trí ban đầu, đổi chân',
+    ],
+    tips: ['Gối trước không vượt quá mũi chân', 'Giữ thân người thẳng, mắt nhìn phía trước'],
+  },
+  db_lateral_lunge: {
+    steps: [
+      'Đứng thẳng, cầm một tạ trước ngực bằng hai tay',
+      'Bước rộng sang một bên, đẩy hông ra sau và gập gối chân bước, chân còn lại thẳng',
+      'Đạp chân bước để về giữa, rồi đổi bên',
+    ],
+    tips: ['Hai bàn chân luôn hướng thẳng về trước', 'Gót chân bước không được nhấc khỏi sàn'],
+  },
+  db_glute_bridge: {
+    steps: [
+      'Nằm ngửa, gập gối, bàn chân đặt sát mông; đặt một tạ lên xương hông và giữ bằng hai tay',
+      'Siết mông, đẩy hông lên cho đến khi vai–hông–gối thành một đường thẳng',
+      'Giữ 1 giây rồi hạ hông xuống từ từ',
+    ],
+    tips: ['Đẩy bằng gót chân, không ưỡn lưng quá mức', 'Có thể dùng chăn gấp lót dưới tạ cho đỡ đau'],
+  },
+  db_cross_body_curl: {
+    steps: [
+      'Đứng thẳng, tay cầm tạ xuôi hai bên, lòng bàn tay hướng vào đùi',
+      'Cuộn tạ chéo qua ngực về phía vai đối diện, giữ cổ tay thẳng',
+      'Hạ xuống từ từ và đổi tay',
+    ],
+    tips: ['Khuỷu tay giữ sát thân', 'Không nghiêng người để lấy đà'],
+  },
+  db_y_raise: {
+    steps: [
+      'Đứng thẳng (hoặc cúi nhẹ người), tay cầm tạ nhẹ trước đùi',
+      'Nâng hai tay chéo lên phía trên đầu tạo thành hình chữ Y, ngón cái hướng lên trên',
+      'Hạ tạ xuống chậm về vị trí ban đầu',
+    ],
+    tips: ['Dùng tạ thật nhẹ — vai nhỏ dễ chấn thương', 'Hạ vai xuống, không nhún vai khi nâng'],
+  },
+  db_pushup_grip: {
+    steps: [
+      'Vào tư thế hít đất, hai tay nắm hai tạ đặt song song trên sàn (tạ hình lục giác/bản dẹt để không lăn)',
+      'Hạ ngực xuống thấp giữa hai tạ, thân người thẳng từ đầu đến gót',
+      'Đẩy tay lên về vị trí ban đầu',
+    ],
+    tips: ['Cổ tay giữ thẳng, không gập', 'Chỉ dùng tạ không lăn — tạ tròn dễ trượt gây ngã'],
+  },
+  db_bird_dog_row: {
+    steps: [
+      'Quỳ bốn chân, tay chống một tạ đặt trên sàn, tay kia cầm một tạ nhẹ',
+      'Kéo tạ lên sát hông, đồng thời duỗi thẳng chân đối diện ra sau',
+      'Hạ tạ và thu chân về, làm hết một bên rồi đổi bên',
+    ],
+    tips: ['Giữ lưng phẳng, hông không xoay', 'Siết bụng để giữ thăng bằng'],
+  },
+  db_curl_press: {
+    steps: [
+      'Đứng thẳng, hai tay cầm tạ xuôi hai bên',
+      'Cuộn tạ lên vai như curl, rồi đẩy thẳng tạ qua đầu',
+      'Hạ tạ về vai rồi xuống hông theo đường cũ',
+    ],
+    tips: ['Siết bụng, không ưỡn lưng khi đẩy tạ qua đầu', 'Chọn tạ nhẹ hơn khi chỉ curl'],
+  },
 
   // Sport (outdoor/team sports)
   sport_football: {

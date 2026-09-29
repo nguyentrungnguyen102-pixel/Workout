@@ -95,6 +95,18 @@ export const SYSTEM_PRESETS: WorkoutPreset[] = [
   { id: 'db_woodchopper',       name: 'Dumbbell Woodchopper', nameVi: 'Chặt củi tạ (xoay core)', category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🪓', isCustom: false, usageCount: 0, muscleGroup: 'core' },
   { id: 'db_standing_twist',    name: 'Standing Dumbbell Twist', nameVi: 'Xoay hông cầm tạ (eo)', category: 'dumbbell', unit: 'reps', defaultValue: 20, defaultSets: 3, icon: '🌀', isCustom: false, usageCount: 0, muscleGroup: 'core' },
 
+  // Dumbbell (home training) — Phase 17, bài đơn giản tại nhà (chỉ cần 1-2 tạ):
+  // lunge lùi/ngang, cầu mông, curl chéo, nâng chữ Y, hít đất tay nắm tạ,
+  // chó chim kéo tạ, curl đẩy vai
+  { id: 'db_reverse_lunge',     name: 'Reverse Lunge',      nameVi: 'Lunge lùi cầm tạ (đùi/mông, dễ giữ thăng bằng)', category: 'dumbbell', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '↩️', isCustom: false, usageCount: 0, muscleGroup: 'legs' },
+  { id: 'db_lateral_lunge',     name: 'Lateral Lunge',      nameVi: 'Lunge ngang cầm tạ (đùi trong/mông)', category: 'dumbbell', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '↔️', isCustom: false, usageCount: 0, muscleGroup: 'legs' },
+  { id: 'db_glute_bridge',      name: 'Dumbbell Glute Bridge', nameVi: 'Cầu mông đặt tạ trên hông (mông/sau đùi)', category: 'dumbbell', unit: 'reps', defaultValue: 15, defaultSets: 3, icon: '🌉', isCustom: false, usageCount: 0, muscleGroup: 'legs' },
+  { id: 'db_cross_body_curl',   name: 'Cross Body Hammer Curl', nameVi: 'Curl búa chéo người (bắp tay/cẳng tay)', category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '💪', isCustom: false, usageCount: 0, muscleGroup: 'arms' },
+  { id: 'db_y_raise',           name: 'Dumbbell Y Raise',   nameVi: 'Nâng tạ chữ Y (vai/thang)', category: 'dumbbell', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '🙌', isCustom: false, usageCount: 0, muscleGroup: 'shoulders' },
+  { id: 'db_pushup_grip',       name: 'Dumbbell Push Up',   nameVi: 'Hít đất tay nắm tạ (ngực, biên độ sâu hơn)', category: 'dumbbell', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '🫸', isCustom: false, usageCount: 0, muscleGroup: 'chest' },
+  { id: 'db_bird_dog_row',      name: 'Bird Dog Row',       nameVi: 'Chó chim kéo tạ (lưng/core)', category: 'dumbbell', unit: 'reps', defaultValue: 8, defaultSets: 3, icon: '🐕', isCustom: false, usageCount: 0, muscleGroup: 'back' },
+  { id: 'db_curl_press',        name: 'Curl to Press',      nameVi: 'Curl rồi đẩy tạ qua đầu (tay/vai)', category: 'dumbbell', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '🔁', isCustom: false, usageCount: 0, muscleGroup: 'arms' },
+
   // Sport (outdoor/team sports) — tracked separately from indoor cardio so
   // "sport frequency" stats/PRs/charts don't blend with treadmill running,
   // jump rope etc. Existing running/cycling stay in cardio (unchanged) —
