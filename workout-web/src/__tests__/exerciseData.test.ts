@@ -83,3 +83,31 @@ describe('PROGRAM_TEMPLATES data completeness', () => {
     expect(missing).toEqual([]);
   });
 });
+
+// Phase 17 (v2.34.0) — bài tạ đơn tại nhà mới + 2 chương trình dùng chúng.
+describe('Phase 17 home dumbbell additions', () => {
+  const NEW_IDS = [
+    'db_reverse_lunge', 'db_lateral_lunge', 'db_glute_bridge', 'db_cross_body_curl',
+    'db_y_raise', 'db_pushup_grip', 'db_bird_dog_row', 'db_curl_press',
+  ];
+
+  it('all 8 new exercises exist as dumbbell presets with a guide', () => {
+    NEW_IDS.forEach((id) => {
+      const p = SYSTEM_PRESETS.find((x) => x.id === id);
+      expect(p?.category).toBe('dumbbell');
+      expect(EXERCISE_GUIDES[id]?.steps.length).toBeGreaterThanOrEqual(3);
+    });
+  });
+
+  it('new programs exist and every new exercise is used by some program', () => {
+    expect(PROGRAM_TEMPLATES.find((p) => p.id === 'dumbbell_home_express_3x')?.days).toHaveLength(3);
+    expect(PROGRAM_TEMPLATES.find((p) => p.id === 'dumbbell_home_full_4x')?.days).toHaveLength(4);
+    const used = new Set(PROGRAM_TEMPLATES.flatMap((p) => p.days.flatMap((d) => d.exercises.map((e) => e.presetId))));
+    NEW_IDS.forEach((id) => expect(used.has(id)).toBe(true));
+  });
+
+  it('program daysPerWeek matches the number of days', () => {
+    PROGRAM_TEMPLATES.filter((p) => p.id.startsWith('dumbbell_home_express') || p.id.startsWith('dumbbell_home_full'))
+      .forEach((p) => expect(p.days.length).toBe(p.daysPerWeek));
+  });
+});
