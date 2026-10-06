@@ -95,6 +95,14 @@ export const SYSTEM_PRESETS: WorkoutPreset[] = [
   { id: 'db_woodchopper',       name: 'Dumbbell Woodchopper', nameVi: 'Chặt củi tạ (xoay core)', category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🪓', isCustom: false, usageCount: 0, muscleGroup: 'core' },
   { id: 'db_standing_twist',    name: 'Standing Dumbbell Twist', nameVi: 'Xoay hông cầm tạ (eo)', category: 'dumbbell', unit: 'reps', defaultValue: 20, defaultSets: 3, icon: '🌀', isCustom: false, usageCount: 0, muscleGroup: 'core' },
 
+  // Dumbbell (home training) — Phase 17, bài đơn giản tại nhà chỉ cần 1-2 quả tạ
+  { id: 'db_reverse_lunge',     name: 'Dumbbell Reverse Lunge', nameVi: 'Lunge lùi tạ (đùi mông, dễ giữ thăng bằng)', category: 'dumbbell', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '🦵', isCustom: false, usageCount: 0, muscleGroup: 'legs' },
+  { id: 'db_split_squat',       name: 'Bulgarian Split Squat', nameVi: 'Squat một chân kê ghế (đùi mông)', category: 'dumbbell', unit: 'reps', defaultValue: 8, defaultSets: 3, icon: '🪑', isCustom: false, usageCount: 0, muscleGroup: 'legs' },
+  { id: 'db_single_arm_press',  name: 'Single Arm Press',   nameVi: 'Đẩy tạ một tay (vai/core)', category: 'dumbbell', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '🙋', isCustom: false, usageCount: 0, muscleGroup: 'shoulders' },
+  { id: 'db_glute_bridge',      name: 'Dumbbell Glute Bridge', nameVi: 'Cầu mông có tạ (mông/sau đùi)', category: 'dumbbell', unit: 'reps', defaultValue: 15, defaultSets: 3, icon: '🌉', isCustom: false, usageCount: 0, muscleGroup: 'legs' },
+  { id: 'db_reverse_curl',      name: 'Reverse Curl',       nameVi: 'Curl ngược (cẳng tay/bắp tay)', category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🔄', isCustom: false, usageCount: 0, muscleGroup: 'arms' },
+  { id: 'db_incline_pushup_row', name: 'Pushup Row',        nameVi: 'Hít đất kéo tạ (ngực + lưng)', category: 'dumbbell', unit: 'reps', defaultValue: 8, defaultSets: 3, icon: '🧗', isCustom: false, usageCount: 0, muscleGroup: 'chest' },
+
   // Sport (outdoor/team sports) — tracked separately from indoor cardio so
   // "sport frequency" stats/PRs/charts don't blend with treadmill running,
   // jump rope etc. Existing running/cycling stay in cardio (unchanged) —
