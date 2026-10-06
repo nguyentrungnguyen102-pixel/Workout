@@ -652,6 +652,54 @@ export const EXERCISE_GUIDES: Record<string, ExerciseGuide> = {
     ],
     tips: ['Mang giày bóng rổ có độ ôm cổ chân tốt để giảm nguy cơ lật cổ chân', 'Uống nước đều đặn giữa các hiệp'],
   },
+  db_reverse_lunge: {
+    steps: [
+      'Đứng thẳng, hai tay cầm tạ buông dọc thân, chân rộng bằng hông',
+      'Bước một chân ra sau, hạ thấp cho đến khi cả hai gối gập khoảng 90°',
+      'Đẩy gót chân trước đứng dậy, thu chân sau về — hết hiệp thì đổi chân',
+    ],
+    tips: ['Gối trước không vượt quá mũi chân', 'Dễ giữ thăng bằng và nhẹ gối hơn lunge tiến'],
+  },
+  db_split_squat: {
+    steps: [
+      'Đứng quay lưng ghế, đặt mu bàn chân sau lên ghế, hai tay cầm tạ buông thân',
+      'Gập gối chân trước hạ người thẳng xuống đến khi đùi trước gần song song sàn',
+      'Đẩy gót chân trước đứng dậy — hết hiệp thì đổi chân',
+    ],
+    tips: ['Bước chân trước đủ xa để gối không vượt mũi chân', 'Bắt đầu không tạ để làm quen thăng bằng'],
+  },
+  db_single_arm_press: {
+    steps: [
+      'Đứng thẳng, một tay cầm tạ ở ngang vai, tay kia thả lỏng',
+      'Siết bụng, đẩy tạ thẳng lên trên đầu đến khi duỗi hết tay',
+      'Hạ tạ về vai có kiểm soát — hết hiệp thì đổi tay',
+    ],
+    tips: ['Không nghiêng người sang bên — dùng core giữ thân thẳng', 'Siết mông để không võng lưng'],
+  },
+  db_glute_bridge: {
+    steps: [
+      'Nằm ngửa, gập gối, bàn chân đặt sát sàn, đặt một tạ lên xương hông',
+      'Siết mông đẩy hông lên đến khi vai-hông-gối thành một đường thẳng',
+      'Giữ 1 giây trên đỉnh rồi hạ hông xuống chậm',
+    ],
+    tips: ['Đẩy bằng gót chân, không dồn lực vào lưng dưới', 'Giữ cằm hơi cúi, mắt nhìn lên trần'],
+  },
+  db_reverse_curl: {
+    steps: [
+      'Đứng thẳng, hai tay cầm tạ úp lòng bàn tay xuống, để trước đùi',
+      'Giữ khuỷu sát thân, cuộn tạ lên ngang vai',
+      'Hạ tạ xuống chậm về vị trí ban đầu',
+    ],
+    tips: ['Dùng tạ nhẹ hơn curl thường — cẳng tay yếu hơn bắp tay', 'Giữ cổ tay thẳng, không gập'],
+  },
+  db_incline_pushup_row: {
+    steps: [
+      'Vào tư thế hít đất, hai tay mỗi tay nắm một quả tạ đặt sàn, chân rộng hơn vai',
+      'Hít đất 1 cái, rồi kéo tạ một bên lên sát hông (chèo tạ)',
+      'Hạ tạ xuống, hít đất tiếp và kéo bên còn lại — tính 1 lần khi đủ 2 bên',
+    ],
+    tips: ['Chân rộng giúp hông không xoay khi chèo', 'Dùng tạ lục giác (không lăn) để an toàn'],
+  },
 };
 
 export function getGuide(presetId: string): ExerciseGuide | undefined {

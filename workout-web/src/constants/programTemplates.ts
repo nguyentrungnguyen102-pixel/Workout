@@ -662,6 +662,70 @@ export const PROGRAM_TEMPLATES: WorkoutProgram[] = [
       },
     ],
   },
+  {
+    id: 'dumbbell_home_lower_upper_4x',
+    nameVi: 'Tạ Đơn Tại Nhà - Trên/Dưới 4x',
+    descriptionVi: 'Chia 2 buổi thân trên, 2 buổi thân dưới. Chỉ cần 1-2 quả tạ và một chiếc ghế; tăng tạ khi đạt 12 reps hai buổi liền.',
+    emoji: '🏠',
+    daysPerWeek: 4,
+    difficulty: 'intermediate',
+    focus: 'strength',
+    estimatedMinutes: 35,
+    days: [
+      {
+        id: 'dblu_day1',
+        order: 1,
+        nameVi: 'Buổi 1 · Thân trên A',
+        focusVi: 'Ngực · Vai · Tay sau',
+        emoji: '💪',
+        exercises: [
+          { presetId: 'db_chest_press',       nameVi: 'Đẩy tạ nằm sàn (ngực)',     sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_single_arm_press',  nameVi: 'Đẩy tạ một tay (vai/core)', sets: 3, reps: 10, unit: 'reps' },
+          { presetId: 'db_incline_pushup_row', nameVi: 'Hít đất kéo tạ (ngực + lưng)', sets: 3, reps: 8, unit: 'reps' },
+          { presetId: 'db_tricep_ext',        nameVi: 'Giơ tạ sau đầu (tay sau)',  sets: 3, reps: 12, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'dblu_day2',
+        order: 2,
+        nameVi: 'Buổi 2 · Thân dưới A',
+        focusVi: 'Đùi · Mông',
+        emoji: '🦵',
+        exercises: [
+          { presetId: 'db_goblet_squat',  nameVi: 'Squat ôm tạ (đùi)',        sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'db_reverse_lunge', nameVi: 'Lunge lùi tạ (đùi mông, dễ giữ thăng bằng)', sets: 3, reps: 10, unit: 'reps' },
+          { presetId: 'db_glute_bridge',  nameVi: 'Cầu mông có tạ (mông/sau đùi)', sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'db_calf_raise',    nameVi: 'Nâng gót tạ (bắp chân)',   sets: 3, reps: 15, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'dblu_day3',
+        order: 3,
+        nameVi: 'Buổi 3 · Thân trên B',
+        focusVi: 'Lưng · Vai · Tay trước',
+        emoji: '🔙',
+        exercises: [
+          { presetId: 'db_bent_row',        nameVi: 'Kéo tạ cúi người (lưng)',   sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_lateral_raise',   nameVi: 'Nâng tạ ngang vai',         sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_bicep_curl',      nameVi: 'Curl tạ đơn (bắp tay)',     sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_reverse_curl',    nameVi: 'Curl ngược (cẳng tay/bắp tay)', sets: 2, reps: 12, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'dblu_day4',
+        order: 4,
+        nameVi: 'Buổi 4 · Thân dưới B',
+        focusVi: 'Đùi · Sau đùi · Core',
+        emoji: '🏗️',
+        exercises: [
+          { presetId: 'db_split_squat', nameVi: 'Squat một chân kê ghế (đùi mông)', sets: 3, reps: 8,  unit: 'reps' },
+          { presetId: 'db_rdl',         nameVi: 'Deadlift tạ Romania (sau đùi)',    sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_russian_twist', nameVi: 'Xoay hông có tạ (bụng xiên)',   sets: 3, reps: 20, unit: 'reps' },
+          { presetId: 'plank',          nameVi: 'Plank',                            sets: 2, durationSeconds: 45, unit: 'seconds' },
+        ],
+      },
+    ],
+  },
 ];
 
 export const DIFFICULTY_LABELS: Record<string, string> = {

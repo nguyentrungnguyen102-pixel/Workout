@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, ChevronRight, Flame, Target, ChevronDown, ChevronUp, Plus, Trash2, Search, Info, Star } from 'lucide-react';
 import { useUserStore } from '../stores/userStore';
+import { suggestNextWeight } from '../lib/weightProgression';
 import { useWorkoutStore } from '../stores/workoutStore';
 import { useProgramStore } from '../stores/programStore';
 import { SYSTEM_PRESETS, CATEGORY_LABELS } from '../constants/exercises';
@@ -293,7 +294,7 @@ interface WorkoutSummaryModalProps {
 
 function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
   const navigate = useNavigate();
-  const { draft, removeExercise, updateExercise, setNotes, setLocation, setStartedAt, logWorkout, isLogging, editingLogId, cancelEdit } = useWorkoutStore();
+  const { draft, removeExercise, updateExercise, setNotes, setLocation, setStartedAt, logWorkout, isLogging, editingLogId, cancelEdit, recentLogs } = useWorkoutStore();
   const [toast, setToast] = useState('');
   // Ref (not state) holds the pending timer so a fast second toast can clear
   // the first toast's timeout before it fires and clears the newer message.
@@ -531,6 +532,21 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
                         }}
                       />
                       <span className="text-xs text-text-secondary">kg</span>
+                      {(() => {
+                        // Gợi ý tăng tạ (double progression) — bỏ qua chính buổi đang sửa
+                        const s = suggestNextWeight(recentLogs.filter((l) => l.id !== editingLogId), ex.presetId);
+                        if (!s || ex.weight !== s.currentWeight) return null;
+                        return (
+                          <button
+                            type="button"
+                            title={s.reason}
+                            onClick={() => updateExercise(ex.presetId, { weight: s.nextWeight })}
+                            className="text-[11px] font-semibold text-primary bg-primary/10 rounded-full px-2 py-1"
+                          >
+                            ⬆ Thử {s.nextWeight}kg
+                          </button>
+                        );
+                      })()}
                     </div>
                   )}
 
