@@ -19,6 +19,7 @@ import { toggleFavorite, sortWithFavoritesFirst } from '../lib/favorites';
 import { sumThisWeek } from '../lib/dayTimeline';
 import { todayString } from '../lib/date';
 import { buildRecoveryInsight } from '../lib/recovery';
+import { findLastWeightedEntry, suggestOverload } from '../lib/overload';
 import WeeklyPlanCard from '../components/WeeklyPlanCard';
 import QuoteBanner from '../components/QuoteBanner';
 import ExerciseIcon from '../components/ExerciseIcon';
@@ -293,7 +294,7 @@ interface WorkoutSummaryModalProps {
 
 function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
   const navigate = useNavigate();
-  const { draft, removeExercise, updateExercise, setNotes, setLocation, setStartedAt, logWorkout, isLogging, editingLogId, cancelEdit } = useWorkoutStore();
+  const { draft, recentLogs, removeExercise, updateExercise, setNotes, setLocation, setStartedAt, logWorkout, isLogging, editingLogId, cancelEdit } = useWorkoutStore();
   const [toast, setToast] = useState('');
   // Ref (not state) holds the pending timer so a fast second toast can clear
   // the first toast's timeout before it fires and clears the newer message.
@@ -394,7 +395,31 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
       }));
     }
 
-    if (chips.length === 0 && weightChips.length === 0) return null;
+    // Gợi ý tăng tiến (v2.34.0) — chỉ khi bài tạ này đã từng ghi cả tạ lẫn reps.
+    let overloadHint: React.ReactNode = null;
+    if (ex.category === 'dumbbell' && ex.unit === 'reps') {
+      const sug = suggestOverload(findLastWeightedEntry(recentLogs, ex.presetId), todayString());
+      if (sug) {
+        const applied = ex.weight === sug.weight && ex.reps === sug.reps;
+        const text = sug.kind === 'weight_up' ? 'Đã đủ rep, tăng tạ'
+          : sug.kind === 'rep_up' ? 'Thử thêm 1 rep' : 'Lâu chưa tập, giữ nguyên';
+        overloadHint = (
+          <div key="overload" className="flex items-center justify-between gap-2 mt-2 bg-primary-light rounded-lg px-3 py-2">
+            <p className="text-xs text-text-main min-w-0">
+              <span className="text-text-secondary">Lần trước {sug.lastWeight}kg × {sug.lastReps} · </span>
+              <span className="font-bold">{text}: {sug.weight}kg × {sug.reps}</span>
+            </p>
+            <button type="button" disabled={applied}
+              onClick={() => updateExercise(ex.presetId, { weight: sug.weight, reps: sug.reps })}
+              className="flex-shrink-0 text-xs font-bold text-primary disabled:opacity-50">
+              {applied ? 'Đã áp dụng' : 'Áp dụng'}
+            </button>
+          </div>
+        );
+      }
+    }
+
+    if (chips.length === 0 && weightChips.length === 0 && !overloadHint) return null;
 
     const renderRow = (row: Chip[], key: string) => (
       <div key={key} className="flex flex-wrap gap-1.5 mt-2">
@@ -418,6 +443,7 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
       <>
         {chips.length > 0 && renderRow(chips, 'value-chips')}
         {weightChips.length > 0 && renderRow(weightChips, 'weight-chips')}
+        {overloadHint}
       </>
     );
   };

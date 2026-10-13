@@ -652,6 +652,54 @@ export const EXERCISE_GUIDES: Record<string, ExerciseGuide> = {
     ],
     tips: ['Mang giày bóng rổ có độ ôm cổ chân tốt để giảm nguy cơ lật cổ chân', 'Uống nước đều đặn giữa các hiệp'],
   },
+  db_reverse_lunge: {
+    steps: [
+      'Đứng thẳng, hai tay cầm tạ buông dọc người, chân rộng bằng hông',
+      'Bước một chân ra sau, hạ thấp đến khi đùi trước song song sàn và gối sau gần chạm đất',
+      'Đẩy gót chân trước để đứng lên, đổi chân và lặp lại',
+    ],
+    tips: ['Thân trên thẳng, gối trước không đổ vào trong', 'Bước lùi dễ giữ thăng bằng và nhẹ khớp gối hơn lunge bước tới'],
+  },
+  db_split_squat: {
+    steps: [
+      'Đứng quay lưng về ghế/sofa, đặt mu bàn chân sau lên mặt ghế, hai tay cầm tạ buông dọc người',
+      'Bước chân trước ra xa vừa đủ, hạ người thẳng xuống đến khi đùi trước gần song song sàn',
+      'Đẩy gót chân trước đứng lên; xong số rep thì đổi chân',
+    ],
+    tips: ['Phần lớn trọng lượng dồn lên chân trước', 'Chọn ghế vững, không trượt; nếu khó thì bỏ tạ tập tay không trước'],
+  },
+  db_glute_bridge: {
+    steps: [
+      'Nằm ngửa, gối co, bàn chân đặt sát mông, đặt 1 tạ ngang xương hông và giữ bằng hai tay',
+      'Siết mông, đẩy hông lên đến khi vai-hông-gối thành một đường thẳng',
+      'Giữ 1 giây trên đỉnh rồi hạ hông từ từ xuống',
+    ],
+    tips: ['Đẩy bằng gót chân, không ưỡn lưng quá mức', 'Không cần ghế — bài mông dễ nhất cho người mới'],
+  },
+  db_y_raise: {
+    steps: [
+      'Nằm sấp trên sàn (hoặc nằm sấp trên ghế dài), hai tay cầm tạ nhẹ duỗi về phía trước, thành hình chữ Y',
+      'Nâng hai tay lên khỏi sàn bằng cách siết bả vai, ngón cái hướng lên trần',
+      'Giữ 1 giây rồi hạ chậm',
+    ],
+    tips: ['Dùng tạ rất nhẹ (1-3kg)', 'Nhìn xuống sàn, cổ giữ trung tính; không nhún vai lên tai'],
+  },
+  db_plank_drag: {
+    steps: [
+      'Vào tư thế plank tay thẳng, chân rộng hơn vai, đặt 1 tạ ngoài tầm tay bên trái',
+      'Dùng tay phải kéo tạ ngang qua người sang bên phải, hông giữ im không xoay',
+      'Đổi tay, kéo tạ về lại; mỗi lần kéo là 1 rep',
+    ],
+    tips: ['Chân rộng hơn giúp giữ thăng bằng', 'Nếu hông lắc nhiều: hạ gối xuống sàn hoặc dùng tạ nhẹ hơn'],
+  },
+  db_swing: {
+    steps: [
+      'Đứng chân rộng hơn vai, hai tay cầm 1 đầu tạ, gập hông ra sau (như deadlift) cho tạ đưa qua giữa hai chân',
+      'Bung hông mạnh về trước để tạ vung lên ngang ngực — lực đến từ hông, không phải từ tay',
+      'Để tạ rơi tự nhiên, gập hông ra sau đón và lặp lại liên tục',
+    ],
+    tips: ['Lưng thẳng, không cong; siết mông trên đỉnh', 'Bắt đầu với tạ nhẹ để làm quen nhịp vung'],
+  },
 };
 
 export function getGuide(presetId: string): ExerciseGuide | undefined {
