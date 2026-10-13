@@ -662,6 +662,57 @@ export const PROGRAM_TEMPLATES: WorkoutProgram[] = [
       },
     ],
   },
+  {
+    id: 'dumbbell_home_simple_fullbody_3x',
+    nameVi: 'Tạ Đơn Tại Nhà - Toàn Thân Đơn Giản 3x',
+    descriptionVi: 'Chỉ 1 đôi tạ, không cần dụng cụ khác. 3 buổi toàn thân ngắn ~25 phút, mỗi buổi nhấn khác nhau (chân/mông, thân trên, core + vung tạ). Tự tăng tạ theo gợi ý trong app.',
+    emoji: '🏠',
+    daysPerWeek: 3,
+    difficulty: 'beginner',
+    focus: 'strength',
+    estimatedMinutes: 25,
+    days: [
+      {
+        id: 'dbsf_day1',
+        order: 1,
+        nameVi: 'Buổi A · Chân & Mông',
+        focusVi: 'Đùi · Mông',
+        emoji: '🦵',
+        exercises: [
+          { presetId: 'db_goblet_squat',  nameVi: 'Squat ôm tạ (đùi)',                   sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_reverse_lunge', nameVi: 'Lunge lùi tạ (đùi mông, dễ giữ thăng bằng)', sets: 3, reps: 10, unit: 'reps' },
+          { presetId: 'db_glute_bridge',  nameVi: 'Cầu mông có tạ nằm sàn (mông/sau đùi)', sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'db_calf_raise',    nameVi: 'Nâng gót tạ (bắp chân)',              sets: 2, reps: 20, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'dbsf_day2',
+        order: 2,
+        nameVi: 'Buổi B · Thân trên',
+        focusVi: 'Ngực · Lưng · Vai',
+        emoji: '💪',
+        exercises: [
+          { presetId: 'db_chest_press',      nameVi: 'Đẩy tạ nằm sàn (ngực)',   sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_single_arm_row',   nameVi: 'Kéo tạ một tay (lưng)',    sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_shoulder_press',   nameVi: 'Đẩy tạ đôi (vai)',        sets: 3, reps: 10, unit: 'reps' },
+          { presetId: 'db_y_raise',          nameVi: 'Nâng tạ chữ Y nằm sấp (vai sau/lưng trên)', sets: 2, reps: 12, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'dbsf_day3',
+        order: 3,
+        nameVi: 'Buổi C · Core & Toàn thân',
+        focusVi: 'Core · Mông · Tim mạch',
+        emoji: '🔥',
+        exercises: [
+          { presetId: 'db_swing',         nameVi: 'Vung tạ hai tay (mông/lưng dưới/toàn thân)', sets: 3, reps: 15, unit: 'reps' },
+          { presetId: 'db_plank_drag',    nameVi: 'Plank kéo tạ (core chống xoay)',  sets: 3, reps: 10, unit: 'reps' },
+          { presetId: 'db_dead_bug',      nameVi: 'Dead bug tạ (bụng)',            sets: 3, reps: 10, unit: 'reps' },
+          { presetId: 'db_farmers_carry', nameVi: 'Đi bộ mang tạ (toàn thân/cầm nắm)', sets: 3, durationSeconds: 30, unit: 'seconds' },
+        ],
+      },
+    ],
+  },
 ];
 
 export const DIFFICULTY_LABELS: Record<string, string> = {

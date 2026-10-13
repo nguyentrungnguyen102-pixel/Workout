@@ -95,6 +95,15 @@ export const SYSTEM_PRESETS: WorkoutPreset[] = [
   { id: 'db_woodchopper',       name: 'Dumbbell Woodchopper', nameVi: 'Chặt củi tạ (xoay core)', category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🪓', isCustom: false, usageCount: 0, muscleGroup: 'core' },
   { id: 'db_standing_twist',    name: 'Standing Dumbbell Twist', nameVi: 'Xoay hông cầm tạ (eo)', category: 'dumbbell', unit: 'reps', defaultValue: 20, defaultSets: 3, icon: '🌀', isCustom: false, usageCount: 0, muscleGroup: 'core' },
 
+  // Dumbbell (home training) — Phase 17, 6 bài đơn giản tại nhà: chỉ cần 1 đôi
+  // tạ, không cần ghế/bục/dụng cụ khác (trừ Split Squat dùng ghế/sofa).
+  { id: 'db_reverse_lunge',     name: 'Dumbbell Reverse Lunge', nameVi: 'Lunge lùi tạ (đùi mông, dễ giữ thăng bằng)', category: 'dumbbell', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '🔙', isCustom: false, usageCount: 0, muscleGroup: 'legs' },
+  { id: 'db_split_squat',       name: 'Dumbbell Split Squat', nameVi: 'Squat tách chân gác ghế (đùi/mông)', category: 'dumbbell', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '🪑', isCustom: false, usageCount: 0, muscleGroup: 'legs' },
+  { id: 'db_glute_bridge',      name: 'Dumbbell Glute Bridge', nameVi: 'Cầu mông có tạ nằm sàn (mông/sau đùi)', category: 'dumbbell', unit: 'reps', defaultValue: 15, defaultSets: 3, icon: '🌉', isCustom: false, usageCount: 0, muscleGroup: 'legs' },
+  { id: 'db_y_raise',           name: 'Prone Y Raise', nameVi: 'Nâng tạ chữ Y nằm sấp (vai sau/lưng trên)', category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🇾', isCustom: false, usageCount: 0, muscleGroup: 'shoulders' },
+  { id: 'db_plank_drag',        name: 'Plank Drag', nameVi: 'Plank kéo tạ (core chống xoay)', category: 'dumbbell', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '🧱', isCustom: false, usageCount: 0, muscleGroup: 'core' },
+  { id: 'db_swing',             name: 'Dumbbell Swing', nameVi: 'Vung tạ hai tay (mông/lưng dưới/toàn thân)', category: 'dumbbell', unit: 'reps', defaultValue: 15, defaultSets: 3, icon: '🔔', isCustom: false, usageCount: 0, muscleGroup: 'fullBody' },
+
   // Sport (outdoor/team sports) — tracked separately from indoor cardio so
   // "sport frequency" stats/PRs/charts don't blend with treadmill running,
   // jump rope etc. Existing running/cycling stay in cardio (unchanged) —
