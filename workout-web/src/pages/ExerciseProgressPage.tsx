@@ -7,6 +7,7 @@ import { computePRs, getPRLabel } from '../services/prService';
 import { getCustomPresets } from '../services/customExerciseService';
 import { SYSTEM_PRESETS } from '../constants/exercises';
 import { bestOneRepMax } from '../lib/oneRepMax';
+import { loadTable, warmupSets } from '../lib/loadPlanner';
 import { WorkoutLog, WorkoutPreset } from '../types/workout';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import ExerciseIcon from '../components/ExerciseIcon';
@@ -134,6 +135,30 @@ export default function ExerciseProgressPage() {
           <p className="text-xs text-text-secondary">{oneRepMax.date}</p>
         </div>
       )}
+
+      {oneRepMax && (() => {
+        const table = loadTable(oneRepMax.oneRepMax);
+        const working = table.find((s) => s.reps === 10)?.weight || 0;
+        const warm = warmupSets(working);
+        return (
+          <div className="bg-card rounded-2xl border border-border p-4 mb-4">
+            <p className="text-xs text-text-secondary font-semibold mb-2">🎯 TẠ GỢI Ý THEO SỐ REPS</p>
+            <div className="grid grid-cols-5 gap-2 text-center">
+              {table.map((s) => (
+                <div key={s.reps} className="bg-card-2 rounded-xl py-2">
+                  <p className="text-base font-black text-text-main">{s.weight}</p>
+                  <p className="text-[10px] text-text-secondary">kg × {s.reps}</p>
+                </div>
+              ))}
+            </div>
+            {warm.length > 0 && (
+              <p className="text-xs text-text-secondary mt-3">
+                🔥 Khởi động trước hiệp {working}kg × 10: {warm.map((w) => `${w.weight}kg × ${w.reps}`).join(' → ')}
+              </p>
+            )}
+          </div>
+        );
+      })()}
 
       {loading ? (
         <div className="flex justify-center py-8">
