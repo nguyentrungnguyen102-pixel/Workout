@@ -611,6 +611,55 @@ export const EXERCISE_GUIDES: Record<string, ExerciseGuide> = {
     tips: ['Xoay bằng phần thân trên, không xoay bằng cách vặn gối/hông', 'Dùng tạ nhẹ để tập trung vào biên độ xoay thay vì sức nặng'],
   },
 
+  db_bulgarian_split_squat: {
+    steps: [
+      'Đứng cách ghế khoảng một bước, đặt mu bàn chân sau lên mặt ghế, hai tay cầm tạ buông dọc thân',
+      'Hạ người thẳng xuống đến khi đùi trước gần song song sàn, gối trước không vượt quá mũi chân nhiều',
+      'Đẩy gót chân trước đứng lên; hết hiệp thì đổi chân',
+    ],
+    tips: ['Chân trước đủ xa để thân người đi xuống thẳng, không đổ về trước', 'Bắt đầu không tạ nếu mất thăng bằng'],
+  },
+  db_reverse_lunge: {
+    steps: [
+      'Đứng thẳng, hai tay cầm tạ buông dọc thân',
+      'Bước một chân ra sau, hạ người đến khi hai gối gập khoảng 90 độ',
+      'Đẩy chân trước đứng lên, đưa chân sau về, đổi chân — tính 1 lần cho mỗi chân',
+    ],
+    tips: ['Thân người thẳng, gối trước nằm trên mắt cá', 'Lùi dễ kiểm soát và đỡ áp lực lên gối hơn lunge tiến'],
+  },
+  db_swing: {
+    steps: [
+      'Đứng rộng hơn vai, hai tay giữ một đầu tạ, đẩy hông ra sau và để tạ lướt giữa hai chân',
+      'Đẩy hông về trước mạnh để tạ vung lên ngang ngực — lực đến từ hông, không phải tay',
+      'Để tạ rơi tự nhiên và đẩy hông ra sau cho lần kế tiếp',
+    ],
+    tips: ['Lưng giữ thẳng, đây là động tác bản lề hông chứ không phải squat', 'Chọn tạ vừa phải để giữ đúng kỹ thuật'],
+  },
+  db_cross_body_hammer: {
+    steps: [
+      'Đứng thẳng, hai tay cầm tạ lòng bàn tay hướng vào người, khuỷu sát hông',
+      'Cuộn một tạ chéo qua ngực về phía vai đối diện, giữ khuỷu cố định',
+      'Hạ chậm về vị trí đầu, đổi tay xen kẽ',
+    ],
+    tips: ['Không đung đưa thân người để lấy đà', 'Hạ tạ chậm khoảng 2 giây để cơ làm việc cả chiều xuống'],
+  },
+  db_reverse_curl: {
+    steps: [
+      'Đứng thẳng, hai tay cầm tạ úp lòng bàn tay xuống đất',
+      'Cuộn tạ lên ngang vai, cổ tay giữ thẳng, khuỷu sát hông',
+      'Hạ chậm về vị trí đầu',
+    ],
+    tips: ['Dùng tạ nhẹ hơn curl thường vì cẳng tay yếu hơn', 'Không để cổ tay gập về sau'],
+  },
+  db_snatch: {
+    steps: [
+      'Đứng rộng hơn vai, một tay cầm tạ đặt giữa hai chân, hạ hông như deadlift',
+      'Bật hông và chân đồng thời, kéo tạ thẳng lên cao qua đầu đến khi tay duỗi thẳng',
+      'Hạ tạ có kiểm soát về giữa hai chân, hết hiệp thì đổi tay',
+    ],
+    tips: ['Học bằng tạ nhẹ trước khi tăng mức', 'Tạ đi sát thân người, không vung ra xa'],
+  },
+
   // Sport (outdoor/team sports)
   sport_football: {
     steps: [

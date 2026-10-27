@@ -83,3 +83,21 @@ describe('PROGRAM_TEMPLATES data completeness', () => {
     expect(missing).toEqual([]);
   });
 });
+
+// v2.34.0 — the new home-dumbbell batch must be reachable (picker + program).
+describe('v2.34.0 home dumbbell batch', () => {
+  const NEW_IDS = ['db_bulgarian_split_squat', 'db_reverse_lunge', 'db_swing', 'db_cross_body_hammer', 'db_reverse_curl', 'db_snatch'];
+
+  it('all new exercises are dumbbell presets', () => {
+    NEW_IDS.forEach((id) => {
+      expect(SYSTEM_PRESETS.find((p) => p.id === id)?.category).toBe('dumbbell');
+    });
+  });
+
+  it('the advanced full-body program uses every new exercise', () => {
+    const prog = PROGRAM_TEMPLATES.find((p) => p.id === 'dumbbell_home_fullbody_3x');
+    expect(prog?.days).toHaveLength(3);
+    const used = new Set(prog!.days.flatMap((d) => d.exercises.map((e) => e.presetId)));
+    NEW_IDS.forEach((id) => expect(used.has(id)).toBe(true));
+  });
+});
