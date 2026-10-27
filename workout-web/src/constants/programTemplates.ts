@@ -662,6 +662,59 @@ export const PROGRAM_TEMPLATES: WorkoutProgram[] = [
       },
     ],
   },
+
+  {
+    id: 'dumbbell_home_fullbody_3x',
+    nameVi: 'Tạ Đơn Tại Nhà - Toàn Thân Nâng Cao 3x',
+    descriptionVi: 'Dành cho người đã quen tạ đơn, có sẵn 1 đôi tạ và 1 chiếc ghế. 3 buổi/tuần luân phiên Chân · Đẩy/Kéo · Toàn thân, dùng các động tác mới (split squat, swing, snatch).',
+    emoji: '🔶',
+    daysPerWeek: 3,
+    difficulty: 'intermediate',
+    focus: 'strength',
+    estimatedMinutes: 40,
+    days: [
+      {
+        id: 'dbfb_day1',
+        order: 1,
+        nameVi: 'Buổi A · Chân & Mông',
+        focusVi: 'Đùi · Mông · Sau đùi',
+        emoji: '🦵',
+        exercises: [
+          { presetId: 'db_bulgarian_split_squat', nameVi: 'Squat tách chân sau kê ghế (đùi mông)', sets: 3, reps: 10, unit: 'reps' },
+          { presetId: 'db_reverse_lunge',         nameVi: 'Lunge lùi tạ (đùi mông, êm gối)',       sets: 3, reps: 10, unit: 'reps' },
+          { presetId: 'db_rdl',                   nameVi: 'Deadlift tạ Romania (sau đùi)',          sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_calf_raise',            nameVi: 'Nâng gót tạ (bắp chân)',                 sets: 3, reps: 15, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'dbfb_day2',
+        order: 2,
+        nameVi: 'Buổi B · Đẩy & Kéo',
+        focusVi: 'Ngực · Lưng · Vai · Tay',
+        emoji: '💪',
+        exercises: [
+          { presetId: 'db_chest_press',        nameVi: 'Đẩy tạ nằm sàn (ngực)',        sets: 3, reps: 10, unit: 'reps' },
+          { presetId: 'db_bent_row',           nameVi: 'Kéo tạ cúi người (lưng)',      sets: 3, reps: 10, unit: 'reps' },
+          { presetId: 'db_shoulder_press',     nameVi: 'Đẩy tạ đôi (vai)',             sets: 3, reps: 10, unit: 'reps' },
+          { presetId: 'db_cross_body_hammer',  nameVi: 'Curl búa chéo người',          sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'db_reverse_curl',       nameVi: 'Curl úp tay (cẳng tay)',       sets: 2, reps: 12, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'dbfb_day3',
+        order: 3,
+        nameVi: 'Buổi C · Toàn thân & Core',
+        focusVi: 'Hông · Vai · Core',
+        emoji: '⚡',
+        exercises: [
+          { presetId: 'db_swing',         nameVi: 'Vung tạ giữa hai chân',  sets: 4, reps: 15, unit: 'reps' },
+          { presetId: 'db_snatch',        nameVi: 'Giật tạ một tay',        sets: 3, reps: 8,  unit: 'reps' },
+          { presetId: 'db_woodchopper',   nameVi: 'Chặt củi tạ (xoay core)', sets: 3, reps: 12, unit: 'reps' },
+          { presetId: 'plank',            nameVi: 'Plank',                  sets: 3, durationSeconds: 45, unit: 'seconds' },
+        ],
+      },
+    ],
+  },
 ];
 
 export const DIFFICULTY_LABELS: Record<string, string> = {
