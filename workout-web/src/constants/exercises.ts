@@ -94,6 +94,13 @@ export const SYSTEM_PRESETS: WorkoutPreset[] = [
   { id: 'db_good_morning',      name: 'Dumbbell Good Morning', nameVi: 'Gập hông tạ (sau đùi/lưng dưới)', category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🙇', isCustom: false, usageCount: 0, muscleGroup: 'legs' },
   { id: 'db_woodchopper',       name: 'Dumbbell Woodchopper', nameVi: 'Chặt củi tạ (xoay core)', category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🪓', isCustom: false, usageCount: 0, muscleGroup: 'core' },
   { id: 'db_standing_twist',    name: 'Standing Dumbbell Twist', nameVi: 'Xoay hông cầm tạ (eo)', category: 'dumbbell', unit: 'reps', defaultValue: 20, defaultSets: 3, icon: '🌀', isCustom: false, usageCount: 0, muscleGroup: 'core' },
+  // Phase 17 — bài tạ đơn tại nhà đơn giản (chân/mông/vai), ít thiết bị
+  { id: 'db_glute_bridge', name: 'Dumbbell Glute Bridge', nameVi: 'Cầu mông đặt tạ (mông/đùi sau)', category: 'dumbbell', unit: 'reps', defaultValue: 12, defaultSets: 3, icon: '🌉', isCustom: false, usageCount: 0, muscleGroup: 'legs' },
+  { id: 'db_reverse_lunge', name: 'Dumbbell Reverse Lunge', nameVi: 'Lunge lùi cầm tạ (đùi/mông)', category: 'dumbbell', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '↩️', isCustom: false, usageCount: 0, muscleGroup: 'legs' },
+  { id: 'db_split_squat', name: 'Dumbbell Split Squat', nameVi: 'Squat tách chân tạ (đùi/mông)', category: 'dumbbell', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '🦵', isCustom: false, usageCount: 0, muscleGroup: 'legs' },
+  { id: 'db_lateral_lunge', name: 'Dumbbell Lateral Lunge', nameVi: 'Lunge ngang cầm tạ (đùi trong/mông)', category: 'dumbbell', unit: 'reps', defaultValue: 8, defaultSets: 3, icon: '↔️', isCustom: false, usageCount: 0, muscleGroup: 'legs' },
+  { id: 'db_floor_y_raise', name: 'Dumbbell Prone Y Raise', nameVi: 'Nâng tạ chữ Y nằm sấp (vai sau/lưng trên)', category: 'dumbbell', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '🔱', isCustom: false, usageCount: 0, muscleGroup: 'back' },
+  { id: 'db_overhead_press_seated', name: 'Seated Dumbbell Overhead Press', nameVi: 'Đẩy tạ ngồi (vai, dễ giữ thân)', category: 'dumbbell', unit: 'reps', defaultValue: 10, defaultSets: 3, icon: '🪑', isCustom: false, usageCount: 0, muscleGroup: 'shoulders' },
 
   // Sport (outdoor/team sports) — tracked separately from indoor cardio so
   // "sport frequency" stats/PRs/charts don't blend with treadmill running,

@@ -611,6 +611,55 @@ export const EXERCISE_GUIDES: Record<string, ExerciseGuide> = {
     tips: ['Xoay bằng phần thân trên, không xoay bằng cách vặn gối/hông', 'Dùng tạ nhẹ để tập trung vào biên độ xoay thay vì sức nặng'],
   },
 
+  db_glute_bridge: {
+    steps: [
+      'Nằm ngửa, gập gối, bàn chân đặt sát sàn, đặt một tạ lên hông và giữ bằng hai tay',
+      'Siết mông, đẩy hông lên đến khi vai–hông–gối thành một đường thẳng',
+      'Dừng 1 giây ở trên rồi hạ hông chậm xuống',
+    ],
+    tips: ['Đẩy bằng gót chân, không ưỡn lưng quá mức', 'Siết chặt mông ở điểm cao nhất'],
+  },
+  db_reverse_lunge: {
+    steps: [
+      'Đứng thẳng, hai tay cầm tạ buông dọc thân',
+      'Bước một chân ra sau, hạ gối sau gần chạm sàn, thân người thẳng',
+      'Đạp chân trước đứng dậy về vị trí cũ, đổi chân (tính 1 lần mỗi chân)',
+    ],
+    tips: ['Lunge lùi dễ giữ thăng bằng và nhẹ gối hơn lunge tiến — hợp người mới', 'Gối trước không vượt quá mũi chân quá nhiều'],
+  },
+  db_split_squat: {
+    steps: [
+      'Đứng một chân trước một chân sau (khoảng cách như bước dài), cầm tạ hai bên',
+      'Hạ thẳng người xuống đến khi gối sau gần chạm sàn',
+      'Đẩy lên bằng chân trước, hết hiệp thì đổi chân',
+    ],
+    tips: ['Chân đứng yên một chỗ, chỉ lên xuống theo phương thẳng đứng', 'Thân người thẳng, mắt nhìn phía trước'],
+  },
+  db_lateral_lunge: {
+    steps: [
+      'Đứng thẳng, ôm một tạ trước ngực',
+      'Bước sang ngang một bước dài, ngồi xuống về phía chân bước, chân còn lại giữ thẳng',
+      'Đạp chân bước để về vị trí đứng, đổi bên (tính 1 lần mỗi bên)',
+    ],
+    tips: ['Hông đẩy ra sau như ngồi ghế, gót chân luôn chạm sàn', 'Bắt đầu bằng tạ nhẹ để làm quen biên độ'],
+  },
+  db_floor_y_raise: {
+    steps: [
+      'Nằm sấp trên sàn, hai tay cầm tạ nhẹ duỗi thẳng phía trước tạo hình chữ Y',
+      'Nâng hai tay lên khỏi sàn bằng cách siết vai và lưng trên',
+      'Giữ 1 giây rồi hạ chậm xuống',
+    ],
+    tips: ['Dùng tạ rất nhẹ (1–3kg) hoặc không tạ', 'Cổ thả lỏng, ánh mắt nhìn xuống sàn'],
+  },
+  db_overhead_press_seated: {
+    steps: [
+      'Ngồi thẳng trên ghế có tựa lưng, hai tay cầm tạ ngang vai, lòng bàn tay hướng ra trước',
+      'Đẩy tạ thẳng lên trên đầu cho đến khi tay gần duỗi hết',
+      'Hạ tạ chậm về ngang vai',
+    ],
+    tips: ['Ngồi tựa lưng giúp tránh ưỡn lưng khi đẩy', 'Không khoá cứng khuỷu ở điểm cao nhất'],
+  },
+
   // Sport (outdoor/team sports)
   sport_football: {
     steps: [
