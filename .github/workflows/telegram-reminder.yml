@@ -1,8 +1,8 @@
 name: Telegram workout reminder
 
+# v2.34.0: đã TẮT lịch tự chạy (cron) — tính năng nhắc tập Telegram bị gỡ khỏi app.
+# Muốn bật lại: thêm lại khối `schedule: - cron: '*/30 * * * *'` bên dưới `on:`.
 on:
-  schedule:
-    - cron: '*/30 * * * *'
   workflow_dispatch:
     inputs:
       test_all_variants:

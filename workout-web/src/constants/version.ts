@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.33.0';
+export const APP_VERSION = '2.34.0';
 
 // Lich su phien ban chinh thuc (sau dot don nhanh 14/07/2026 — gop cac
 // nang cap tot nhat tu cac nhanh phien hang ngay vao mot ban duy nhat).
@@ -50,4 +50,5 @@ export const PHASE_HISTORY = [
   { version: '2.31.0', phase: 15, summary: 'Chương trình tự tạo (Custom Program Builder) — tự đặt tên/emoji/độ khó, chọn bài cho từng buổi, lưu vào hồ sơ riêng bên cạnh chương trình có sẵn, Sửa/Xoá được; buổi tập dang dở (đã thêm bài nhưng chưa lưu) nay tự lưu qua localStorage, khôi phục lại kèm banner nhắc nếu lỡ tải lại trang hoặc đóng tab' },
   { version: '2.32.0', phase: 15, summary: 'Thẻ "🔋 Hồi phục nhóm cơ" ở trang chủ (nhóm cơ nào vừa tập/đang hồi phục/sẵn sàng tập lại) + banner "Nghỉ ngơi thông minh" nhắc nghỉ khi tập liên tục nhiều ngày không nghỉ; huy hiệu "Buổi tạ đơn" mới trong Thành tựu + fix huy hiệu "Đa dạng nhóm cơ" tính sai mốc tối đa (hard-code 6 trong khi app đã có 7 category từ lâu)' },
   { version: '2.33.0', phase: 16, summary: 'Mở rộng kho câu quote động lực từ 210 lên 300 câu song ngữ Anh–Việt kèm tác giả; fix lặp quote Telegram — trước đây chọn bằng Math.random() thuần không có bộ nhớ nên có thể trùng câu giữa các lần gửi gần nhau, nay chọn quyết định theo ngày + loại tin nhắn (xoay hết 300 câu trước khi lặp lại, ~100 ngày ở nhịp gửi thực tế) và không lặp giữa tin sáng/tối cùng ngày' },
+  { version: '2.34.0', phase: 17, summary: 'Gỡ tính năng nhắc tập Telegram (thẻ cài đặt trong app + tắt lịch cron GitHub Actions, giữ lại chạy tay) vì hay lỗi/trễ; thêm 6 bài tạ đơn tại nhà đơn giản (cầu mông đặt tạ, lunge lùi, squat tách chân, lunge ngang, nâng chữ Y nằm sấp, đẩy tạ ngồi) kèm hướng dẫn form + chương trình "Tạ Đơn Tại Nhà - Nhanh 15 Phút 3x" (4 bài/buổi, chỉ cần 1 đôi tạ + 1 ghế)' },
 ] as const;

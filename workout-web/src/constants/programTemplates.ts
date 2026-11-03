@@ -524,6 +524,59 @@ export const PROGRAM_TEMPLATES: WorkoutProgram[] = [
     ],
   },
 
+  // Phase 17 — chương trình tạ đơn tại nhà ngắn gọn, chỉ cần 1 đôi tạ + 1 cái ghế.
+  {
+    id: 'dumbbell_home_quick_15min_3x',
+    nameVi: 'Tạ Đơn Tại Nhà - Nhanh 15 Phút 3x',
+    descriptionVi: 'Mỗi buổi 4 bài đơn giản, ~15 phút, chỉ cần 1 đôi tạ nhẹ và 1 cái ghế. Xen kẽ chân/mông và thân trên để cơ kịp hồi phục.',
+    emoji: '⏱️',
+    daysPerWeek: 3,
+    difficulty: 'beginner',
+    focus: 'strength',
+    estimatedMinutes: 15,
+    days: [
+      {
+        id: 'dbq_day1',
+        order: 1,
+        nameVi: 'Buổi A',
+        focusVi: 'Chân · Mông · Vai',
+        emoji: '🏠',
+        exercises: [
+          { presetId: 'db_squat', nameVi: 'Squat tạ hai bên (đùi, dễ hơn ôm tạ)', sets: 2, reps: 12, unit: 'reps' },
+          { presetId: 'db_glute_bridge', nameVi: 'Cầu mông đặt tạ (mông/đùi sau)', sets: 2, reps: 12, unit: 'reps' },
+          { presetId: 'db_overhead_press_seated', nameVi: 'Đẩy tạ ngồi (vai, dễ giữ thân)', sets: 2, reps: 10, unit: 'reps' },
+          { presetId: 'db_shrug', nameVi: 'Nhún vai tạ (cầu vai)', sets: 2, reps: 15, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'dbq_day2',
+        order: 2,
+        nameVi: 'Buổi B',
+        focusVi: 'Lưng · Tay · Core',
+        emoji: '🏠',
+        exercises: [
+          { presetId: 'db_bent_row', nameVi: 'Kéo tạ cúi người (lưng)', sets: 2, reps: 10, unit: 'reps' },
+          { presetId: 'db_bicep_curl', nameVi: 'Curl tạ đơn (bắp tay)', sets: 2, reps: 10, unit: 'reps' },
+          { presetId: 'db_floor_y_raise', nameVi: 'Nâng tạ chữ Y nằm sấp (vai sau/lưng trên)', sets: 2, reps: 10, unit: 'reps' },
+          { presetId: 'db_dead_bug', nameVi: 'Dead bug tạ (bụng)', sets: 2, reps: 10, unit: 'reps' },
+        ],
+      },
+      {
+        id: 'dbq_day3',
+        order: 3,
+        nameVi: 'Buổi C',
+        focusVi: 'Chân đơn · Ngực · Vai',
+        emoji: '🏠',
+        exercises: [
+          { presetId: 'db_reverse_lunge', nameVi: 'Lunge lùi cầm tạ (đùi/mông)', sets: 2, reps: 8, unit: 'reps' },
+          { presetId: 'db_split_squat', nameVi: 'Squat tách chân tạ (đùi/mông)', sets: 2, reps: 8, unit: 'reps' },
+          { presetId: 'db_chest_press', nameVi: 'Đẩy tạ nằm sàn (ngực)', sets: 2, reps: 10, unit: 'reps' },
+          { presetId: 'db_lateral_raise', nameVi: 'Nâng tạ ngang vai', sets: 2, reps: 10, unit: 'reps' },
+        ],
+      },
+    ],
+  },
+
   {
     id: 'dumbbell_home_simple_2x',
     nameVi: 'Tạ Đơn Tại Nhà - Siêu Đơn Giản 2x',

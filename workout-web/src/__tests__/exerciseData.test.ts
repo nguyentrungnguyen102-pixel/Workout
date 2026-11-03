@@ -83,3 +83,30 @@ describe('PROGRAM_TEMPLATES data completeness', () => {
     expect(missing).toEqual([]);
   });
 });
+
+// Phase 17 — chương trình tạ đơn tại nhà "Nhanh 15 Phút": người mới, ngắn gọn.
+describe('Phase 17 quick home dumbbell program', () => {
+  const prog = PROGRAM_TEMPLATES.find((p) => p.id === 'dumbbell_home_quick_15min_3x');
+  const byId = new Map(SYSTEM_PRESETS.map((p) => [p.id, p]));
+
+  it('exists, is beginner, 3 days/week and 3 day templates', () => {
+    expect(prog).toBeTruthy();
+    expect(prog!.difficulty).toBe('beginner');
+    expect(prog!.daysPerWeek).toBe(3);
+    expect(prog!.days).toHaveLength(3);
+  });
+
+  it('keeps each session short (<=4 exercises, <=2 sets each)', () => {
+    prog!.days.forEach((d) => {
+      expect(d.exercises.length).toBeLessThanOrEqual(4);
+      d.exercises.forEach((e) => expect(e.sets).toBeLessThanOrEqual(2));
+    });
+  });
+
+  it('new exercises are dumbbell category, not custom', () => {
+    ['db_glute_bridge', 'db_reverse_lunge', 'db_split_squat', 'db_lateral_lunge', 'db_floor_y_raise', 'db_overhead_press_seated'].forEach((id) => {
+      expect(byId.get(id)?.category).toBe('dumbbell');
+      expect(byId.get(id)?.isCustom).toBe(false);
+    });
+  });
+});
