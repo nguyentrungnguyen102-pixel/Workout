@@ -36,6 +36,7 @@ function cleanExercise(e: ExerciseEntry): ExerciseEntry {
   if (e.durationSeconds !== undefined) c.durationSeconds = e.durationSeconds;
   if (e.weight !== undefined) c.weight = e.weight;
   if (e.distance !== undefined) c.distance = e.distance;
+  if (e.rpe !== undefined) c.rpe = e.rpe;
   return c as ExerciseEntry;
 }
 

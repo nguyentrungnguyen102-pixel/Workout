@@ -39,6 +39,9 @@ export interface ExerciseEntry {
   durationSeconds?: number;
   weight?: number;
   distance?: number;
+  // Perceived exertion 6–10 (see lib/previousPerformance.ts RPE_VALUES).
+  // Optional — absent on every log saved before v2.34.0.
+  rpe?: number;
 }
 
 export interface WorkoutLog {

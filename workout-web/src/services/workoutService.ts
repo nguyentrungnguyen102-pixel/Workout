@@ -16,6 +16,7 @@ import { db } from './firebase';
 import { DraftWorkout, WorkoutLog, WorkoutPreset } from '../types/workout';
 import { todayString, yesterdayString } from '../lib/date';
 import { computeLogMetrics } from '../lib/logMetrics';
+import { copyEntryForRepeat } from '../lib/previousPerformance';
 
 export async function logWorkout(
   uid: string,
@@ -163,7 +164,7 @@ export async function getLogsForHeatmap(uid: string, startDate: string): Promise
 
 export function buildDraftFromLog(log: WorkoutLog): DraftWorkout {
   return {
-    exercises: log.exercises.map((e) => ({ ...e })),
+    exercises: log.exercises.map(copyEntryForRepeat),
     startedAt: new Date(),
     intensity: log.intensity,
     notes: '',
