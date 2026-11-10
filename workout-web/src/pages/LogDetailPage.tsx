@@ -7,6 +7,7 @@ import { WorkoutLog } from '../types/workout';
 import { formatTimeOfDay } from '../lib/date';
 import { formatAmount } from '../lib/format';
 import { buildLogShareText } from '../lib/shareText';
+import { isValidRpe, RPE_LABELS } from '../lib/previousPerformance';
 
 function formatDateVi(dateStr: string): string {
   const d = new Date(dateStr + 'T00:00:00');
@@ -185,7 +186,14 @@ export default function LogDetailPage() {
           {log.exercises.map((ex, i) => (
             <div key={i} className="flex items-center justify-between px-4 py-3">
               <p className="font-semibold text-text-main text-sm">{ex.name}</p>
-              <p className="text-sm text-text-secondary">{formatAmount(ex)}</p>
+              <div className="text-right">
+                <p className="text-sm text-text-secondary">
+                  {formatAmount(ex)}{ex.weight && ex.weight > 0 ? ` · ${ex.weight}kg` : ''}
+                </p>
+                {isValidRpe(ex.rpe) && (
+                  <p className="text-[11px] text-text-muted">RPE {ex.rpe} · {RPE_LABELS[ex.rpe].short}</p>
+                )}
+              </div>
             </div>
           ))}
         </div>

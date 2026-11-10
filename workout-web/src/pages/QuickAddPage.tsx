@@ -19,6 +19,10 @@ import { toggleFavorite, sortWithFavoritesFirst } from '../lib/favorites';
 import { sumThisWeek } from '../lib/dayTimeline';
 import { todayString } from '../lib/date';
 import { buildRecoveryInsight } from '../lib/recovery';
+import {
+  findPreviousEntry, formatEntryShort, formatShortDate as formatPrevDate, compareWithPrevious,
+  RPE_VALUES, RPE_LABELS, rpeHint,
+} from '../lib/previousPerformance';
 import WeeklyPlanCard from '../components/WeeklyPlanCard';
 import QuoteBanner from '../components/QuoteBanner';
 import ExerciseIcon from '../components/ExerciseIcon';
@@ -293,7 +297,7 @@ interface WorkoutSummaryModalProps {
 
 function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
   const navigate = useNavigate();
-  const { draft, removeExercise, updateExercise, setNotes, setLocation, setStartedAt, logWorkout, isLogging, editingLogId, cancelEdit } = useWorkoutStore();
+  const { draft, removeExercise, updateExercise, setNotes, setLocation, setStartedAt, logWorkout, isLogging, editingLogId, cancelEdit, recentLogs } = useWorkoutStore();
   const [toast, setToast] = useState('');
   // Ref (not state) holds the pending timer so a fast second toast can clear
   // the first toast's timeout before it fires and clears the newer message.
@@ -419,6 +423,61 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
         {chips.length > 0 && renderRow(chips, 'value-chips')}
         {weightChips.length > 0 && renderRow(weightChips, 'weight-chips')}
       </>
+    );
+  };
+
+  // "Lần trước" (Strong/Hevy "Previous" column) + RPE picker, per exercise.
+  // recentLogs covers the last 35 days (workoutStore.loadRecentLogs) — older
+  // history simply shows no "Lần trước" line, same as a never-done exercise.
+  const renderPreviousAndRpe = (ex: ExerciseEntry) => {
+    const prev = findPreviousEntry(recentLogs, ex.presetId, editingLogId);
+    const delta = prev ? compareWithPrevious(ex, prev.entry) : null;
+    const hint = prev ? rpeHint(prev.entry) : null;
+    const deltaClass = delta?.direction === 'up'
+      ? 'text-success'
+      : delta?.direction === 'down' ? 'text-danger' : 'text-text-muted';
+    const deltaIcon = delta?.direction === 'up' ? '▲' : delta?.direction === 'down' ? '▼' : '=';
+    return (
+      <div className="mt-3 pt-3 border-t border-border space-y-2">
+        {prev ? (
+          <p className="text-xs text-text-secondary" data-testid="previous-line">
+            ⏮ Lần trước ({formatPrevDate(prev.date)}):{' '}
+            <span className="font-semibold text-text-main">{formatEntryShort(prev.entry)}</span>
+            {prev.entry.rpe ? <span className="text-text-muted"> · RPE {prev.entry.rpe}</span> : null}
+            {delta && (
+              <span className={`ml-1.5 font-semibold ${deltaClass}`}>{deltaIcon} {delta.label}</span>
+            )}
+          </p>
+        ) : (
+          <p className="text-xs text-text-muted" data-testid="previous-line">⏮ Lần đầu tập bài này (35 ngày gần đây)</p>
+        )}
+        {hint && <p className="text-[11px] text-primary">💡 {hint}</p>}
+        <div>
+          <p className="text-[11px] text-text-secondary mb-1">
+            Mức gắng sức (RPE){ex.rpe ? `: ${RPE_LABELS[ex.rpe as keyof typeof RPE_LABELS]?.long ?? ex.rpe}` : ' — tuỳ chọn'}
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {RPE_VALUES.map((v) => {
+              const active = ex.rpe === v;
+              return (
+                <button
+                  key={v}
+                  type="button"
+                  aria-pressed={active}
+                  title={RPE_LABELS[v].long}
+                  onClick={() => updateExercise(ex.presetId, { rpe: active ? undefined : v })}
+                  className={`px-2 py-1 rounded-full border text-[11px] font-semibold transition-colors ${
+                    active
+                      ? 'bg-primary text-white border-primary'
+                      : 'bg-card-2 border-border text-text-secondary hover:border-primary hover:text-primary'
+                  }`}>
+                  {v} · {RPE_LABELS[v].short}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
     );
   };
 
@@ -554,6 +613,8 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
                 </div>
 
                 {renderQuickChips(ex)}
+
+                {renderPreviousAndRpe(ex)}
 
               </div>
             );

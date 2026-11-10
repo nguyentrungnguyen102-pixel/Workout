@@ -13,6 +13,7 @@ import { todayString, yesterdayString } from '../lib/date';
 import { aggregateExercises } from '../lib/dayTimeline';
 import { exerciseMinutes } from '../lib/energy';
 import { loadPersistedDraft, savePersistedDraft } from '../lib/draftPersistence';
+import { copyEntryForRepeat } from '../lib/previousPerformance';
 
 interface WorkoutStore {
   draft: DraftWorkout;
@@ -125,7 +126,7 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
   setDraftFromLog: (log) =>
     set({
       draft: {
-        exercises: log.exercises.map((e) => ({ ...e })),
+        exercises: log.exercises.map(copyEntryForRepeat),
         startedAt: new Date(),
         intensity: log.intensity,
         notes: '',
@@ -215,7 +216,7 @@ export const useWorkoutStore = create<WorkoutStore>((set, get) => ({
     if (!yesterdayLog) return;
     set({
       draft: {
-        exercises: yesterdayLog.exercises.map((e) => ({ ...e })),
+        exercises: yesterdayLog.exercises.map(copyEntryForRepeat),
         startedAt: new Date(),
         intensity: yesterdayLog.intensity,
         notes: '',
