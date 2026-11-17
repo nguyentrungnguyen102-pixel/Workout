@@ -74,6 +74,7 @@ export const MET_TABLE: Record<string, number> = {
   cycling: 7.0, // Compendium "bicycling, leisure, moderate effort" ballpark
   jumping_jacks: 8.0, // Source: Compendium "calisthenics, vigorous effort"
   jump_rope: 12.3, // Source: Compendium "rope jumping, moderate pace" ~12.3
+  hiit_interval: 8.0, // Source: Compendium "circuit training, vigorous effort" (02040) ~8.0; only work time is logged
 
   // Mobility
   yoga: 2.5, // Source: Compendium "yoga, Hatha" ballpark

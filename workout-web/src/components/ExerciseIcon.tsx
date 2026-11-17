@@ -425,6 +425,7 @@ const PRESET_ICON: Record<string, JSX.Element> = {
   cycling: gCycling,
   jumping_jacks: gJumpingJacks,
   jump_rope: gJumpRope,
+  hiit_interval: gBurpee,
 
   // Mobility
   yoga: gYoga,

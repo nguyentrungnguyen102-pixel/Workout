@@ -198,6 +198,14 @@ export const EXERCISE_GUIDES: Record<string, ExerciseGuide> = {
     ],
     tips: ['Tiếp đất êm bằng mũi chân, tránh nhảy quá cao gây mỏi bắp chân'],
   },
+  hiit_interval: {
+    steps: [
+      'Mở "⏱️ Hẹn giờ HIIT" ở trang chủ, chọn Tabata / EMOM / HIIT 40/20 hoặc tự chỉnh',
+      'Trong pha TẬP: làm hết sức 1 bài (burpee, squat, hít đất, leo núi, tạ đơn...)',
+      'Trong pha NGHỈ: thở sâu, chuẩn bị bài kế tiếp — EMOM thì nghỉ phần còn lại của phút',
+    ],
+    tips: ['Khởi động 3–5 phút trước khi bắt đầu', 'Giữ đúng kỹ thuật, giảm tốc độ nếu form bị vỡ'],
+  },
 
   // Mobility
   yoga: {
