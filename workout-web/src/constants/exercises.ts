@@ -29,6 +29,8 @@ export const SYSTEM_PRESETS: WorkoutPreset[] = [
   { id: 'cycling', name: 'Cycling', nameVi: 'Đạp xe', category: 'cardio', unit: 'minutes', defaultValue: 30, defaultSets: 1, icon: '🚴', isCustom: false, usageCount: 0, muscleGroup: 'fullBody' },
   { id: 'jumping_jacks', name: 'Jumping Jacks', nameVi: 'Bật nhảy', category: 'cardio', unit: 'reps', defaultValue: 50, defaultSets: 3, icon: '⭐', isCustom: false, usageCount: 0, muscleGroup: 'fullBody' },
   { id: 'jump_rope', name: 'Jump Rope', nameVi: 'Nhảy dây', category: 'cardio', unit: 'minutes', defaultValue: 10, defaultSets: 1, icon: '🪢', isCustom: false, usageCount: 0, muscleGroup: 'fullBody' },
+  // v2.35.0 — logged from the HIIT/Tabata/EMOM interval timer (/timer)
+  { id: 'hiit_interval', name: 'HIIT Interval', nameVi: 'HIIT / Tabata (hẹn giờ)', category: 'cardio', unit: 'minutes', defaultValue: 10, defaultSets: 1, icon: '⏱️', isCustom: false, usageCount: 0, muscleGroup: 'fullBody' },
 
   // Mobility — toàn thân
   { id: 'yoga', name: 'Yoga', nameVi: 'Yoga', category: 'mobility', unit: 'minutes', defaultValue: 20, defaultSets: 1, icon: '🧘', isCustom: false, usageCount: 0, muscleGroup: 'fullBody' },

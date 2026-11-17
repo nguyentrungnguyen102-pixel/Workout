@@ -1467,6 +1467,16 @@ export default function QuickAddPage() {
           />
         </div>
       )}
+      {/* v2.35.0 — interval timer entry point (HIIT/Tabata/EMOM). */}
+      <button onClick={() => navigate('/timer')} data-testid="open-interval-timer"
+        className="w-full mt-3 mb-3 flex items-center gap-3 bg-card border border-border rounded-2xl p-3 text-left hover:border-primary/40 transition-colors">
+        <span className="text-2xl flex-shrink-0">⏱️</span>
+        <div className="min-w-0 flex-1">
+          <p className="font-bold text-text-main text-sm">Hẹn giờ HIIT / Tabata / EMOM</p>
+          <p className="text-xs text-text-secondary truncate">Đếm giờ tập–nghỉ có tiếng bíp, tự ghi vào buổi tập</p>
+        </div>
+        <ChevronRight size={16} className="text-text-secondary flex-shrink-0" />
+      </button>
       {!activeState && recommendedTemplates.length > 0 && (
         <ProgramSuggestionCard templates={recommendedTemplates} />
       )}

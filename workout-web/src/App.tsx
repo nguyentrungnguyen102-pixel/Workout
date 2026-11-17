@@ -19,6 +19,7 @@ import SettingsPage from './pages/SettingsPage';
 import ProgramsPage from './pages/ProgramsPage';
 import ProgramDetailPage from './pages/ProgramDetailPage';
 import ProgramBuilderPage from './pages/ProgramBuilderPage';
+import IntervalTimerPage from './pages/IntervalTimerPage';
 
 class ErrorBoundary extends Component<{ children: React.ReactNode }, { error: Error | null }> {
   state = { error: null };
@@ -82,6 +83,7 @@ export default function App() {
             <Route path="programs/builder" element={<ProgramBuilderPage />} />
             <Route path="programs/builder/:id" element={<ProgramBuilderPage />} />
             <Route path="programs/:id" element={<ProgramDetailPage />} />
+            <Route path="timer" element={<IntervalTimerPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
