@@ -26,3 +26,11 @@ export function formatElapsedClock(seconds: number): string {
   const ss = String(s).padStart(2, '0');
   return h > 0 ? `${h}:${mm}:${ss}` : `${m}:${ss}`;
 }
+
+// Same as formatAmount but appends the dumbbell load when one was logged
+// ("12 cái · 6 kg"). Used on detail screens where the kg entered on the
+// logging screen was previously never shown back to the user.
+export function formatAmountWithWeight(ex: { unit: string; reps?: number; durationSeconds?: number; distance?: number; weight?: number }): string {
+  const base = formatAmount(ex);
+  return ex.weight !== undefined && ex.weight > 0 ? `${base} · ${ex.weight} kg` : base;
+}

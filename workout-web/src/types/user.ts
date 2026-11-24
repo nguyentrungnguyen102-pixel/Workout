@@ -50,16 +50,13 @@ export interface UserProfile {
   // progress card on BodyPage (lib/weightGoal.ts). Optional — most users
   // won't set one.
   goalWeightKg?: number;
-  // Telegram reminder settings — read by the GitHub Actions cron script
-  // (scripts/telegram-reminder.mjs) via the Firebase Admin SDK. All optional
-  // so existing users default to reminders off until they opt in via
-  // Settings. lastReminderSent tracks the local date each slot last fired,
-  // so the every-30-min cron doesn't double-send within the same window.
-  reminderEnabled?: boolean;
-  reminderMorning?: string; // 'HH:MM', default '06:30'
-  reminderEvening?: string; // 'HH:MM', default '19:00'
-  telegramChatId?: string;
-  lastReminderSent?: { morning?: string; evening?: string };
+  // Telegram reminder fields (reminderEnabled/reminderMorning/...) were
+  // removed in v2.36.0 together with the cron job; old docs may still carry
+  // them and they are simply ignored.
+  // Dumbbell weights (kg) the user owns at home — drives the weight chips
+  // on the logging screen + "next step up" hint (lib/dumbbellSet.ts).
+  // Optional: unset → generic default chips.
+  dumbbellWeights?: number[];
   // Favorite/pinned exercise preset ids (system or custom) — surfaced first
   // in the QuickAdd exercise picker + a dedicated "Yêu thích" tab. Optional
   // so existing users default to no favorites.

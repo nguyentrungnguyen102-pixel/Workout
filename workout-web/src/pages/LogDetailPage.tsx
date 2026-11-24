@@ -5,7 +5,7 @@ import { useWorkoutStore } from '../stores/workoutStore';
 import { getLogById, softDeleteLog, restoreLog } from '../services/workoutService';
 import { WorkoutLog } from '../types/workout';
 import { formatTimeOfDay } from '../lib/date';
-import { formatAmount } from '../lib/format';
+import { formatAmountWithWeight } from '../lib/format';
 import { buildLogShareText } from '../lib/shareText';
 
 function formatDateVi(dateStr: string): string {
@@ -185,7 +185,7 @@ export default function LogDetailPage() {
           {log.exercises.map((ex, i) => (
             <div key={i} className="flex items-center justify-between px-4 py-3">
               <p className="font-semibold text-text-main text-sm">{ex.name}</p>
-              <p className="text-sm text-text-secondary">{formatAmount(ex)}</p>
+              <p className="text-sm text-text-secondary">{formatAmountWithWeight(ex)}</p>
             </div>
           ))}
         </div>
