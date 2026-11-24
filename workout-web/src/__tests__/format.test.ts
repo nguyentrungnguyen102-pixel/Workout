@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatElapsedClock } from '../lib/format';
+import { formatElapsedClock, formatAmountWithWeight } from '../lib/format';
 
 describe('formatElapsedClock', () => {
   it('renders under an hour as M:SS', () => {
@@ -22,5 +22,16 @@ describe('formatElapsedClock', () => {
 
   it('clamps negative input to 0 instead of a negative duration', () => {
     expect(formatElapsedClock(-42)).toBe('0:00');
+  });
+});
+
+describe('formatAmountWithWeight', () => {
+  it('appends kg when a weight was logged', () => {
+    expect(formatAmountWithWeight({ unit: 'reps', reps: 12, weight: 6 })).toBe('12 cái · 6 kg');
+  });
+  it('leaves amount unchanged without weight', () => {
+    expect(formatAmountWithWeight({ unit: 'reps', reps: 12 })).toBe('12 cái');
+    expect(formatAmountWithWeight({ unit: 'reps', reps: 12, weight: 0 })).toBe('12 cái');
+    expect(formatAmountWithWeight({ unit: 'minutes', durationSeconds: 600 })).toBe('10 phút');
   });
 });

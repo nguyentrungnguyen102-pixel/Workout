@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, ChevronRight, Flame, Target, ChevronDown, ChevronUp, Plus, Trash2, Search, Info, Star } from 'lucide-react';
 import { useUserStore } from '../stores/userStore';
+import { nextHeavierWeight, normalizeDumbbellWeights, weightChipsFor } from '../lib/dumbbellSet';
 import { useWorkoutStore } from '../stores/workoutStore';
 import { useProgramStore } from '../stores/programStore';
 import { SYSTEM_PRESETS, CATEGORY_LABELS } from '../constants/exercises';
@@ -294,6 +295,8 @@ interface WorkoutSummaryModalProps {
 function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
   const navigate = useNavigate();
   const { draft, removeExercise, updateExercise, setNotes, setLocation, setStartedAt, logWorkout, isLogging, editingLogId, cancelEdit } = useWorkoutStore();
+  const ownedWeights = useUserStore((st) => st.profile?.dumbbellWeights);
+  const hasOwnedSet = normalizeDumbbellWeights(ownedWeights).length > 0;
   const [toast, setToast] = useState('');
   // Ref (not state) holds the pending timer so a fast second toast can clear
   // the first toast's timeout before it fires and clears the newer message.
@@ -346,12 +349,29 @@ function WorkoutSummaryModal({ onClose, uid }: WorkoutSummaryModalProps) {
     let weightChips: Chip[] = [];
 
     if (ex.category === 'dumbbell') {
-      weightChips = [2.5, 5, 7.5, 10, 12.5, 15].map((v) => ({
+      // Real weights from the user's home set (Settings → Bộ tạ đơn tại nhà);
+      // falls back to the generic row when no set is configured.
+      weightChips = weightChipsFor(ownedWeights, ex.weight).map((v) => ({
         key: `weight-${v}`,
         label: `${v}kg`,
         active: (ex.weight ?? 0) === v,
         onClick: () => updateExercise(ex.presetId, { weight: v }),
       }));
+      const up = ex.weight && ex.weight > 0 ? nextHeavierWeight(ownedWeights, ex.weight) : null;
+      if (up !== null) {
+        weightChips.push({
+          key: 'weight-up',
+          label: `⬆ Lên ${up}kg`,
+          active: false,
+          onClick: () => updateExercise(ex.presetId, { weight: up }),
+        });
+      }
+      weightChips.push({
+        key: 'weight-settings',
+        label: hasOwnedSet ? '⚙️ Bộ tạ' : '⚙️ Khai báo bộ tạ',
+        active: false,
+        onClick: () => navigate('/settings'),
+      });
     }
 
     if (ex.unit === 'reps') {

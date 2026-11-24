@@ -6,7 +6,7 @@ import { useWorkoutStore } from '../stores/workoutStore';
 import { getLogsForDate } from '../services/workoutService';
 import { WorkoutLog } from '../types/workout';
 import { buildDayTimeline, aggregateExercises } from '../lib/dayTimeline';
-import { formatAmount } from '../lib/format';
+import { formatAmountWithWeight } from '../lib/format';
 
 function formatDateViLong(dateStr: string): string {
   const d = new Date(dateStr + 'T00:00:00');
@@ -121,7 +121,7 @@ export default function DayDetailPage() {
                   <span className="text-xs font-bold text-primary flex-shrink-0 w-12">{item.time}</span>
                 )}
                 <span className="font-semibold text-text-main text-sm flex-1">{item.name}</span>
-                <span className="text-sm text-text-secondary">{formatAmount(item.ex)}</span>
+                <span className="text-sm text-text-secondary">{formatAmountWithWeight(item.ex)}</span>
               </div>
             ))}
           </div>
